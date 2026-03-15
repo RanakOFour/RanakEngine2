@@ -16,22 +16,29 @@ if(NOT Lua_FOUND)
     # For now, we assume if find_package fails, you'll need to provide it
 endif()
 
-# Fallback for GLEW
-if(NOT GLEW_FOUND)
-    message(STATUS "GLEW not found in system, using extern/GL")
-    set(GLEW_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/extern/GL)
-    # GLEW headers only - no linking needed if using header-only path
-endif()
-
 # Fallback for SDL3
 if(NOT SDL3_FOUND)
     message(STATUS "SDL3 not found in system, using extern/SDL3")
     set(SDL3_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/extern/SDL3)
 endif()
 
-add_library(RanakEngine STATIC)
+file(GLOB_RECURSE RANAK_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Assets/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Core/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/IO/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Log/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Math/*.cpp"
+    )
 
-add_subdirectory(src)
+file(GLOB_RECURSE RANAK_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/Assets/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/Core/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/IO/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/Log/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/Math/*.h"
+    )
+
+add_library(RanakEngine STATIC ${RANAK_HEADER} ${RANAK_SOURCE})
 
 target_include_directories(RanakEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -44,9 +51,6 @@ target_include_directories(RanakEngine PUBLIC
 # Link against system libraries if found, otherwise extern
 if(WIN32)
     target_link_libraries(RanakEngine PRIVATE opengl32)
-    if(GLEW_FOUND)
-        target_link_libraries(RanakEngine PRIVATE GLEW::GLEW)
-    endif()
     if(SDL3_FOUND)
         target_link_libraries(RanakEngine PRIVATE SDL3::SDL3)
     endif()
@@ -56,9 +60,6 @@ if(WIN32)
 elseif(UNIX)
     if(GL_LIBRARIES)
         target_link_libraries(RanakEngine PRIVATE ${GL_LIBRARIES})
-    endif()
-    if(GLEW_FOUND)
-        target_link_libraries(RanakEngine PRIVATE GLEW::GLEW)
     endif()
     if(SDL3_FOUND)
         target_link_libraries(RanakEngine PRIVATE SDL3::SDL3)
