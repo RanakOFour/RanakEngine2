@@ -1,3 +1,4 @@
+# RanakEngine Library
 file(GLOB RANAKENGINE_SOURCES 
     "*.cpp"
     "Core/*.cpp"
@@ -6,5 +7,3 @@ file(GLOB RANAKENGINE_SOURCES
     "Log/*.cpp"
     "Asset/*.cpp"
 )
-
-target_sources(RanakEngine PUBLIC ${RANAKENGINE_SOURCES})
