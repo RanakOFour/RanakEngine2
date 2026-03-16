@@ -46,8 +46,18 @@ namespace RanakEngine::IO
     {
         if(m_activeStreams.find(_audio) != m_activeStreams.end())
         {
-            Log::Warning("Audio is already playing");
-            return false;
+            if(SDL_GetAudioStreamQueued(m_activeStreams[_audio]) == 0)
+            {
+                // Stream finished, unbind and destroy
+                SDL_UnbindAudioStream(m_activeStreams[_audio]);
+                SDL_DestroyAudioStream(m_activeStreams[_audio]);
+                m_activeStreams.erase(_audio);
+            }
+            else
+            {
+                Log::Warning("Audio is already playing");
+                return false;
+            }
         }
 
         Asset::Audio* l_audio = _audio.lock().get();
