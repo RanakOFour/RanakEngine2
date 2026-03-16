@@ -46,6 +46,7 @@ namespace RanakEngine::IO
     {
         if(m_activeStreams.find(_audio) != m_activeStreams.end())
         {
+            // Check if stream is still playing
             if(SDL_GetAudioStreamQueued(m_activeStreams[_audio]) == 0)
             {
                 // Stream finished, unbind and destroy
