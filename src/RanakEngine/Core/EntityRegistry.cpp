@@ -31,8 +31,7 @@ namespace RanakEngine::Core
         }
         else
         {
-            l_newID = m_nextFreeId;
-            m_nextFreeId += 1;
+            l_newID = ++m_nextFreeId;
         }
 
         sol::table l_newEntityTable = m_dataTable.raw_get<sol::table>("Entities").create_named(l_newID);

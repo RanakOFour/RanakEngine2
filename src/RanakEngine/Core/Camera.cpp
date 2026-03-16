@@ -16,7 +16,7 @@ namespace RanakEngine::Core
     , m_rotation(0.0f)
     , m_fov(45.0f)
     , m_projectionType(ProjectionType::Orthographic)
-    , m_cameraSize(5.0f, 5.0f)
+    , m_cameraSize(10.0f, 10.0f)
     , m_viewDirty(true)
     {
         SetOrthographic();
