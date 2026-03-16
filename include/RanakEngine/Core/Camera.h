@@ -38,6 +38,7 @@ namespace RanakEngine::Core
         {
             _state.new_usertype<Camera>("Camera",
                                         "Draw", &Camera::Draw,
+                                        "ScreenToWorldPoint", &Camera::ScreenToWorldPoint,
                                         "setPosition", &Camera::SetPosition,
                                         "getPosition", &Camera::GetPosition,
                                         "setRotation", &Camera::SetRotation,
@@ -58,6 +59,8 @@ namespace RanakEngine::Core
         void Use(std::shared_ptr<Asset::Shader> _shader);
 
         void Draw(sol::table _transform, sol::table _drawable);
+
+        Vector3 ScreenToWorldPoint(Vector2 _screenPos);
 
         void SetPosition(Vector3 _pos);
         Vector3 GetPosition();

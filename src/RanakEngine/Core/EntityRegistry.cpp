@@ -5,7 +5,10 @@
 namespace RanakEngine::Core
 {
     EntityRegistry::EntityRegistry()
-        : m_nextFreeId(0), m_freeIds(), m_categories(), m_entityBitset()
+    : m_nextFreeId(-1)
+    , m_freeIds()
+    , m_categories()
+    , m_entityBitset()
     {
         m_luaContext = LuaContext::Instance().lock();
         m_dataTable = m_luaContext->CreateTable();
@@ -28,7 +31,8 @@ namespace RanakEngine::Core
         }
         else
         {
-            l_newID = ++m_nextFreeId;
+            l_newID = m_nextFreeId;
+            m_nextFreeId += 1;
         }
 
         sol::table l_newEntityTable = m_dataTable.raw_get<sol::table>("Entities").create_named(l_newID);

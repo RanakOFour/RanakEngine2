@@ -1,6 +1,8 @@
 #ifndef COREMANAGER_H
 #define COREMANAGER_H
 
+#include "RanakEngine/Math/Vector3.h"
+
 #include <memory>
 
 namespace RanakEngine
@@ -61,6 +63,8 @@ namespace RanakEngine::Core
         float DeltaTime();
 
         bool IsDebug();
+
+        Vector3 ScreenToWorldPoint(Vector2 _screenPos);
 
         std::weak_ptr<Camera> GetCamera();
     };

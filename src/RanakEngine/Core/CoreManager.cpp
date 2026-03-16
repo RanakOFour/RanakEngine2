@@ -118,6 +118,11 @@ namespace RanakEngine::Core
         return m_debug;
     }
 
+    Vector3 Core::Manager::ScreenToWorldPoint(Vector2 _screenPos)
+    {
+        return m_mainCamera->ScreenToWorldPoint(_screenPos);
+    }
+
     std::weak_ptr<Camera> Core::Manager::GetCamera()
     {
         return m_mainCamera;

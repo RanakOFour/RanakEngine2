@@ -64,8 +64,6 @@ namespace RanakEngine::IO
     void IO::Manager::UpdateInputs()
     {
         static bool l_previousESCValue = false;
-        bool l_movement = false;
-        bool l_scroll = false;
         SDL_Event l_event;
 
         m_mouseInfo.deltaPosition.x = 0.0f;
@@ -104,20 +102,11 @@ namespace RanakEngine::IO
 
             case SDL_EVENT_MOUSE_WHEEL:
                 m_mouseInfo.deltaScroll = -l_event.wheel.y;
-                if (m_mouseInfo.deltaScroll != 0.0f)
-                {
-                    l_scroll = true;
-                }
                 break;
 
             case SDL_EVENT_MOUSE_MOTION:
                 m_mouseInfo.deltaPosition.x = l_event.motion.xrel;
                 m_mouseInfo.deltaPosition.y = l_event.motion.yrel;
-
-                if (m_mouseInfo.deltaPosition.x != 0.0f && m_mouseInfo.deltaPosition.y != 0.0f)
-                {
-                    l_movement = true;
-                }
                 break;
 
             case SDL_EVENT_KEY_DOWN:
@@ -129,6 +118,10 @@ namespace RanakEngine::IO
                 break;
             }
         }
+
+        SDL_GetMouseState(&m_mouseInfo.position.x, &m_mouseInfo.position.y);
+
+        m_mouseInfo.position.y = m_window->GetScreenSize().y - m_mouseInfo.position.y;
 
         // Take mouse out of window focus on escape
         if (m_kbInfo.inputMap[SDL_SCANCODE_ESCAPE] && !l_previousESCValue)

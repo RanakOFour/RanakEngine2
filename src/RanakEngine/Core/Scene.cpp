@@ -8,7 +8,9 @@
 namespace RanakEngine::Core
 {
     Scene::Scene()
-        : m_name("Scene"), m_registry(), m_rules()
+    : m_name("Scene")
+    , m_registry()
+    , m_rules()
     {
         auto l_luaContext = LuaContext::Instance().lock();
         m_sceneTable = l_luaContext->CreateTable();

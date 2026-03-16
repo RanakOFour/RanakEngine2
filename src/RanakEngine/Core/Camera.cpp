@@ -2,6 +2,9 @@
 #include "RanakEngine/Assets.h"
 #include "RanakEngine/Math.h"
 
+#include "RanakEngine/IO/IOManager.h"
+#include "RanakEngine/IO/Window.h"
+
 #include "sol/sol.hpp"
 #include "GL/glew.h"
 #include "GLM/ext.hpp"
@@ -118,15 +121,44 @@ namespace RanakEngine::Core
 
         l_shader->SetUniform("u_Model", l_modelMat);
         
-        l_modelMat = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
+        if(m_viewDirty)
+        {
+            m_view = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
+        }
 
-        l_shader->SetUniform("u_View", glm::inverse(l_modelMat));
+        l_shader->SetUniform("u_View", glm::inverse(m_view));
         l_shader->SetUniform("u_Projection", m_projection);
 
         glDrawArrays(GL_TRIANGLES, 0, l_model->GetVertexCount());
                 
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    Vector3 Camera::ScreenToWorldPoint(Vector2 _screenPoint)
+    {
+        // Get window dimensions from ImGui
+        auto l_window = IO::Manager::Instance().lock()->GetWindow().lock();
+        Vector2 l_screenSize = l_window->GetScreenSize();
+
+        Vector2 l_pointNDC(2 * (_screenPoint.x / l_screenSize.x) - 1,
+                           2 * (_screenPoint.y / l_screenSize.y) - 1);
+
+        if(m_viewDirty)
+        {
+            m_view = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
+            m_view = glm::inverse(m_view);
+        }
+
+        glm::mat4 l_modelView = glm::inverse(m_view * m_projection);
+
+        glm::vec3 l_worldPos = glm::unProject(
+        glm::vec3(_screenPoint.x, _screenPoint.y, 0),
+        m_view,
+        m_projection,
+        glm::vec4(0.0f, 0.0f, l_screenSize.x, l_screenSize.y));
+
+        return (Vector3)l_worldPos;
     }
 
     void Camera::SetPosition(Vector3 _p)
