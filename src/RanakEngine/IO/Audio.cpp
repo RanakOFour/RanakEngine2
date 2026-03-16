@@ -3,11 +3,13 @@
 #include "RanakEngine/Log.h"
 
 #include "SDL3/SDL.h"
+#include "SDL3/SDL_audio.h"
 
 namespace RanakEngine::IO
 {
     Audio::Audio()
     : m_audioDevice(0)
+    , m_activeStreams()
     {
         if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
         {
@@ -42,6 +44,12 @@ namespace RanakEngine::IO
 
     bool Audio::Play(std::weak_ptr<Asset::Audio> _audio, bool _loop)
     {
+        if(m_activeStreams.find(_audio) != m_activeStreams.end())
+        {
+            Log::Warning("Audio is already playing");
+            return false;
+        }
+
         Asset::Audio* l_audio = _audio.lock().get();
         if (!l_audio)
         {
@@ -80,16 +88,16 @@ namespace RanakEngine::IO
         }
         
         // Store stream for later control
-        m_activeStreams[l_audio->GetPath()] = l_stream;
+        m_activeStreams[_audio] = l_stream;
         
         Log::Debug("Now playing: " + l_audio->GetPath());
         
         return true;
     }
 
-    void Audio::Stop(const std::string& _audioName)
+    void Audio::Stop(std::weak_ptr<Asset::Audio> _audio)
     {
-        auto stream = m_activeStreams.find(_audioName);
+        auto stream = m_activeStreams.find(_audio);
         if (stream != m_activeStreams.end())
         {
             SDL_UnbindAudioStream(stream->second);
@@ -98,27 +106,27 @@ namespace RanakEngine::IO
         }
     }
 
-    void Audio::Pause(const std::string& _audioName)
+    void Audio::Pause(std::weak_ptr<Asset::Audio> _audio)
     {
-        auto stream = m_activeStreams.find(_audioName);
+        auto stream = m_activeStreams.find(_audio);
         if (stream != m_activeStreams.end())
         {
             SDL_PauseAudioStreamDevice(stream->second);
         }
     }
 
-    void Audio::Resume(const std::string& _audioName)
+    void Audio::Resume(std::weak_ptr<Asset::Audio> _audio)
     {
-        auto stream = m_activeStreams.find(_audioName);
+        auto stream = m_activeStreams.find(_audio);
         if (stream != m_activeStreams.end())
         {
             SDL_ResumeAudioStreamDevice(stream->second);
         }
     }
 
-    void Audio::SetAudioVolume(const std::string& _audioName, float _volume)
+    void Audio::SetAudioVolume(std::weak_ptr<Asset::Audio> _audio, float _volume)
     {
-        auto stream = m_activeStreams.find(_audioName);
+        auto stream = m_activeStreams.find(_audio);
         if (stream != m_activeStreams.end())
         {
             SDL_SetAudioStreamGain(stream->second, _volume);

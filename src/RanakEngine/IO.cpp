@@ -45,6 +45,17 @@ namespace RanakEngine::IO
         IOTable.set_function("ClearColour", []()
                              { return IOManager->GetClearColour(); });
 
+        IOTable.set_function("PlayAudio", [](std::weak_ptr<Asset::Audio> _audio, bool _repeat)
+                             { IOManager->GetAudio().lock()->Play(_audio, _repeat); });
+        IOTable.set_function("StopAudio", [](std::weak_ptr<Asset::Audio> _audio)
+                             { IOManager->GetAudio().lock()->Stop(_audio); });
+        IOTable.set_function("PauseAudio", [](std::weak_ptr<Asset::Audio> _audio)
+                             { IOManager->GetAudio().lock()->Pause(_audio); });
+        IOTable.set_function("ResumeAudio", [](std::weak_ptr<Asset::Audio> _audio)
+                             { IOManager->GetAudio().lock()->Resume(_audio); });
+        IOTable.set_function("SetAudioVolume", [](std::weak_ptr<Asset::Audio> _audio, float _volume)
+                             { IOManager->GetAudio().lock()->SetAudioVolume(_audio, _volume); });
+
         l_context->SetGlobal("IO", IOTable);
     };
 

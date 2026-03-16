@@ -67,7 +67,7 @@ namespace RanakEngine::Core
             std::string l_modelPath = _drawable.raw_get<std::string>("modelPath");
             if(l_modelPath == "")
             {
-                l_modelPath = "./resources/models/FlatTexture.obj";
+                l_modelPath = "./resources/Models/FlatTexture.obj";
             }
 
             _drawable.raw_set("model", l_assetManager->Load<Asset::Model>(l_modelPath));
@@ -84,7 +84,7 @@ namespace RanakEngine::Core
             std::string l_texturePath = _drawable.raw_get<std::string>("texturePath");
             if(l_texturePath == "")
             {
-                l_texturePath = "./resources/textures/triangle.png";
+                l_texturePath = "./resources/Textures/triangle.png";
             }
 
             _drawable.raw_set("texture", l_assetManager->Load<Asset::Texture>(l_texturePath));
@@ -101,7 +101,7 @@ namespace RanakEngine::Core
             std::string l_shaderPath = _drawable.raw_get<std::string>("shaderPath");
             if(l_shaderPath == "")
             {
-                l_shaderPath = "./resources/shaders/default/frag.fs;./resources/shaders/default/vert.vs";
+                l_shaderPath = "./resources/Shaders/default/frag.fs;./resources/Shaders/default/vert.vs";
             }
 
             _drawable.raw_set("shader", l_assetManager->Load<Asset::Shader>(l_shaderPath));

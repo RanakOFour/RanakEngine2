@@ -60,6 +60,15 @@ namespace RanakEngine::Log
                 // Print non-debug messages
                 switch (l_currentMessage.severity)
                 {
+
+                case MessageContent::NORMAL:
+                    printf("LOG: %s\n", l_currentMessage.contents.c_str());
+                    break;
+
+                case MessageContent::WARNING:
+                    printf("WARNING: %s\n", l_currentMessage.contents.c_str());
+                    break;
+
                 case MessageContent::DEBUG:
                     if (l_core.get() != nullptr && l_core->IsDebug())
                     {
@@ -68,16 +77,7 @@ namespace RanakEngine::Log
                     break;
 
                 case MessageContent::ERROR:
-                    printf("ERROR: %s\n", l_currentMessage.contents.c_str());
-                    throw(std::runtime_error(""));
-                    break;
-
-                case MessageContent::NORMAL:
-                    printf("LOG: %s\n", l_currentMessage.contents.c_str());
-                    break;
-
-                case MessageContent::WARNING:
-                    printf("WARNING: %s\n", l_currentMessage.contents.c_str());
+                    throw(std::runtime_error("ERROR: " + l_currentMessage.contents));
                     break;
                 }
             }
