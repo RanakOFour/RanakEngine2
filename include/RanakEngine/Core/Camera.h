@@ -22,31 +22,33 @@ namespace RanakEngine::Core
         };
 
         private:
-        bool m_isLookingAt;
-        float m_lookAtDistance;
-        int m_lookAtTarget;
-
         Vector3 m_position;
         float m_rotation;
 
         float m_fov;
+        Vector2 m_cameraSize;
+
+        bool m_viewDirty;
 
         ProjectionType m_projectionType;
         glm::mat4 m_projection;
+        glm::mat4 m_view;
 
         static void DefineUsertype(sol::state& _state)
         {
             _state.new_usertype<Camera>("Camera",
-                                        "position", &Camera::m_position,
-                                        "rotation", &Camera::m_rotation,
-                                        "fov", &Camera::m_fov,
                                         "Draw", &Camera::Draw,
-                                        "setLookAtTarget", &Camera::SetLookAtTarget,
-                                        "getLookAtTarget", &Camera::GetLookAtTarget,
-                                        "setLookAtDistance", &Camera::SetLookAtDistance,
-                                        "getLookAtDistance", &Camera::GetLookAtDistance,
-                                        "setProjectionType", &Camera::SetProjectionType,
-                                        "getProjectionType", &Camera::GetProjectionType);
+                                        "setPosition", &Camera::SetPosition,
+                                        "getPosition", &Camera::GetPosition,
+                                        "setRotation", &Camera::SetRotation,
+                                        "getRotation", &Camera::GetRotation,
+                                        "setFOV", &Camera::SetFOV,
+                                        "getFOV", &Camera::GetFOV,
+                                        "setCameraSize", &Camera::SetCameraSize,
+                                        "getCameraSize", &Camera::GetCameraSize,
+                                        "isPerspective", &Camera::IsPerspective,
+                                        "setPerspective", &Camera::SetPerspective,
+                                        "setOrthographic", &Camera::SetOrthographic);
         }
 
         public:
@@ -58,15 +60,24 @@ namespace RanakEngine::Core
         void Draw(sol::table _transform, sol::table _drawable);
 
         void SetPosition(Vector3 _pos);
+        Vector3 GetPosition();
 
-        void SetLookAtTarget(int _id);
-        int GetLookAtTarget();
+        void SetRotation(float _rot);
+        float GetRotation();
 
-        void SetLookAtDistance(float _d);
-        float GetLookAtDistance();
+        void SetFOV(float _fov);
+        float GetFOV();
 
-        void SetProjectionType(int _t);
-        ProjectionType GetProjectionType();
+        void SetCameraSize(Vector2 _size);
+        Vector2 GetCameraSize();
+
+        bool IsPerspective() const
+        {
+            return m_projectionType == ProjectionType::Perspective;
+        }
+
+        void SetPerspective();
+        void SetOrthographic();
     };
 }
 

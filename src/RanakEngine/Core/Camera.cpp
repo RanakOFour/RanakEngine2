@@ -9,16 +9,14 @@
 namespace RanakEngine::Core
 {
     Camera::Camera()
-    : m_isLookingAt(false)
-    , m_lookAtDistance(3.0f)
-    , m_lookAtTarget(-1)
-    , m_position(0.0f, 0.0f, 3.0f)
+    : m_position(0.0f, 0.0f, 3.0f)
     , m_rotation(0.0f)
     , m_fov(45.0f)
     , m_projectionType(ProjectionType::Orthographic)
+    , m_cameraSize(5.0f, 5.0f)
+    , m_viewDirty(true)
     {
-        //m_projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
-        m_projection = glm::perspective(m_fov, 1920.0f/1080.0f, 0.1f, 100.0f);
+        SetOrthographic();
     }
 
     Camera::~Camera()
@@ -42,14 +40,14 @@ namespace RanakEngine::Core
         _shader->SetUniform("u_Projection", m_projection);
     }
 
-    glm::mat4 CalculateModelMatrix(Vector3 _pos, Vector3 _euler)
+    glm::mat4 CalculateModelMatrix(Vector3 _pos, Vector3 _euler, Vector3 _scale)
     {
         glm::vec3 l_glPos = glm::vec3(_pos.x, _pos.y, _pos.z);
         glm::quat l_glQuat = (glm::quat)Quaternion(glm::radians(_euler.x), glm::radians(_euler.y), glm::radians(_euler.z));
 
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), l_glPos);
         glm::mat4 rotation = glm::mat4(l_glQuat);
-        glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+        glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(_scale.x, _scale.y, _scale.z));
         
         return translation * rotation * scale;
     }
@@ -116,11 +114,11 @@ namespace RanakEngine::Core
 
         glBindTexture(GL_TEXTURE_2D, l_texture->GetID());
 
-        glm::mat4 l_modelMat = CalculateModelMatrix(_transform.raw_get<Vector3>("position"), _transform.raw_get<Vector3>("rotation"));
+        glm::mat4 l_modelMat = CalculateModelMatrix(_transform.raw_get<Vector3>("position"), _transform.raw_get<Vector3>("rotation"), _transform.raw_get<Vector3>("scale"));
 
         l_shader->SetUniform("u_Model", l_modelMat);
         
-        l_modelMat = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f));
+        l_modelMat = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
 
         l_shader->SetUniform("u_View", glm::inverse(l_modelMat));
         l_shader->SetUniform("u_Projection", m_projection);
@@ -134,47 +132,66 @@ namespace RanakEngine::Core
     void Camera::SetPosition(Vector3 _p)
     {
         m_position = _p;
+        m_viewDirty = true;
     }
 
-    void Camera::SetLookAtTarget(int _id)
+    Vector3 Camera::GetPosition()
     {
-        m_lookAtTarget = _id;
+        return m_position;
+    }
 
-        if(_id == -1)
+    void Camera::SetRotation(float _rot)
+    {
+        m_rotation = _rot;
+        m_viewDirty = true;
+    }
+
+    float Camera::GetRotation()
+    {
+        return m_rotation;
+    }
+
+    void Camera::SetFOV(float _fov)
+    {
+        m_fov = _fov;
+        if(m_projectionType == ProjectionType::Perspective)
         {
-            m_isLookingAt = false;
+            SetPerspective();
+        }
+    }
+
+    float Camera::GetFOV()
+    {
+        return m_fov;
+    }
+
+    void Camera::SetCameraSize(Vector2 _size)
+    {
+        m_cameraSize = _size;
+        if(m_projectionType == ProjectionType::Perspective)
+        {
+            SetPerspective();
         }
         else
         {
-            m_isLookingAt = true;
+            SetOrthographic();
         }
     }
 
-    int Camera::GetLookAtTarget()
+    Vector2 Camera::GetCameraSize()
     {
-        return m_lookAtTarget;
+        return m_cameraSize;
     }
 
-    void Camera::SetLookAtDistance(float _d)
+    void Camera::SetPerspective()
     {
-        m_lookAtDistance = _d;
+        m_projectionType = ProjectionType::Perspective;
+        m_projection = glm::perspective(m_fov, m_cameraSize.x/m_cameraSize.y, 0.1f, 100.0f);
     }
 
-    float Camera::GetLookAtDistance()
+    void Camera::SetOrthographic()
     {
-        return m_lookAtDistance;
-    }
-
-    void Camera::SetProjectionType(int _t)
-    {
-        if(_t > -1 && _t < 2)
-        {
-            m_projectionType = (ProjectionType)_t;
-        }
-    }
-
-    Camera::ProjectionType Camera::GetProjectionType()
-    {
-        return m_projectionType;
+        m_projectionType = ProjectionType::Orthographic;
+        m_projection = glm::ortho(-m_cameraSize.x/2.0f, m_cameraSize.x/2.0f, -m_cameraSize.y/2.0f, m_cameraSize.y/2.0f, 0.1f, 100.0f);
     }
 }
