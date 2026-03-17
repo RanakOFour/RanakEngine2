@@ -56,8 +56,6 @@ namespace RanakEngine::Core
         Camera();
         ~Camera();
 
-        void Use(std::shared_ptr<Asset::Shader> _shader);
-
         void Draw(sol::table _transform, sol::table _drawable);
 
         Vector3 ScreenToWorldPoint(Vector2 _screenPos);
@@ -81,6 +79,9 @@ namespace RanakEngine::Core
 
         void SetPerspective();
         void SetOrthographic();
+
+        glm::mat4 GetProjection();
+        glm::mat4 GetView();
     };
 }
 

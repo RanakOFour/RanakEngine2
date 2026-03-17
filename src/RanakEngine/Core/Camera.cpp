@@ -27,22 +27,6 @@ namespace RanakEngine::Core
 
     }
 
-    void Camera::Use(std::shared_ptr<Asset::Shader> _shader)
-    {
-        glm::vec3 l_glPos = glm::vec3(m_position.x, m_position.y, m_position.z);
-        glm::quat l_glQuat = glm::angleAxis(m_rotation, glm::vec3(0.0f, 1.0f, 0.0f));
-
-        glm::mat4 translation = glm::translate(glm::mat4(1.0f), l_glPos);
-        glm::mat4 rotation = glm::mat4(l_glQuat);
-        glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-        
-        glm::mat4 l_modelMat = translation * rotation * scale;
-
-        //Logger::LogMessage(Message::DEBUG, "Transform::ModelMatrix()\n" + glm::to_string(l_modelMat));
-        _shader->SetUniform("u_View", glm::inverse(l_modelMat));
-        _shader->SetUniform("u_Projection", m_projection);
-    }
-
     glm::mat4 CalculateModelMatrix(Vector3 _pos, Vector3 _euler, Vector3 _scale)
     {
         glm::vec3 l_glPos = glm::vec3(_pos.x, _pos.y, _pos.z);
@@ -83,13 +67,11 @@ namespace RanakEngine::Core
         {
             // Try to load texture from path in drawable, otherwise load default texture
             std::string l_texturePath = _drawable.raw_get<std::string>("texturePath");
-            if(l_texturePath == "")
+            if(l_texturePath != "")
             {
-                l_texturePath = "./resources/Textures/triangle.png";
+                _drawable.raw_set("texture", l_assetManager->Load<Asset::Texture>(l_texturePath));
+                l_texturePtr = _drawable.raw_get<std::weak_ptr<Asset::Texture>>("texture");
             }
-
-            _drawable.raw_set("texture", l_assetManager->Load<Asset::Texture>(l_texturePath));
-            l_texturePtr = _drawable.raw_get<std::weak_ptr<Asset::Texture>>("texture");
         }
 
         auto l_texture = l_texturePtr.value().lock();
@@ -115,7 +97,10 @@ namespace RanakEngine::Core
         
         glBindVertexArray(l_model->GetVAO());
 
-        glBindTexture(GL_TEXTURE_2D, l_texture->GetID());
+        if(l_texture != nullptr)
+        {
+            glBindTexture(GL_TEXTURE_2D, l_texture->GetID());
+        }
 
         glm::mat4 l_modelMat = CalculateModelMatrix(_transform.raw_get<Vector3>("position"), _transform.raw_get<Vector3>("rotation"), _transform.raw_get<Vector3>("scale"));
 
@@ -124,13 +109,15 @@ namespace RanakEngine::Core
         if(m_viewDirty)
         {
             m_view = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
+            m_view = glm::inverse(m_view);
         }
 
-        l_shader->SetUniform("u_View", glm::inverse(m_view));
+        l_shader->SetUniform("u_View", m_view);
         l_shader->SetUniform("u_Projection", m_projection);
 
         glDrawArrays(GL_TRIANGLES, 0, l_model->GetVertexCount());
-                
+        
+        glUseProgram(0);
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
@@ -148,6 +135,7 @@ namespace RanakEngine::Core
         {
             m_view = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
             m_view = glm::inverse(m_view);
+            m_viewDirty = false;
         }
 
         glm::mat4 l_modelView = glm::inverse(m_view * m_projection);
@@ -225,5 +213,22 @@ namespace RanakEngine::Core
     {
         m_projectionType = ProjectionType::Orthographic;
         m_projection = glm::ortho(-m_cameraSize.x/2.0f, m_cameraSize.x/2.0f, -m_cameraSize.y/2.0f, m_cameraSize.y/2.0f, 0.1f, 100.0f);
+    }
+
+    glm::mat4 Camera::GetProjection()
+    {
+        return m_projection;
+    }
+
+    glm::mat4 Camera::GetView()
+    {
+        if(m_viewDirty)
+        {
+            m_view = CalculateModelMatrix(m_position, glm::vec3(0.0f, m_rotation, 0.0f), glm::vec3(1.0f));
+            m_view = glm::inverse(m_view);
+            m_viewDirty = false;
+        }
+
+        return m_view;
     }
 }
