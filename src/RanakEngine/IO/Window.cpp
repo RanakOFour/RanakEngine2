@@ -59,7 +59,7 @@ namespace RanakEngine::IO
         m_sdlWindow = std::shared_ptr<SDL_Window>(
             SDL_CreateWindow(_title.c_str(),
                             l_winWidth, l_winHeight,
-                            SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN),
+                            SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL),
             SDL_DestroyWindow);
 
         m_sdlglContext = SDL_GL_CreateContext(m_sdlWindow.get());

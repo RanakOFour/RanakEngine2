@@ -114,4 +114,15 @@ namespace RanakEngine::Core
         m_nameToSignature.erase(l_oldName);
         m_nameToSignature[_name] = m_signatureToCategory[_signature]->m_signature;
     }
+
+    std::string CategoryFactory::GetLoadedCategories()
+    {
+        std::string l_toReturn;
+        for(auto& l_pair : m_nameToSignature)
+        {
+            l_toReturn += l_pair.first + ";";
+        }
+
+        return l_toReturn;
+    }
 }

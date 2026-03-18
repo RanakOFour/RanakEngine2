@@ -126,7 +126,9 @@ namespace RanakEngine::Core
             glBindTexture(GL_TEXTURE_2D, l_texture->GetID());
         }
 
-        glm::mat4 l_modelMat = CalculateModelMatrix(_transform.raw_get<Vector3>("position"), _transform.raw_get<Vector3>("rotation"), _transform.raw_get<Vector3>("scale"));
+        glm::mat4 l_modelMat = CalculateModelMatrix(_transform.raw_get<Vector3>("Position"),
+                                                    _transform.raw_get<Vector3>("Rotation"),
+                                                    _transform.raw_get<Vector3>("Scale"));
 
         l_shader->SetUniform("u_Model", l_modelMat);
         

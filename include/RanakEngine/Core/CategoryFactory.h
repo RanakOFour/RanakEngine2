@@ -34,7 +34,7 @@ namespace Core
         std::weak_ptr<Category> GetBySignature(std::bitset<1024> _signature);
         std::vector<std::weak_ptr<Category>> GetCategories(std::bitset<1024> _combinedSignature);
         void RenameCategory(std::bitset<1024> _signature, std::string _name);
-
+        std::string GetLoadedCategories();
     };
 }
 }

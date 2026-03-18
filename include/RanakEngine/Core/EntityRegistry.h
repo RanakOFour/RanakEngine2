@@ -38,6 +38,7 @@ namespace RanakEngine::Core
         void RemoveFromCategory(int _id, std::bitset<1024> _signature);
 
         std::weak_ptr<Category> GetCategory(std::bitset<1024> _signature);
+        std::weak_ptr<Category> GetCategory(std::string _name);
         std::vector<int> GetEntitiesWith(std::bitset<1024> _combinedSignature);
         sol::table GetEntityAttributes(int _id);
 

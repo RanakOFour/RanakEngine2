@@ -87,4 +87,9 @@ namespace RanakEngine::Core
     {
         m_state[_name] = _obj;
     }
+
+    std::string LuaContext::GetLoadedCategories()
+    {
+        return m_categoryFactory->GetLoadedCategories();
+    }
 }

@@ -83,6 +83,8 @@ namespace RanakEngine::Core
         void SetGlobal(std::string _name, sol::object &_obj);
 
         sol::state *GetState() { return &m_state; };
+
+        std::string GetLoadedCategories();
     };
 }
 

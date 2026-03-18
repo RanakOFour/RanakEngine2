@@ -155,6 +155,19 @@ namespace RanakEngine::Core
         return std::weak_ptr<Category>();
     }
 
+    std::weak_ptr<Category> EntityRegistry::GetCategory(std::string _name)
+    {
+        for(auto& l_pair : m_categories)
+        {
+            if(l_pair.second->GetName() == _name)
+            {
+                return l_pair.second;
+            }
+        }
+
+        return std::weak_ptr<Category>();
+    }
+
     std::vector<int> EntityRegistry::GetEntitiesWith(std::bitset<1024> _combinedSignature)
     {
         std::vector<int> l_entities;
