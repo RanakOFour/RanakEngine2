@@ -77,7 +77,7 @@ namespace RanakEngine::Core
             std::string l_texturePath = _drawable.raw_get<std::string>("texturePath");
             if(l_texturePath != "")
             {
-                auto l_textureWPtr = l_assetManager->Load<Asset::Model>(l_texturePath);
+                auto l_textureWPtr = l_assetManager->Load<Asset::Texture>(l_texturePath);
 
                 if(l_textureWPtr.lock() == nullptr)
                 {
@@ -102,19 +102,17 @@ namespace RanakEngine::Core
             {
                 l_shaderPath = "./resources/Shaders/default/frag.fs;./resources/Shaders/default/vert.vs";
             }
-            else
+
+            auto l_shaderWPtr = l_assetManager->Load<Asset::Shader>(l_shaderPath);
+
+            if(l_shaderWPtr.lock() == nullptr)
             {
-                auto l_shaderWPtr = l_assetManager->Load<Asset::Model>(l_shaderPath);
-
-                if(l_shaderWPtr.lock() == nullptr)
-                {
-                    Log::Warning("Object cannot be drawn: invalid shader path");
-                    return;
-                }
-
-                _drawable.raw_set("shader", l_shaderWPtr);
-                l_shaderPtr = _drawable.raw_get<std::weak_ptr<Asset::Shader>>("texture");
+                Log::Warning("Object cannot be drawn: invalid shader path");
+                return;
             }
+
+            _drawable.raw_set("shader", l_shaderWPtr);
+            l_shaderPtr = _drawable.raw_get<std::weak_ptr<Asset::Shader>>("shader");
         }
 
         auto l_shader = l_shaderPtr.value().lock();
