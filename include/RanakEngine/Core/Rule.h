@@ -38,10 +38,10 @@ namespace RanakEngine::Core
             _state.new_usertype<Rule>("Rule", sol::constructors<Rule()>(),
                                               "name", &Rule::m_name,
                                               "categories", &Rule::m_categories,
+                                              "attributes", &Rule::m_table,
                                               "Init", &Rule::m_initFunction,
                                               "Update", &Rule::m_updateFunction,
                                               "Draw", &Rule::m_drawFunction,
-                                              "data", &Rule::m_table,
                                               "getCategories", sol::readonly(&Rule::GetCategories)
                                      );
         }

@@ -45,10 +45,13 @@ namespace RanakEngine::Core
         m_idsToDelete.push_back(_id);
 
         // Clear table
-        m_dataTable.traverse_raw_get<sol::table>(
-                       "Entities",
-                       _id)
-            .clear();
+        // m_dataTable.traverse_raw_get<sol::table>(
+        //                "Entities",
+        //                _id)
+        //     .clear();
+
+        m_dataTable.raw_get<sol::table>("Entities").raw_set(_id, sol::nil);
+        DeleteFlaggedEntities();
     }
 
     void EntityRegistry::DeleteFlaggedEntities()

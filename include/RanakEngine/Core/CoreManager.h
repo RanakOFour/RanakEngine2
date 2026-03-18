@@ -67,6 +67,7 @@ namespace RanakEngine::Core
         Vector3 ScreenToWorldPoint(Vector2 _screenPos);
 
         std::weak_ptr<Camera> GetCamera();
+        std::shared_ptr<LuaContext> GetLuaContext();
     };
 }
 

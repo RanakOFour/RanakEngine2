@@ -55,7 +55,15 @@ namespace RanakEngine::Core
                 l_modelPath = "./resources/Models/FlatTexture.obj";
             }
 
-            _drawable.raw_set("model", l_assetManager->Load<Asset::Model>(l_modelPath));
+            auto l_modelWPtr = l_assetManager->Load<Asset::Model>(l_modelPath);
+
+            if(l_modelWPtr.lock() == nullptr)
+            {
+                Log::Warning("Object cannot be drawn: invalid model path");
+                return;
+            }
+
+            _drawable.raw_set("model", l_modelWPtr);
             l_modelPtr = _drawable.raw_get<std::weak_ptr<Asset::Model>>("model");
         }
 
@@ -69,7 +77,15 @@ namespace RanakEngine::Core
             std::string l_texturePath = _drawable.raw_get<std::string>("texturePath");
             if(l_texturePath != "")
             {
-                _drawable.raw_set("texture", l_assetManager->Load<Asset::Texture>(l_texturePath));
+                auto l_textureWPtr = l_assetManager->Load<Asset::Model>(l_texturePath);
+
+                if(l_textureWPtr.lock() == nullptr)
+                {
+                    Log::Warning("Object cannot be drawn: invalid texture path");
+                    return;
+                }
+
+                _drawable.raw_set("texture", l_textureWPtr);
                 l_texturePtr = _drawable.raw_get<std::weak_ptr<Asset::Texture>>("texture");
             }
         }
@@ -86,9 +102,19 @@ namespace RanakEngine::Core
             {
                 l_shaderPath = "./resources/Shaders/default/frag.fs;./resources/Shaders/default/vert.vs";
             }
+            else
+            {
+                auto l_shaderWPtr = l_assetManager->Load<Asset::Model>(l_shaderPath);
 
-            _drawable.raw_set("shader", l_assetManager->Load<Asset::Shader>(l_shaderPath));
-            l_shaderPtr = _drawable.raw_get<std::weak_ptr<Asset::Shader>>("shader");
+                if(l_shaderWPtr.lock() == nullptr)
+                {
+                    Log::Warning("Object cannot be drawn: invalid shader path");
+                    return;
+                }
+
+                _drawable.raw_set("shader", l_shaderWPtr);
+                l_shaderPtr = _drawable.raw_get<std::weak_ptr<Asset::Shader>>("texture");
+            }
         }
 
         auto l_shader = l_shaderPtr.value().lock();
@@ -212,7 +238,16 @@ namespace RanakEngine::Core
     void Camera::SetOrthographic()
     {
         m_projectionType = ProjectionType::Orthographic;
-        m_projection = glm::ortho(-m_cameraSize.x/2.0f, m_cameraSize.x/2.0f, -m_cameraSize.y/2.0f, m_cameraSize.y/2.0f, 0.1f, 100.0f);
+        
+        // Get the viewport size to maintain correct aspect ratio
+        auto l_window = IO::Manager::Instance().lock()->GetWindow().lock();
+        Vector2 l_viewportSize = l_window->GetScreenSize();
+        float l_aspectRatio = l_viewportSize.x / l_viewportSize.y;
+        
+        // Calculate the height based on the width and viewport aspect ratio to prevent stretching
+        float l_orthoHeight = m_cameraSize.x / l_aspectRatio;
+        
+        m_projection = glm::ortho(-m_cameraSize.x/2.0f, m_cameraSize.x/2.0f, -l_orthoHeight/2.0f, l_orthoHeight/2.0f, 0.1f, 100.0f);
     }
 
     glm::mat4 Camera::GetProjection()

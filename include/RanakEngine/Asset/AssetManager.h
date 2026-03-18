@@ -30,7 +30,7 @@ namespace RanakEngine::Asset
                 std::filesystem::path l_fsPath(_path);
                 if(!std::filesystem::exists(l_fsPath))
                 {
-                    Log::Error("Asset::Load<" + std::string(typeid(T).name()) + ">, File does not exist: " + _path);
+                    Log::Warning("Asset::Load<" + std::string(typeid(T).name()) + ">, File does not exist: " + _path);
                     return std::weak_ptr<T>();
                 }
             }
@@ -43,13 +43,13 @@ namespace RanakEngine::Asset
 
                 if(!std::filesystem::exists(l_path1))
                 {
-                    Log::Error("Asset::Load<" + std::string(typeid(T).name()) + ">, File does not exist: " + _path);
+                    Log::Warning("Asset::Load<" + std::string(typeid(T).name()) + ">, File does not exist: " + _path);
                     return std::weak_ptr<T>();
                 }
 
                 if(!std::filesystem::exists(l_path2))
                 {
-                    Log::Error("Asset::Load<" + std::string(typeid(T).name()) + ">, File does not exist: " + _path);
+                    Log::Warning("Asset::Load<" + std::string(typeid(T).name()) + ">, File does not exist: " + _path);
                     return std::weak_ptr<T>();
                 }
             }

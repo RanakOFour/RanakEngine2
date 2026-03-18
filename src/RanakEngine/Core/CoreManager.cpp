@@ -127,4 +127,9 @@ namespace RanakEngine::Core
     {
         return m_mainCamera;
     }
+
+    std::shared_ptr<LuaContext> Core::Manager::GetLuaContext()
+    {
+        return m_luaContext;
+    }
 }
