@@ -2,7 +2,7 @@
 #include "RanakEngine/IO/Audio.h"
 #include "RanakEngine/IO/Window.h"
 
-#include "RanakEngine/Log/LogManager.h"
+#include "RanakEngine/Log.h"
 #include "RanakEngine/Core/CoreManager.h"
 #include "RanakEngine/Core/Scene.h"
 
@@ -51,14 +51,80 @@ namespace RanakEngine::IO
         return m_self;
     }
 
+    void SDLCALL IO::Manager::FileDialogSelected(void* userdata, const char* const* filelist, int filter)
+    {
+        if (!filelist) 
+        {
+            std::string l_error = SDL_GetError();
+            Log::Error("An error occured: " + l_error);
+            return;
+        }
+        else if (!*filelist)
+        {
+            Log::Message( "The user did not select any file.\nMost likely the dialog was cancelled.");
+            return;
+        }
+
+        std::string& outFile = *(std::string*)userdata;
+        outFile = *filelist;
+
+        while (*filelist)
+        {
+            std::string l_fileList = *filelist;
+            Log::Message( "Full path to selected file: " + l_fileList);
+            filelist++;
+        }
+
+        if (filter < 0)
+        {
+            Log::Message( "The current platform does not support fetching\nthe selected filter, or the user did not select any filter.");
+        }
+        else if (filter < SDL_arraysize(m_FileDialogFilters)) 
+        {
+            std::string l_filterPattern = std::string(m_FileDialogFilters[filter].pattern);
+
+            std::string l_info = "The filter selected by the user is " + l_filterPattern + 
+                " (" + m_FileDialogFilters[filter].name + ").";
+            Log::Message( l_info);
+        }
+
+        m_fileDialogEnded = true;
+    }
+
     std::string IO::Manager::OpenFileDialog()
     {
-        return "";
+        std::string l_filePath = "";
+        SDL_ShowOpenFileDialog(FileDialogSelected, &l_filePath, m_window->GetSDLWindow(), m_FileDialogFilters, 3, m_defaultFilePath.c_str(), false);
+
+        // Force program to wait until file is selected,
+        // because SDL file dialog is async
+        while(!m_fileDialogEnded)
+        {
+            SDL_Delay(100);
+            SDL_PumpEvents();
+        }
+
+        m_fileDialogEnded = false;
+        
+        return l_filePath;
     }
 
     std::string IO::Manager::SaveFileDialog()
     {
-        return "";
+        std::string l_filePath = "";
+        SDL_ShowSaveFileDialog(FileDialogSelected, &l_filePath, m_window->GetSDLWindow(), m_FileDialogFilters, 3, m_defaultFilePath.c_str());
+
+        // Force program to wait until file is selected,
+        // because SDL file dialog is async
+        while(!m_fileDialogEnded)
+        {
+            SDL_Delay(100);
+            SDL_PumpEvents();
+        }
+
+        m_fileDialogEnded = false;
+        
+        return l_filePath;
     }
 
     void IO::Manager::UpdateInputs()

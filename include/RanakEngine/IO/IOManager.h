@@ -7,6 +7,8 @@
 #include "RanakEngine/IO/KBInfo.h"
 #include "RanakEngine/IO/MouseInfo.h"
 
+#include "SDL3/SDL.h"
+
 namespace RanakEngine::Core
 {
     class Manager;
@@ -27,9 +29,19 @@ namespace RanakEngine::IO
         std::shared_ptr<Audio> m_audio;
         KBInfo m_kbInfo;
         MouseInfo m_mouseInfo;
+        
+        static inline bool m_fileDialogEnded = true;
+        static inline std::string m_defaultFilePath = "./";
+
+        static inline const SDL_DialogFileFilter m_FileDialogFilters[] = {
+            { "Lua files", "lua"},
+            { "Scene files",  "scene" },
+            { "All files",   "*" }
+        };
+
+        static void SDLCALL FileDialogSelected(void* userdata, const char* const* filelist, int filter);
 
         void SetCore(std::weak_ptr<Core::Manager> _core);
-
         Manager(Vector2 _screenSize);
         public:
         ~Manager();
