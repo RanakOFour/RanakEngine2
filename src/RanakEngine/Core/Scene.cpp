@@ -20,8 +20,12 @@ namespace RanakEngine::Core
     }
 
     Scene::Scene(sol::table _tableData)
-        : m_name(_tableData["name"]), m_registry(), m_rules(), m_sceneTable(_tableData)
+    : m_name()
+    , m_registry()
+    , m_rules()
+    , m_sceneTable(_tableData)
     {
+        m_name = _tableData.raw_get<std::string>("name");
         auto l_luaContext = LuaContext::Instance().lock();
         l_luaContext->AddVariable<sol::table>("Scene", m_sceneTable);
     }

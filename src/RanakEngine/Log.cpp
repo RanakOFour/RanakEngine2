@@ -112,7 +112,7 @@ namespace RanakEngine::Log
         LogTable.set_function("Warning", [](const std::string _message)
                               { LogManager->LogMessage(Log::MessageContent::WARNING, _message); });
         LogTable.set_function("Error", [](const std::string _message)
-                              { LogManager->LogMessage(Log::MessageContent::ERROR, _message); });
+                              { LogManager->LogMessage(Log::MessageContent::ERRORLOG, _message); });
         LogTable.set_function("Table", [](const sol::table _table)
                               { LogManager->LogMessage(Log::MessageContent::NORMAL, Table(_table, 0)); });
 

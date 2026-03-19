@@ -28,7 +28,7 @@ namespace RanakEngine::Log
 
     static void Error(std::string _message)
     {
-        LogManager->LogMessage(Log::MessageContent::ERROR, _message);
+        LogManager->LogMessage(Log::MessageContent::ERRORLOG, _message);
     }
 
     std::string Table(sol::table);

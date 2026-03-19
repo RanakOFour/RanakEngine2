@@ -76,7 +76,7 @@ namespace RanakEngine::Log
                     }
                     break;
 
-                case MessageContent::ERROR:
+                case MessageContent::ERRORLOG:
                     throw(std::runtime_error("ERROR: " + l_currentMessage.contents));
                     break;
                 }
@@ -150,7 +150,7 @@ namespace RanakEngine::Log
                 }
                 break;
 
-            case MessageContent::ERROR:
+            case MessageContent::ERRORLOG:
                 printf("ERROR: %s\n", l_currentMessage.contents.c_str());
                 throw(std::runtime_error(""));
                 break;

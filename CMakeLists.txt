@@ -5,9 +5,10 @@ project(RanakEngine)
 
 # Try to find system libraries first, fallback to external versions
 find_package(Lua QUIET)
-find_package(GLEW QUIET)
 find_package(SDL3 QUIET)
 find_library(GL_LIBRARIES GL QUIET)
+
+set(GLEW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/GLEW)
 
 # Fallback for Lua
 if(NOT Lua_FOUND)
@@ -52,7 +53,7 @@ target_include_directories(RanakEngine PUBLIC
 
 # Link against system libraries if found, otherwise extern
 if(WIN32)
-    target_link_libraries(RanakEngine PRIVATE opengl32)
+    target_link_libraries(RanakEngine PRIVATE opengl32 glew32)
     if(SDL3_FOUND)
         target_link_libraries(RanakEngine PRIVATE SDL3::SDL3)
     endif()

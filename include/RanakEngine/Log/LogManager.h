@@ -23,7 +23,7 @@ namespace RanakEngine::Log
             DEBUG,
             NORMAL,
             WARNING,
-            ERROR
+            ERRORLOG
         };
         
         Severity severity;
