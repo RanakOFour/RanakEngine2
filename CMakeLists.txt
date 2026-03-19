@@ -12,9 +12,11 @@ find_library(GL_LIBRARIES GL QUIET)
 # Fallback for Lua
 if(NOT Lua_FOUND)
     message(STATUS "Lua not found in system, checking extern...")
-    # Lua needs to be found or compiled - adjust path if needed
-    # For now, we assume if find_package fails, you'll need to provide it
+    add_subdirectory(extern/lua)
+    set(LUA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/lua)
 endif()
+
+message(STATUS "Lua includes: " ${LUA_INCLUDE_DIR})
 
 # Fallback for SDL3
 if(NOT SDL3_FOUND)
@@ -56,7 +58,11 @@ if(WIN32)
     endif()
     if(Lua_FOUND)
         target_link_libraries(RanakEngine PRIVATE ${LUA_LIBRARIES})
+    else()
+        target_link_libraries(RanakEngine PRIVATE lua)
     endif()
+
+    # Copy dlls from lib/win/bin to output dir
 elseif(UNIX)
     if(GL_LIBRARIES)
         target_link_libraries(RanakEngine PRIVATE ${GL_LIBRARIES})
@@ -66,5 +72,7 @@ elseif(UNIX)
     endif()
     if(Lua_FOUND)
         target_link_libraries(RanakEngine PRIVATE ${LUA_LIBRARIES})
+    else()
+        target_link_libraries(RanakEngine PRIVATE lua)
     endif()
 endif()
