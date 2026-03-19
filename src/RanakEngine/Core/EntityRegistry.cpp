@@ -37,6 +37,11 @@ namespace RanakEngine::Core
         sol::table l_newEntityTable = m_dataTable.raw_get<sol::table>("Entities").create_named(l_newID);
         l_newEntityTable.create_named("attributes");
 
+        // Add to transform
+        auto l_signature = m_luaContext->GetCategory("Transform")
+                                .lock()->GetSignature();
+        AddToCategory(l_newID, l_signature);
+
         return l_newID;
     }
 

@@ -18,6 +18,11 @@ namespace RanakEngine::Core
         Category::DefineUsertype(m_state);
         Rule::DefineUsertype(m_state);
         Camera::DefineUsertype(m_state);
+
+        const std::string l_transformScript = "local categoryName = 'Transform'\nlocal baseAttributes = {\nPosition = Vector3.new(0, 0, 0),\nRotation = Vector3.new(0),\nScale = Vector3.new(1)\n}\nreturn Category.new(categoryName, baseAttributes)";
+        sol::protected_function_result l_transformRes = m_state.script(l_transformScript);
+        Category l_transformCategory = l_transformRes.get<Category>();
+        m_categoryFactory->RegisterCategory(l_transformCategory);
     }
 
     LuaContext::~LuaContext()
@@ -88,8 +93,8 @@ namespace RanakEngine::Core
         m_state[_name] = _obj;
     }
 
-    std::string LuaContext::GetLoadedCategories()
+    std::string LuaContext::GetCategoryNames()
     {
-        return m_categoryFactory->GetLoadedCategories();
+        return m_categoryFactory->GetCategoryNames();
     }
 }

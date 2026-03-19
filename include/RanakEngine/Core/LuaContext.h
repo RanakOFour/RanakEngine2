@@ -84,7 +84,10 @@ namespace RanakEngine::Core
 
         sol::state *GetState() { return &m_state; };
 
-        std::string GetLoadedCategories();
+        /*
+            @brief Returns semi-colon (;) separated string of the names of all loaded categories
+        */
+        std::string GetCategoryNames();
     };
 }
 

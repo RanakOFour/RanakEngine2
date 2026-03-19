@@ -115,7 +115,7 @@ namespace RanakEngine::Core
         m_nameToSignature[_name] = m_signatureToCategory[_signature]->m_signature;
     }
 
-    std::string CategoryFactory::GetLoadedCategories()
+    std::string CategoryFactory::GetCategoryNames()
     {
         std::string l_toReturn;
         for(auto& l_pair : m_nameToSignature)
