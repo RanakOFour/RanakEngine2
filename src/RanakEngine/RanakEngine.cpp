@@ -29,7 +29,7 @@ namespace RanakEngine
     void Shutdown(EngineContents &_contents)
     {
         // Physics::Stop();
-        Log::Message("Stopping core");
+        Log::Message("Stopping Core");
         Core::Stop();
 
         Log::Message("Stopping IO");

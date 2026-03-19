@@ -79,6 +79,6 @@ namespace RanakEngine::Math
 
     void Stop()
     {
-        MathTable.clear();
+        MathTable.abandon();
     }
 }

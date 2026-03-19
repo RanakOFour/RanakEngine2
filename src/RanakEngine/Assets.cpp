@@ -55,7 +55,7 @@ namespace RanakEngine::Asset
 
     void Stop()
     {
-        AssetTable.clear();
+        AssetTable.abandon();
         AssetManager.reset();
     }
 }

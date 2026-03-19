@@ -22,6 +22,7 @@ namespace RanakEngine::Core
 
     LuaContext::~LuaContext()
     {
+        m_categoryFactory.reset();
     }
 
     std::shared_ptr<LuaContext> LuaContext::Init()

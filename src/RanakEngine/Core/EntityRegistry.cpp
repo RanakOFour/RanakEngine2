@@ -10,8 +10,8 @@ namespace RanakEngine::Core
     , m_categories()
     , m_entityBitset()
     {
-        m_luaContext = LuaContext::Instance().lock();
-        m_dataTable = m_luaContext->CreateTable();
+        m_luaContext = LuaContext::Instance();
+        m_dataTable = m_luaContext.lock()->CreateTable();
         m_dataTable.create_named("Entities");
         m_dataTable.create_named("Categories");
     }
@@ -38,8 +38,8 @@ namespace RanakEngine::Core
         l_newEntityTable.create_named("attributes");
 
         // Add to transform
-        auto l_signature = m_luaContext->GetCategory("Transform")
-                                .lock()->GetSignature();
+        auto l_signature = m_luaContext.lock()->GetCategory("Transform")
+                                       .lock()->GetSignature();
         AddToCategory(l_newID, l_signature);
 
         return l_newID;
@@ -83,7 +83,7 @@ namespace RanakEngine::Core
         if (m_categories.find(_signature) == m_categories.end())
         {
             // Ask context for registered category
-            std::shared_ptr<Category> l_categoryPtr = m_luaContext->GetCategory(_signature).lock();
+            std::shared_ptr<Category> l_categoryPtr = m_luaContext.lock()->GetCategory(_signature).lock();
 
             if (l_categoryPtr.get() != nullptr)
             {

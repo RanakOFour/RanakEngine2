@@ -68,7 +68,7 @@ namespace RanakEngine::IO
 
     void Stop()
     {
-        IOTable.clear();
+        IOTable.abandon();
         IOManager.reset();
     }
 }

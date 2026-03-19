@@ -33,7 +33,7 @@ namespace RanakEngine::Core
 
     void Stop()
     {
-        CoreTable.clear();
+        CoreTable.abandon();
         CoreManager.reset();
     }
 }

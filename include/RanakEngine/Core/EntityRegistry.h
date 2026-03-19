@@ -16,7 +16,7 @@ namespace RanakEngine::Core
     class EntityRegistry
     {
         private:
-        std::shared_ptr<LuaContext> m_luaContext;
+        std::weak_ptr<LuaContext> m_luaContext;
 
         int m_nextFreeId;
         std::vector<int> m_idsToDelete;

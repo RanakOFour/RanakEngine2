@@ -127,7 +127,8 @@ namespace RanakEngine::Log
 
     void Stop()
     {
-        LogTable.clear();
+        LogTable.abandon();
         LogManager->Stop();
+        LogManager.reset();
     }
 }
