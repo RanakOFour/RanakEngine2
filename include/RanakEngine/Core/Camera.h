@@ -26,7 +26,7 @@ namespace RanakEngine::Core
         float m_rotation;
 
         float m_fov;
-        Vector2 m_cameraSize;
+        float m_cameraWidth;
 
         bool m_viewDirty;
 
@@ -45,8 +45,8 @@ namespace RanakEngine::Core
                                         "getRotation", &Camera::GetRotation,
                                         "setFOV", &Camera::SetFOV,
                                         "getFOV", &Camera::GetFOV,
-                                        "setCameraSize", &Camera::SetCameraSize,
-                                        "getCameraSize", &Camera::GetCameraSize,
+                                        "setCameraWidth", &Camera::SetCameraWidth,
+                                        "getCameraWidth", &Camera::GetCameraWidth,
                                         "isPerspective", &Camera::IsPerspective,
                                         "setPerspective", &Camera::SetPerspective,
                                         "setOrthographic", &Camera::SetOrthographic);
@@ -69,8 +69,8 @@ namespace RanakEngine::Core
         void SetFOV(float _fov);
         float GetFOV();
 
-        void SetCameraSize(Vector2 _size);
-        Vector2 GetCameraSize();
+        void SetCameraWidth(float _width);
+        float GetCameraWidth();
 
         bool IsPerspective() const
         {

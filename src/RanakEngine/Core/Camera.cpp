@@ -16,7 +16,7 @@ namespace RanakEngine::Core
     , m_rotation(0.0f)
     , m_fov(45.0f)
     , m_projectionType(ProjectionType::Orthographic)
-    , m_cameraSize(10.0f, 10.0f)
+    , m_cameraWidth(10.0f)
     , m_viewDirty(true)
     {
         SetOrthographic();
@@ -211,9 +211,9 @@ namespace RanakEngine::Core
         return m_fov;
     }
 
-    void Camera::SetCameraSize(Vector2 _size)
+    void Camera::SetCameraWidth(float _width)
     {
-        m_cameraSize = _size;
+        m_cameraWidth = _width;
         if(m_projectionType == ProjectionType::Perspective)
         {
             SetPerspective();
@@ -224,15 +224,20 @@ namespace RanakEngine::Core
         }
     }
 
-    Vector2 Camera::GetCameraSize()
+    float Camera::GetCameraWidth()
     {
-        return m_cameraSize;
+        return m_cameraWidth;
     }
 
     void Camera::SetPerspective()
     {
+        
         m_projectionType = ProjectionType::Perspective;
-        m_projection = glm::perspective(m_fov, m_cameraSize.x/m_cameraSize.y, 0.1f, 100.0f);
+        
+        auto l_window = IO::Manager::Instance().lock()->GetWindow().lock();
+        Vector2 l_screenSize = l_window->GetScreenSize();
+
+        m_projection = glm::perspective(glm::radians(m_fov), l_screenSize.x / l_screenSize.y, 0.1f, 100.0f);
     }
 
     void Camera::SetOrthographic()
@@ -245,9 +250,9 @@ namespace RanakEngine::Core
         float l_aspectRatio = l_viewportSize.x / l_viewportSize.y;
         
         // Calculate the height based on the width and viewport aspect ratio to prevent stretching
-        float l_orthoHeight = m_cameraSize.x / l_aspectRatio;
+        float l_orthoHeight = m_cameraWidth / l_aspectRatio;
         
-        m_projection = glm::ortho(-m_cameraSize.x/2.0f, m_cameraSize.x/2.0f, -l_orthoHeight/2.0f, l_orthoHeight/2.0f, 0.1f, 100.0f);
+        m_projection = glm::ortho(-m_cameraWidth/2.0f, m_cameraWidth/2.0f, -l_orthoHeight/2.0f, l_orthoHeight/2.0f, 0.1f, 100.0f);
     }
 
     glm::mat4 Camera::GetProjection()
