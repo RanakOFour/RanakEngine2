@@ -52,6 +52,19 @@ struct Vector2
         return glm::vec2(x, y);
     };
 
+    float operator[](int _idx)
+    {
+        switch(_idx)
+        {
+        case 0:
+            return x;
+        case 1:
+            return y;
+        default:
+            std::runtime_error(std::string("Invalid index to Vector3: " + std::to_string(_idx)));
+        } 
+    };
+
     /**
      * @brief Calculates the length of the vector.
      * 

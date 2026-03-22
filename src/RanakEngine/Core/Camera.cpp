@@ -45,11 +45,13 @@ namespace RanakEngine::Core
         auto l_assetManager = Asset::Manager::Instance().lock();
 
         sol::optional<std::weak_ptr<Asset::Model>> l_modelPtr = _drawable.raw_get<sol::optional<std::weak_ptr<Asset::Model>>>("model");
+        
+        std::string l_modelPath = _drawable.raw_get<std::string>("modelPath");
+        std::shared_ptr<Asset::Model> l_model;
 
         if(!l_modelPtr.has_value())
         {
-            // Try to load model from path in drawable, otherwise load default model
-            std::string l_modelPath = _drawable.raw_get<std::string>("modelPath");
+            // Instantiate value for ptr
             if(l_modelPath == "")
             {
                 l_modelPath = "./resources/Models/FlatTexture.obj";
@@ -59,22 +61,41 @@ namespace RanakEngine::Core
 
             if(l_modelWPtr.lock() == nullptr)
             {
-                Log::Warning("Object cannot be drawn: invalid model path");
+                Log::Warning("Object cannot be drawn: invalid model path" + l_modelPath);
                 return;
             }
 
             _drawable.raw_set("model", l_modelWPtr);
             l_modelPtr = _drawable.raw_get<std::weak_ptr<Asset::Model>>("model");
+
+            l_model = l_modelPtr.value().lock();
+        }
+        else
+        {
+            // Check if path has changed
+            l_model = l_modelPtr.value().lock();
+            if(l_modelPath != "" && l_model->GetPath() != l_modelPath)
+            {
+                auto l_modelWPtr = l_assetManager->Load<Asset::Model>(l_modelPath);
+
+                if(l_modelWPtr.lock() == nullptr)
+                {
+                    Log::Warning("Object cannot be drawn: invalid model path " + l_modelPath);
+                    return;
+                }
+
+                _drawable.raw_set("model", l_modelWPtr);
+                l_modelPtr = _drawable.raw_get<std::weak_ptr<Asset::Model>>("model");
+            }
         }
 
-        auto l_model = l_modelPtr.value().lock();
-
         sol::optional<std::weak_ptr<Asset::Texture>> l_texturePtr = _drawable.raw_get<sol::optional<std::weak_ptr<Asset::Texture>>>("texture");
-
+        
+        std::string l_texturePath = _drawable.raw_get<std::string>("texturePath");
+        std::shared_ptr<Asset::Texture> l_texture;
+        
         if(!l_texturePtr.has_value())
         {
-            // Try to load texture from path in drawable, otherwise load default texture
-            std::string l_texturePath = _drawable.raw_get<std::string>("texturePath");
             if(l_texturePath != "")
             {
                 auto l_textureWPtr = l_assetManager->Load<Asset::Texture>(l_texturePath);
@@ -87,17 +108,36 @@ namespace RanakEngine::Core
 
                 _drawable.raw_set("texture", l_textureWPtr);
                 l_texturePtr = _drawable.raw_get<std::weak_ptr<Asset::Texture>>("texture");
+
+                l_texture = l_texturePtr.value().lock();
+            }
+        }
+        else
+        {
+            // Check if path has changed
+            l_texture = l_texturePtr.value().lock();
+            if(l_texturePath != "" && l_texture->GetPath() != l_texturePath)
+            {
+                auto l_textureWPtr = l_assetManager->Load<Asset::Texture>(l_texturePath);
+
+                if(l_textureWPtr.lock() == nullptr)
+                {
+                    Log::Warning("Object cannot be drawn: invalid model path");
+                    return;
+                }
+
+                _drawable.raw_set("texture", l_textureWPtr);
+                l_texturePtr = _drawable.raw_get<std::weak_ptr<Asset::Texture>>("texture");
             }
         }
 
-        auto l_texture = l_texturePtr.value().lock();
-
         sol::optional<std::weak_ptr<Asset::Shader>> l_shaderPtr = _drawable.raw_get<sol::optional<std::weak_ptr<Asset::Shader>>>("shader");
 
+        std::string l_shaderPath = _drawable.raw_get<std::string>("shaderPath");
+        std::shared_ptr<Asset::Shader> l_shader;
+        
         if(!l_shaderPtr.has_value())
         {
-            // Try to load shader from path in drawable, otherwise load default shader
-            std::string l_shaderPath = _drawable.raw_get<std::string>("shaderPath");
             if(l_shaderPath == "")
             {
                 l_shaderPath = "./resources/Shaders/default/frag.fs;./resources/Shaders/default/vert.vs";
@@ -113,9 +153,26 @@ namespace RanakEngine::Core
 
             _drawable.raw_set("shader", l_shaderWPtr);
             l_shaderPtr = _drawable.raw_get<std::weak_ptr<Asset::Shader>>("shader");
+            l_shader = l_shaderPtr.value().lock();
         }
+        else
+        {
+            // Check if path has changed
+            l_shader = l_shaderPtr.value().lock();
+            if(l_shaderPath != "" && l_shader->GetPath() != l_shaderPath)
+            {
+                auto l_shaderWPtr = l_assetManager->Load<Asset::Shader>(l_shaderPath);
 
-        auto l_shader = l_shaderPtr.value().lock();
+                if(l_shaderWPtr.lock() == nullptr)
+                {
+                    Log::Warning("Object cannot be drawn: invalid model path");
+                    return;
+                }
+
+                _drawable.raw_set("shader", l_shaderWPtr);
+                l_shaderPtr = _drawable.raw_get<std::weak_ptr<Asset::Shader>>("shader");
+            }
+        }
         
         l_shader->Use();
         

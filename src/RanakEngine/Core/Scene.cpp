@@ -2,6 +2,7 @@
 #include "RanakEngine/Core/LuaContext.h"
 #include "RanakEngine/Core/CategoryFactory.h"
 #include "RanakEngine/Core/Category.h"
+#include "RanakEngine/Core/Raycast.h"
 
 #include "RanakEngine/Log.h"
 
@@ -118,6 +119,50 @@ namespace RanakEngine::Core
         {
             l_rule.Draw(m_registry);
         }
+    }
+
+    int Scene::Raycast(Ray& _ray, RaycastHit& _out)
+    {
+        std::map<float, float> l_hitEntities;
+        sol::table l_entities = m_registry.GetEntityTable();
+
+        auto l_pairs = l_entities.pairs();
+
+        for(auto& l_entity : l_pairs)
+        {
+            // Just AABB it
+
+            sol::table l_transform = l_entity.second.as<sol::table>().traverse_raw_get<sol::table>("attributes", "Transform");
+            Vector3 l_position = l_transform.raw_get<Vector3>("Position");
+            Vector3 l_scale = l_transform.raw_get<Vector3>("Scale");
+
+            Vector3 l_min = l_position - (l_scale);
+            Vector3 l_max = l_position + (l_scale);
+
+            bool l_hit = AABBIntersection(_ray, l_min, l_max, _out.hitInfo);
+
+            if(l_hit)
+            {
+                l_hitEntities[l_entity.first.as<float>()] = _out.hitInfo.distance;
+            }
+        }
+
+        if(l_hitEntities.size() == 0)
+        {
+            return -1;
+        }
+
+        float l_closestEntity = (*(l_hitEntities.begin())).first;
+
+        for(auto& l_entity : l_hitEntities)
+        {
+            if(l_entity.second < l_hitEntities[l_closestEntity])
+            {
+                l_closestEntity = l_entity.first;
+            }
+        }
+
+        return (int)l_closestEntity;
     }
 
     EntityRegistry* Scene::GetRegistry()

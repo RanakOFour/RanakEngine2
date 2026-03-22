@@ -18,6 +18,8 @@ namespace RanakEngine
 
 namespace Core
 {
+    struct Ray;
+    struct RaycastHit;
     class Camera;
     class Scene
     {
@@ -62,6 +64,8 @@ namespace Core
         void Init();
         void Update(float _deltaTime);
         void Draw();
+
+        int Raycast(Ray& _ray, RaycastHit& _out);
 
         EntityRegistry* GetRegistry();
         sol::table GetSceneTable();

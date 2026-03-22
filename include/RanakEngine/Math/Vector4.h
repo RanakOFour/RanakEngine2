@@ -19,10 +19,10 @@ struct Vector3;
  */
 struct Vector4
 {
-    union {
-        struct { float x, y, z, w; };  ///< Vector components
-        struct { float r, g, b, a; };  ///< Color component aliases (RGBA)
-    };
+    union {float x, r; };
+    union {float y, g; };
+    union {float z, b; };
+    union {float w, a; };
 
     /**
      * @brief Creates a zero vector.
@@ -153,6 +153,23 @@ struct Vector4
     Vector4 operator-() const
     {
         return Vector4(-x, -y, -z, -w);
+    };
+
+    float operator[](int _idx)
+    {
+        switch(_idx)
+        {
+        case 0:
+            return x;
+        case 1:
+            return y;
+        case 2:
+            return z;
+        case 3:
+            return w;
+        default:
+            std::runtime_error(std::string("Invalid index to Vector3: " + std::to_string(_idx)));
+        } 
     };
 };
 

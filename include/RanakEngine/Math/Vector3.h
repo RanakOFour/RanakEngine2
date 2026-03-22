@@ -3,6 +3,7 @@
 
 #include "GLM/vec3.hpp"
 
+#include <stdexcept>
 #include <string>
 
 struct Vector2;
@@ -16,11 +17,9 @@ struct Vector2;
  */
 struct Vector3
 {
-    union
-    {
-        struct { float x, y, z; };  ///< Standard component names
-        struct { float r, g, b; };  ///< Color component aliases (RGB)
-    };
+    union {float x, r; };
+    union {float y, g; };
+    union {float z, b; };
 
     /**
      * @brief Creates a zero vector.
@@ -64,6 +63,21 @@ struct Vector3
     explicit operator glm::vec3() const
     {
         return glm::vec3(x, y, z);
+    };
+
+    float operator[](int _idx)
+    {
+        switch(_idx)
+        {
+        case 0:
+            return x;
+        case 1:
+            return y;
+        case 2:
+            return z;
+        default:
+            std::runtime_error(std::string("Invalid index to Vector3: " + std::to_string(_idx)));
+        } 
     };
 
     /**
