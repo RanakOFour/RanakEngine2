@@ -67,6 +67,8 @@ struct Vector3
 
     float operator[](int _idx)
     {
+        assert(_idx < 3);
+
         switch(_idx)
         {
         case 0:
@@ -75,8 +77,6 @@ struct Vector3
             return y;
         case 2:
             return z;
-        default:
-            std::runtime_error(std::string("Invalid index to Vector3: " + std::to_string(_idx)));
         } 
     };
 

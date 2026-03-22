@@ -10,6 +10,10 @@
 
 namespace RanakEngine
 {
+namespace Asset
+{
+    class LuaFile;
+}
 namespace Core
 {
     class LuaContext;
@@ -26,6 +30,9 @@ namespace Core
 
         std::weak_ptr<Category> RegisterCategory(sol::table _definitionTable);
         std::weak_ptr<Category> RegisterCategory(Category _category);
+
+        void ReloadCategory(std::weak_ptr<Asset::LuaFile> _file);
+
         public:
         CategoryFactory();
         ~CategoryFactory();

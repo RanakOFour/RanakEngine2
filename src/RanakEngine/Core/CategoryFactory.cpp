@@ -22,10 +22,7 @@ namespace RanakEngine::Core
 
     std::weak_ptr<Category> CategoryFactory::RegisterCategory(Category _category)
     {
-        std::string l_categoryName = _category.GetName();
-        sol::table l_baseAttributes = _category.GetBaseData();
-
-        auto l_newCategoryPtr = std::make_shared<Category>(l_categoryName, l_baseAttributes);
+        std::shared_ptr<Category> l_newCategoryPtr(&_category);
 
         std::bitset<1024> l_newSignature;
         l_newSignature.set(m_size);
@@ -68,6 +65,11 @@ namespace RanakEngine::Core
         m_size++;
 
         return l_newCategoryPtr;
+    }
+
+    void CategoryFactory::ReloadCategory(std::weak_ptr<Asset::LuaFile> _file)
+    {
+        
     }
 
     std::weak_ptr<Category> CategoryFactory::GetByName(std::string _name)

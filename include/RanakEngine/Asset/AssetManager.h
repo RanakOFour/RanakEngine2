@@ -21,6 +21,19 @@ namespace RanakEngine::Asset
         ~Manager();
         static std::shared_ptr<Asset::Manager> Init();
         static std::weak_ptr<Asset::Manager> Instance();
+
+        template<typename T>
+        std::weak_ptr<T> CreateNewReference(std::weak_ptr<T> _asset)
+        {
+            std::shared_ptr<AssetFile> l_assetRef = std::static_pointer_cast<AssetFile>(_asset.lock());
+
+            if(m_resourceMap.find(l_assetRef->GetPath()) == m_resourceMap.end())
+            {
+                m_resourceMap[l_assetRef->GetPath()] = l_assetRef;
+            }
+
+            return std::static_pointer_cast<T>(m_resourceMap[l_assetRef->GetPath()]);
+        }
         
         template<typename T>
         std::weak_ptr<T> Load(std::string _path)

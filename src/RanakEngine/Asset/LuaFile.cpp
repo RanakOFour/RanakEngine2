@@ -1,5 +1,6 @@
 #include "RanakEngine/Asset/LuaFile.h"
 #include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/Core/CoreManager.h"
 
 #include <fstream> 
 #include <sstream>
@@ -35,6 +36,26 @@ namespace RanakEngine::Asset
     LuaFile::~LuaFile()
     {
 
+    }
+
+    void LuaFile::SetCategory(std::shared_ptr<Core::Category> _category)
+    {
+        m_category = _category;
+    }
+
+    void LuaFile::FlagReloaded()
+    {
+        m_toBeReloaded = true;
+    }
+
+    bool LuaFile::GetReloaded()
+    {
+        return m_toBeReloaded;
+    }
+
+    std::weak_ptr<Core::Category> LuaFile::GetCategory()
+    {
+        return m_category;
     }
 
     std::string LuaFile::GetName()

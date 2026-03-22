@@ -1,5 +1,6 @@
 #include "RanakEngine/Core/Category.h"
 #include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/Asset/LuaFile.h"
 
 namespace RanakEngine::Core
 {
@@ -135,5 +136,15 @@ namespace RanakEngine::Core
     std::bitset<1024> Category::GetSignature()
     {
         return m_signature;
+    }
+
+    void Category::SetOriginFile(std::weak_ptr<Asset::LuaFile> _file)
+    {
+        m_originFile = _file;
+    }
+
+    std::weak_ptr<Asset::LuaFile> Category::GetOriginFile()
+    {
+        return m_originFile;
     }
 }

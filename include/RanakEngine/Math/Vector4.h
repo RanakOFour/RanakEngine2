@@ -157,6 +157,8 @@ struct Vector4
 
     float operator[](int _idx)
     {
+        assert(_idx < 4);
+        
         switch(_idx)
         {
         case 0:
@@ -167,8 +169,6 @@ struct Vector4
             return z;
         case 3:
             return w;
-        default:
-            std::runtime_error(std::string("Invalid index to Vector3: " + std::to_string(_idx)));
         } 
     };
 };

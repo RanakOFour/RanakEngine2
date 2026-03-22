@@ -8,6 +8,11 @@
 #include <vector>
 #include <map>
 
+namespace RanakEngine::Asset
+{
+    class LuaFile;
+}
+
 namespace RanakEngine::Core
 {
     class LuaContext;
@@ -18,6 +23,8 @@ namespace RanakEngine::Core
         friend LuaContext;
         friend CategoryFactory;
         private:
+        std::weak_ptr<Asset::LuaFile> m_originFile;
+
         std::string m_name;
         std::bitset<1024> m_signature;
         sol::table m_baseAttributeTable;
@@ -54,6 +61,9 @@ namespace RanakEngine::Core
         std::string GetName();
         int GetSize();
         std::bitset<1024> GetSignature();
+
+        void SetOriginFile(std::weak_ptr<Asset::LuaFile> _file);
+        std::weak_ptr<Asset::LuaFile> GetOriginFile();
     };
 }
 

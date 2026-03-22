@@ -3,6 +3,8 @@
 #include "RanakEngine/Core/Category.h"
 #include "RanakEngine/Core/Camera.h"
 
+#include "RanakEngine/Assets.h"
+
 #include "RanakEngine/Log.h"
 
 namespace RanakEngine::Core
@@ -79,8 +81,12 @@ namespace RanakEngine::Core
     {
         Log::Message("Creating category from file " + _file.lock()->GetPath() + "...\n");
         Category l_categoryTable = RunScript<Category>(_file);
+        l_categoryTable.SetOriginFile(_file);
         
-        return m_categoryFactory->RegisterCategory(l_categoryTable);
+        auto l_categoryPtr = m_categoryFactory->RegisterCategory(l_categoryTable);
+        _file.lock()->SetCategory(l_categoryPtr.lock());
+
+        return l_categoryPtr;
     }
 
     std::weak_ptr<Category> LuaContext::GetCategory(std::bitset<1024> _signature)
