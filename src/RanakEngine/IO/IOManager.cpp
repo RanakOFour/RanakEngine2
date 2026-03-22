@@ -96,6 +96,8 @@ namespace RanakEngine::IO
         std::string l_filePath = "";
         SDL_ShowOpenFileDialog(FileDialogSelected, &l_filePath, m_window->GetSDLWindow(), m_FileDialogFilters, 3, m_defaultFilePath.c_str(), false);
 
+        m_fileDialogEnded = false;
+
         // Force program to wait until file is selected,
         // because SDL file dialog is async
         while(!m_fileDialogEnded)
@@ -114,6 +116,7 @@ namespace RanakEngine::IO
         std::string l_filePath = "";
         SDL_ShowSaveFileDialog(FileDialogSelected, &l_filePath, m_window->GetSDLWindow(), m_FileDialogFilters, 3, m_defaultFilePath.c_str());
 
+        m_fileDialogEnded = false;
         // Force program to wait until file is selected,
         // because SDL file dialog is async
         while(!m_fileDialogEnded)

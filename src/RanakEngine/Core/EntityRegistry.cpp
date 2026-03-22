@@ -38,7 +38,7 @@ namespace RanakEngine::Core
         l_newEntityTable.create_named("attributes");
 
         // Add to transform
-        auto l_signature = m_luaContext.lock()->GetCategory("Transform")
+        std::bitset<1024> l_signature = m_luaContext.lock()->GetCategory("Transform")
                                        .lock()->GetSignature();
         AddToCategory(l_newID, l_signature);
 

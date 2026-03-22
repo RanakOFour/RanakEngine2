@@ -22,7 +22,7 @@ namespace RanakEngine::Core
 
     std::weak_ptr<Category> CategoryFactory::RegisterCategory(Category _category)
     {
-        std::shared_ptr<Category> l_newCategoryPtr(&_category);
+        std::shared_ptr<Category> l_newCategoryPtr = std::make_shared<Category>(_category);
 
         std::bitset<1024> l_newSignature;
         l_newSignature.set(m_size);

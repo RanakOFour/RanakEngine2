@@ -20,8 +20,8 @@ namespace RanakEngine
         Log::DefineLuaLib();
 
         // Load transform category (Required by registry to exist)
-        const std::string l_transformCategoryText = "local categoryName = 'Transform'\nlocal baseAttributes = {\nPosition = Vector3.new(0, 0, 0),\nRotation = Vector3.new(0),\nScale = Vector3.new(1)\n}\nreturn Category.new(categoryName, baseAttributes)";
-        l_toReturn.core->GetLuaContext()->CreateCategory(l_transformCategoryText);
+        auto l_transformFile = l_toReturn.resources->Load<Asset::LuaFile>("./resources/Categories/Transform.lua");
+        l_toReturn.core->GetLuaContext()->CreateCategory(l_transformFile);
 
         return l_toReturn;
     };
