@@ -1,6 +1,8 @@
 #include "RanakEngine/Asset/LuaFile.h"
 #include "RanakEngine/Core/LuaContext.h"
 #include "RanakEngine/Core/CoreManager.h"
+#include "RanakEngine/Core/Category.h"
+#include "RanakEngine/Log.h"
 
 #include <fstream> 
 #include <sstream>
@@ -36,6 +38,32 @@ namespace RanakEngine::Asset
     LuaFile::~LuaFile()
     {
 
+    }
+
+    void LuaFile::Reload()
+    {
+        Core::LuaContext::Instance().lock()
+        ->ReloadCategory(m_category.lock()
+                         ->GetOriginFile());
+    }
+
+    void LuaFile::Save()
+    {
+        std::ofstream l_stream(m_path, std::ios::out | std::ios::trunc);
+        if (!l_stream.is_open())
+        {
+            Log::Warning("LuaFile::Save() - Stream could not be opened for writing at " + m_path);
+            return;
+        }
+
+        l_stream.write(m_contents.data(), m_contents.size());
+        l_stream.close();
+    }
+
+    void LuaFile::SetCode(std::string _code)
+    {
+        m_contents.clear();
+        m_contents.assign(_code.begin(), _code.end());
     }
 
     void LuaFile::SetCategory(std::shared_ptr<Core::Category> _category)

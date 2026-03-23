@@ -68,6 +68,8 @@ namespace RanakEngine::Core
         std::weak_ptr<Core::Category> GetCategory(std::bitset<1024> _signature);
         std::weak_ptr<Core::Category> GetCategory(std::string _name);
 
+        void ReloadCategory(std::weak_ptr<Asset::LuaFile> _file);
+
         template <typename T>
         void AddVariable(std::string _name, T &_var)
         {

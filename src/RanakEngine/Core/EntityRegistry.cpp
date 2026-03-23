@@ -74,7 +74,7 @@ namespace RanakEngine::Core
             m_freeIds.push_back(l_id);
         }
 
-        m_freeIds.erase(m_freeIds.begin(), m_freeIds.end());
+        m_idsToDelete.clear();
     }
 
     void EntityRegistry::AddToCategory(int _id, std::bitset<1024> _signature)

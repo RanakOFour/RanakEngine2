@@ -27,49 +27,37 @@ namespace RanakEngine::Core
         std::bitset<1024> l_newSignature;
         l_newSignature.set(m_size);
 
-        m_nameToSignature.insert({l_newCategoryPtr->m_name, l_newSignature});
+        m_nameToSignature[l_newCategoryPtr->m_name] = l_newSignature;
 
         l_newCategoryPtr->m_signature = l_newSignature;
 
-        m_signatureToCategory.insert({l_newSignature, l_newCategoryPtr});
+        m_signatureToCategory[l_newSignature] = l_newCategoryPtr;
 
         m_size++;
 
         return l_newCategoryPtr;
     }
 
-    std::weak_ptr<Category> CategoryFactory::RegisterCategory(sol::table _definitionTable)
+    std::weak_ptr<Category> CategoryFactory::ReloadCategory(Category _category, std::bitset<1024> _signature, std::string _oldName)
     {
-        // Give category default name of Category{0}, where {0} is m_size, or the registered name is not null
-        std::string l_categoryName = _definitionTable.raw_get<std::string>("name");
-        if(l_categoryName == "")
+        std::shared_ptr<Category> l_newCategoryPtr = std::make_shared<Category>(_category);
+        l_newCategoryPtr->m_signature = _signature;
+
+        // Remove the old category from our maps
+        auto l_signatureIt = m_nameToSignature.find(_oldName);
+        if (l_signatureIt != m_nameToSignature.end())
         {
-            l_categoryName = "Category" + std::to_string(m_size);
+            std::bitset<1024> l_signature = l_signatureIt->second;
+            m_signatureToCategory.erase(l_signature);
+            m_nameToSignature.erase(l_signatureIt);
         }
-
-        Log::Message("Registering category " + l_categoryName + "...\n");
-
-        sol::table l_baseAttributes = _definitionTable.raw_get<sol::table>("baseAttributes");
-
-        auto l_newCategoryPtr = std::make_shared<Category>(l_categoryName, l_baseAttributes);
-
-        std::bitset<1024> l_newSignature;
-        l_newSignature.set(m_size);
-
-        m_nameToSignature.insert({l_newCategoryPtr->m_name, l_newSignature});
-
-        l_newCategoryPtr->m_signature = l_newSignature;
-
-        m_signatureToCategory.insert({l_newSignature, l_newCategoryPtr});
-
+        
+        m_nameToSignature[l_newCategoryPtr->GetName()] = _signature;
+        m_signatureToCategory[_signature] = l_newCategoryPtr;
+        
         m_size++;
 
         return l_newCategoryPtr;
-    }
-
-    void CategoryFactory::ReloadCategory(std::weak_ptr<Asset::LuaFile> _file)
-    {
-        
     }
 
     std::weak_ptr<Category> CategoryFactory::GetByName(std::string _name)

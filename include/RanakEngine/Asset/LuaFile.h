@@ -22,7 +22,7 @@ namespace RanakEngine::Asset
         bool m_toBeReloaded;
         std::string m_name;
 
-        std::shared_ptr<Core::Category> m_category;
+        std::weak_ptr<Core::Category> m_category;
 
         void SetCategory(std::shared_ptr<Core::Category> _category);
 
@@ -32,13 +32,17 @@ namespace RanakEngine::Asset
 
         void Reload();
 
+        void Save();
+
         void FlagReloaded();
         bool GetReloaded();
+
+        void SetCode(std::string _code);
+        std::string GetCode();
 
         std::weak_ptr<Core::Category> GetCategory();
 
         std::string GetName();
-        std::string GetCode();
     };
 }
 

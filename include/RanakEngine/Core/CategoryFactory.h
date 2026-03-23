@@ -28,10 +28,9 @@ namespace Core
         std::unordered_map<std::bitset<1024>, std::shared_ptr<Category>> m_signatureToCategory;
         std::unordered_map<std::string, std::bitset<1024>> m_nameToSignature;
 
-        std::weak_ptr<Category> RegisterCategory(sol::table _definitionTable);
         std::weak_ptr<Category> RegisterCategory(Category _category);
 
-        void ReloadCategory(std::weak_ptr<Asset::LuaFile> _file);
+        std::weak_ptr<Category> ReloadCategory(Category _category, std::bitset<1024> _signature, std::string _oldName);
 
         public:
         CategoryFactory();
