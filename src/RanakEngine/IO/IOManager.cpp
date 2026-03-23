@@ -57,11 +57,14 @@ namespace RanakEngine::IO
         {
             std::string l_error = SDL_GetError();
             Log::Error("An error occured: " + l_error);
+        
+            m_fileDialogEnded = true;
             return;
         }
         else if (!*filelist)
         {
             Log::Message( "The user did not select any file.\nMost likely the dialog was cancelled.");
+            m_fileDialogEnded = true;
             return;
         }
 
