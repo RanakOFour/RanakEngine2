@@ -41,9 +41,6 @@ namespace RanakEngine::Core
 
     void Camera::Draw(sol::table _transform, sol::table _drawable)
     {
-        // Get model, texture, and shader from drawable, loading them if they haven't been already
-        auto l_assetManager = Asset::Manager::Instance().lock();
-
         sol::optional<std::weak_ptr<Asset::Model>> l_modelPtr = _drawable.raw_get<sol::optional<std::weak_ptr<Asset::Model>>>("model");
         
         std::string l_modelPath = _drawable.raw_get<std::string>("modelPath");
@@ -57,7 +54,7 @@ namespace RanakEngine::Core
                 l_modelPath = "./resources/Models/FlatTexture.obj";
             }
 
-            auto l_modelWPtr = l_assetManager->Load<Asset::Model>(l_modelPath);
+            auto l_modelWPtr = Asset::Load<Asset::Model>(l_modelPath);
 
             if(l_modelWPtr.lock() == nullptr)
             {
@@ -76,7 +73,7 @@ namespace RanakEngine::Core
             l_model = l_modelPtr.value().lock();
             if(l_modelPath != "" && l_model->GetPath() != l_modelPath)
             {
-                auto l_modelWPtr = l_assetManager->Load<Asset::Model>(l_modelPath);
+                auto l_modelWPtr = Asset::Load<Asset::Model>(l_modelPath);
 
                 if(l_modelWPtr.lock() == nullptr)
                 {
@@ -98,7 +95,7 @@ namespace RanakEngine::Core
         {
             if(l_texturePath != "")
             {
-                auto l_textureWPtr = l_assetManager->Load<Asset::Texture>(l_texturePath);
+                auto l_textureWPtr = Asset::Load<Asset::Texture>(l_texturePath);
 
                 if(l_textureWPtr.lock() == nullptr)
                 {
@@ -118,7 +115,7 @@ namespace RanakEngine::Core
             l_texture = l_texturePtr.value().lock();
             if(l_texturePath != "" && l_texture->GetPath() != l_texturePath)
             {
-                auto l_textureWPtr = l_assetManager->Load<Asset::Texture>(l_texturePath);
+                auto l_textureWPtr = Asset::Load<Asset::Texture>(l_texturePath);
 
                 if(l_textureWPtr.lock() == nullptr)
                 {
@@ -143,7 +140,7 @@ namespace RanakEngine::Core
                 l_shaderPath = "./resources/Shaders/default/frag.fs;./resources/Shaders/default/vert.vs";
             }
 
-            auto l_shaderWPtr = l_assetManager->Load<Asset::Shader>(l_shaderPath);
+            auto l_shaderWPtr = Asset::Load<Asset::Shader>(l_shaderPath);
 
             if(l_shaderWPtr.lock() == nullptr)
             {
@@ -161,7 +158,7 @@ namespace RanakEngine::Core
             l_shader = l_shaderPtr.value().lock();
             if(l_shaderPath != "" && l_shader->GetPath() != l_shaderPath)
             {
-                auto l_shaderWPtr = l_assetManager->Load<Asset::Shader>(l_shaderPath);
+                auto l_shaderWPtr = Asset::Load<Asset::Shader>(l_shaderPath);
 
                 if(l_shaderWPtr.lock() == nullptr)
                 {

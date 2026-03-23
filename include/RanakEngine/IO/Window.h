@@ -17,9 +17,9 @@ namespace RanakEngine::IO
         std::shared_ptr<SDL_Window> m_sdlWindow;
         SDL_GLContext m_sdlglContext;
         std::shared_ptr<SDL_AudioStream> m_audioStream;
-        Vector4 m_clearColour;
-        Vector2 m_screenSize;
-        float m_aspectRatio;
+        Vector4 m_clearColour = Vector4(0.4f, 0.4f, 0.8f, 1.0f);
+        Vector2 m_screenSize = Vector2(1920.0f, 1080.0f);
+        float m_aspectRatio = 1920.0f / 1080.0f;
 
         public:
         Window(Vector2 _screenSize, std::string _title = "RanakEngine");

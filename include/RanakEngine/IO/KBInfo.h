@@ -12,10 +12,10 @@ namespace RanakEngine::IO
      */
     struct KBInfo
     {
-        int kbSize; ///< Size of the keyboard input map (always 322 for SDL keys)
+        int kbSize = 322; ///< Size of the keyboard input map (always 322 for SDL keys)
 
         // 322 SDLk_* keys
-        bool inputMap[322]; ///< Array tracking the state of each keyboard key
+        bool inputMap[322]{false}; ///< Array tracking the state of each keyboard key
     };
 }
 

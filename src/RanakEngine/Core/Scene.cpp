@@ -58,6 +58,12 @@ namespace RanakEngine::Core
         m_registry.RemoveEntity(_id);
     }
 
+    void Scene::RenameEntity(int _id, const std::string _newName)
+    {
+        sol::table l_entity = m_registry.GetEntityTable().raw_get<sol::table>(_id);
+        l_entity["name"] = _newName;
+    }
+
     void Scene::RemoveCategory(std::bitset<1024> _signature)
     {
         std::vector<int> l_entities = m_registry.GetEntitiesWith(_signature);

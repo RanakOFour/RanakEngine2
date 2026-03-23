@@ -23,6 +23,7 @@ namespace RanakEngine::Asset
         std::string m_name;
 
         std::weak_ptr<Core::Category> m_category;
+        // Need to do same/similar for rule
 
         void SetCategory(std::shared_ptr<Core::Category> _category);
 

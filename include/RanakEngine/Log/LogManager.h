@@ -26,8 +26,8 @@ namespace RanakEngine::Log
             ERRORLOG
         };
         
-        Severity severity;
-        std::string contents;
+        Severity severity = Severity::NORMAL;
+        std::string contents = "";
     };
 
     class Manager
@@ -41,7 +41,7 @@ namespace RanakEngine::Log
         std::thread m_watchThread; ///< Background thread for monitoring/processing logs
         std::mutex m_threadMutex; ///< Mutex protecting the message queue
 
-        bool m_running; ///< Whether the logging system is currently running
+        bool m_running = false; ///< Whether the logging system is currently running
 
         /**
          * @brief Monitoring thread function.

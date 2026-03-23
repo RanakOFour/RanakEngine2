@@ -8,8 +8,8 @@ namespace RanakEngine::Core
 {
     struct Ray
     {
-        Vector3 origin;
-        Vector3 direction;
+        Vector3 origin = Vector3(0.0f);
+        Vector3 direction = Vector3(0.0f);
     };
 
     struct HitInfo

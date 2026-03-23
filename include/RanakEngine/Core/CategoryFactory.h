@@ -2,6 +2,7 @@
 #define CATEGORYFACTORY_H
 
 #include <memory>
+#include <map>
 #include <unordered_map>
 #include <bitset>
 #include <vector>
@@ -26,7 +27,7 @@ namespace Core
 
         // These are unordered as I do not care to specify less than (operator<) overloads for bitset and string
         std::unordered_map<std::bitset<1024>, std::shared_ptr<Category>> m_signatureToCategory;
-        std::unordered_map<std::string, std::bitset<1024>> m_nameToSignature;
+        std::map<std::string, std::bitset<1024>> m_nameToSignature;
 
         std::weak_ptr<Category> RegisterCategory(Category _category);
 

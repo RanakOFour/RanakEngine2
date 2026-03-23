@@ -41,10 +41,10 @@ namespace RanakEngine::Core
         std::shared_ptr<Camera> m_mainCamera;
 
         std::shared_ptr<Scene> m_currentScene;
-        bool m_running;
-        bool m_debug;
-        float m_deltaTime;
-        float m_targetFPS;
+        bool m_running = false;
+        bool m_debug = false;
+        float m_deltaTime = 0.0f;
+        float m_targetFPS = 60.0f;
 
         Manager(bool _debug);
 

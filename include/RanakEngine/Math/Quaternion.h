@@ -15,7 +15,10 @@
  */
 struct Quaternion
 {
-    float w, x, y, z;   ///< Quaternion components
+    float w = 0.0f;
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
 
     /**
      * @brief Creates a quaternion representing a rotation around an axis.

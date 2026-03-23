@@ -18,7 +18,7 @@ namespace RanakEngine::Core
         private:
         std::weak_ptr<LuaContext> m_luaContext;
 
-        int m_nextFreeId;
+        int m_nextFreeId = 0;
         std::vector<int> m_idsToDelete;
         std::vector<int> m_freeIds;
         std::unordered_map<std::bitset<1024>, std::shared_ptr<Category>> m_categories;
@@ -40,6 +40,8 @@ namespace RanakEngine::Core
         std::weak_ptr<Category> GetCategory(std::bitset<1024> _signature);
         std::weak_ptr<Category> GetCategory(std::string _name);
         std::vector<int> GetEntitiesWith(std::bitset<1024> _combinedSignature);
+
+        std::string GetEntityName(int _id);
         sol::table GetEntityAttributes(int _id);
 
         bool Empty();

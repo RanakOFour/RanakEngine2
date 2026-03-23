@@ -35,6 +35,7 @@ namespace RanakEngine::Core
         }
 
         sol::table l_newEntityTable = m_dataTable.raw_get<sol::table>("Entities").create_named(l_newID);
+        l_newEntityTable["name"] = "Entity" + std::to_string(l_newID);
         l_newEntityTable.create_named("attributes");
 
         // Add to transform
@@ -182,6 +183,11 @@ namespace RanakEngine::Core
         }
 
         return l_entities;
+    }
+
+    std::string EntityRegistry::GetEntityName(int _id)
+    {
+        return  m_dataTable.traverse_raw_get<std::string>("Entities", _id, "name");
     }
 
     sol::table EntityRegistry::GetEntityAttributes(int _id)

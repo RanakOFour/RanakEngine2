@@ -25,11 +25,11 @@ namespace RanakEngine::Core
         private:
         std::weak_ptr<Asset::LuaFile> m_originFile;
 
-        std::string m_name;
+        std::string m_name = "";
         std::bitset<1024> m_signature;
         sol::table m_baseAttributeTable;
 
-        int m_size;
+        int m_size = 0;
         std::vector<sol::table> m_entityDataTables;
         std::map<int, int> m_entityToIndex;
         std::map<int, int> m_indexToEntity;

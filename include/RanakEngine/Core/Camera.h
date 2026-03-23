@@ -22,15 +22,15 @@ namespace RanakEngine::Core
         };
 
         private:
-        Vector3 m_position;
-        float m_rotation;
+        Vector3 m_position = Vector3(0.0f, 0.0f, 3.0f);
+        float m_rotation = 0.0f;
 
-        float m_fov;
-        float m_cameraWidth;
+        float m_fov = 45.0f;
+        float m_cameraWidth = 10.0f;
 
-        bool m_viewDirty;
+        bool m_viewDirty = true;
 
-        ProjectionType m_projectionType;
+        ProjectionType m_projectionType = ProjectionType::Orthographic;
         glm::mat4 m_projection;
         glm::mat4 m_view;
 

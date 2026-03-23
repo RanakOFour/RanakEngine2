@@ -11,22 +11,22 @@ namespace RanakEngine::Log
         std::shared_ptr<Log::Manager> LogManager;
     };
 
-    static void Message(std::string _message)
+    inline static void Message(std::string _message)
     {
         LogManager->LogMessage(Log::MessageContent::NORMAL, _message);
     }
 
-    static void Debug(std::string _message)
+    inline static void Debug(std::string _message)
     {
         LogManager->LogMessage(Log::MessageContent::DEBUG, _message);
     }
 
-    static void Warning(std::string _message)
+    inline static void Warning(std::string _message)
     {
         LogManager->LogMessage(Log::MessageContent::WARNING, _message);
     }
 
-    static void Error(std::string _message)
+    inline static void Error(std::string _message)
     {
         LogManager->LogMessage(Log::MessageContent::ERRORLOG, _message);
     }

@@ -56,6 +56,8 @@ namespace Core
         void AddEntityToCategory(int _id, std::bitset<1024> _bitset);
         void RemoveEntity(int _id);
 
+        void RenameEntity(int _id, const std::string _newName);
+
         void RemoveCategory(std::bitset<1024> _signature);
 
         void AddRule(Rule& _rule);
@@ -65,6 +67,8 @@ namespace Core
         void Update(float _deltaTime);
         void Draw();
 
+        // Returns id of hit entity and RaycastHit info if more is needed.
+        // Returns -1 is no entity was hit.
         int Raycast(Ray& _ray, RaycastHit& _out);
 
         EntityRegistry* GetRegistry();
