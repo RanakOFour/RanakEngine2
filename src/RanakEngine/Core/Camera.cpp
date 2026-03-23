@@ -84,6 +84,10 @@ namespace RanakEngine::Core
                 _drawable.raw_set("model", l_modelWPtr);
                 l_modelPtr = _drawable.raw_get<std::weak_ptr<Asset::Model>>("model");
             }
+            else if(l_modelPath == "")
+            {
+                _drawable["modelPath"] = l_model->GetPath();
+            }
         }
 
         sol::optional<std::weak_ptr<Asset::Texture>> l_texturePtr = _drawable.raw_get<sol::optional<std::weak_ptr<Asset::Texture>>>("texture");
@@ -125,6 +129,10 @@ namespace RanakEngine::Core
 
                 _drawable.raw_set("texture", l_textureWPtr);
                 l_texturePtr = _drawable.raw_get<std::weak_ptr<Asset::Texture>>("texture");
+            }
+            else if(l_texturePath == "")
+            {
+                _drawable["texturePath"] = l_texture->GetPath();
             }
         }
 
@@ -168,6 +176,10 @@ namespace RanakEngine::Core
 
                 _drawable.raw_set("shader", l_shaderWPtr);
                 l_shaderPtr = _drawable.raw_get<std::weak_ptr<Asset::Shader>>("shader");
+            }
+            else if(l_shaderPath == "")
+            {
+                _drawable["shaderPath"] = l_shader->GetPath();
             }
         }
         
