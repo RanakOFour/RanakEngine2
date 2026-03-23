@@ -12,13 +12,13 @@ namespace RanakEngine::Asset
 {
     namespace
     {
-        static std::shared_ptr<Asset::Manager> AssetManager;
+        std::shared_ptr<Asset::Manager> AssetManager;
     }
 
     template<typename T>
     static std::weak_ptr<T> Load(std::string _path)
     {
-        return AssetManager->Load<T>(_path);
+        return Asset::Manager::Instance().lock()->Load<T>(_path);
     };
 
     void DefineLuaLib();

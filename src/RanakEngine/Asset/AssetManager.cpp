@@ -5,7 +5,7 @@ namespace RanakEngine::Asset
     Asset::Manager::Manager()
     : m_resourceMap()
     {
-
+        m_resourceMap.clear();
     }
 
     Asset::Manager::~Manager()

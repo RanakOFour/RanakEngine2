@@ -49,8 +49,9 @@ namespace RanakEngine::Asset
 
     std::shared_ptr<Asset::Manager> Init()
     {
-        AssetManager = Asset::Manager::Init();
-        return AssetManager;
+        auto l_manager = Asset::Manager::Init();
+        AssetManager = Asset::Manager::Instance().lock();
+        return l_manager;
     }
 
     void Stop()

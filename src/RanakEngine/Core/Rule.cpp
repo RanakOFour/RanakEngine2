@@ -21,6 +21,10 @@ namespace RanakEngine::Core
     Rule::Rule()
     : m_updateFunction()
     , m_initFunction()
+    , m_drawFunction()
+    , m_name("")
+    , m_signature()
+    , m_categories()
     {
         m_table = LuaContext::Instance().lock()->CreateTable();
         m_context = LuaContext::Instance();

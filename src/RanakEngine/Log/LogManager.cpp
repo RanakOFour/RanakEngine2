@@ -42,6 +42,8 @@ namespace RanakEngine::Log
             l_Logger = m_self.lock().get();
         }
 
+        l_Logger->m_running = true;
+
         std::shared_ptr<Core::Manager> l_core;
 
         while (l_Logger->m_running)

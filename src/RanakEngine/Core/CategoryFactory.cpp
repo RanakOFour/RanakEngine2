@@ -12,6 +12,7 @@ namespace RanakEngine::Core
     CategoryFactory::CategoryFactory()
     : m_signatureToCategory()
     , m_nameToSignature()
+    , m_size(0)
     {
     }
 
@@ -22,7 +23,10 @@ namespace RanakEngine::Core
 
     std::weak_ptr<Category> CategoryFactory::RegisterCategory(Category _category)
     {
-        std::shared_ptr<Category> l_newCategoryPtr = std::make_shared<Category>(_category);
+        std::shared_ptr<Category> l_newCategoryPtr = std::make_shared<Category>();
+        l_newCategoryPtr->m_name = _category.m_name;
+        l_newCategoryPtr->m_baseAttributeTable = _category.m_baseAttributeTable;
+        l_newCategoryPtr->m_originFile = _category.m_originFile;
 
         std::bitset<1024> l_newSignature;
         l_newSignature.set(m_size);

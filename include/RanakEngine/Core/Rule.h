@@ -28,9 +28,9 @@ namespace RanakEngine::Core
         std::string m_name;
         std::bitset<1024> m_signature;
         std::vector<std::string> m_categories;
-        sol::function m_initFunction;
-        sol::function m_updateFunction;
-        sol::function m_drawFunction;
+        sol::protected_function m_initFunction;
+        sol::protected_function m_updateFunction;
+        sol::protected_function m_drawFunction;
         sol::table m_table;
 
         static void DefineUsertype(sol::state& _state)
