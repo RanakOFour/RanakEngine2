@@ -1,5 +1,7 @@
 #include "RanakEngine/RanakEngine.h"
 
+#include <filesystem>
+
 namespace RanakEngine
 {
     EngineContents Initialise(bool _debug, Vector2 _screenSize)
@@ -21,6 +23,11 @@ namespace RanakEngine
 
         // Load transform category (Required by registry to exist)
         auto l_transformFile = l_toReturn.resources->Load<Asset::LuaFile>("./resources/Categories/Transform.lua");
+        if (l_transformFile.lock() == nullptr)
+        {
+            printf("Could not find transform file\n");
+            printf("%s\n", std::filesystem::current_path().c_str());
+        }
         l_toReturn.core->GetLuaContext()->CreateCategory(l_transformFile);
 
         return l_toReturn;
