@@ -25,6 +25,8 @@ if(NOT SDL3_FOUND)
     set(SDL3_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/extern/SDL3)
 endif()
 
+add_subdirectory(extern/box2d)
+
 file(GLOB_RECURSE RANAK_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Assets/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Core/*.cpp"
@@ -53,7 +55,7 @@ target_include_directories(RanakEngine PUBLIC
 
 # Link against system libraries if found, otherwise extern
 if(WIN32)
-    target_link_libraries(RanakEngine PRIVATE opengl32 glew32)
+    target_link_libraries(RanakEngine PRIVATE opengl32 glew32 box2d)
     if(SDL3_FOUND)
         target_link_libraries(RanakEngine PRIVATE SDL3::SDL3)
     endif()
@@ -76,4 +78,6 @@ elseif(UNIX)
     else()
         target_link_libraries(RanakEngine PRIVATE lua)
     endif()
+
+    target_link_libraries(RanakEngine PRIVATE box2d)
 endif()
