@@ -33,7 +33,7 @@ namespace Core
         
         EntityRegistry m_registry;
 
-        std::vector<Rule> m_rules;
+        std::vector<std::shared_ptr<Rule>> m_rules;
 
         static void DefineUsertype()
         {

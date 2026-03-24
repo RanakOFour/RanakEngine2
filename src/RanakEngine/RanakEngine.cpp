@@ -26,7 +26,8 @@ namespace RanakEngine
         if (l_transformFile.lock() == nullptr)
         {
             printf("Could not find transform file\n");
-            printf("%s\n", std::filesystem::current_path().c_str());
+            std::string l_cwd = std::filesystem::current_path().generic_string();
+            printf("CWD: %s", l_cwd.c_str());
         }
         l_toReturn.core->GetLuaContext()->CreateCategory(l_transformFile);
 

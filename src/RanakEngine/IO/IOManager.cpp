@@ -16,6 +16,8 @@ namespace RanakEngine::IO
     IO::Manager::Manager(Vector2 _screenSize)
     : m_kbInfo()
     , m_mouseInfo()
+    , m_lastFrameKBInfo()
+    , m_lastFrameMouseInfo()
     {
         m_window = std::make_shared<Window>(_screenSize);
         m_audio = std::make_shared<Audio>();
@@ -133,17 +135,25 @@ namespace RanakEngine::IO
         return l_filePath;
     }
 
-    void IO::Manager::UpdateInputs()
+    std::vector<SDL_Event> IO::Manager::UpdateInputs()
     {
+        m_lastFrameMouseInfo = m_mouseInfo;
+        m_lastFrameKBInfo = m_kbInfo;
+
         static bool l_previousESCValue = false;
         SDL_Event l_event;
+
+        bool l_resized = false;
 
         m_mouseInfo.deltaPosition.x = 0.0f;
         m_mouseInfo.deltaPosition.y = 0.0f;
         m_mouseInfo.deltaScroll = 0.0f;
 
+        std::vector<SDL_Event> l_polledEvents;
+
         while (SDL_PollEvent(&l_event))
         {
+            l_polledEvents.push_back(SDL_Event(l_event));
             switch (l_event.type)
             {
             case SDL_EVENT_QUIT:
@@ -188,20 +198,38 @@ namespace RanakEngine::IO
             case SDL_EVENT_KEY_UP:
                 m_kbInfo.inputMap[l_event.key.scancode] = false;
                 break;
+
+            case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+                l_resized = true;
             }
+        }
+
+        if (l_resized)
+        {
+            int l_w, l_h;
+            SDL_GetWindowSizeInPixels(m_window->GetSDLWindow(), &l_w, &l_h);
+            m_window->SetScreenSize(Vector2(l_w, l_h));
         }
 
         SDL_GetMouseState(&m_mouseInfo.position.x, &m_mouseInfo.position.y);
 
         m_mouseInfo.position.y = m_window->GetScreenSize().y - m_mouseInfo.position.y;
 
-        // Take mouse out of window focus on escape
-        if (m_kbInfo.inputMap[SDL_SCANCODE_ESCAPE] && !l_previousESCValue)
+        // Take mouse out of window focus on ESC+LCTRL
+        if (m_kbInfo.inputMap[SDL_SCANCODE_ESCAPE] && !l_previousESCValue && m_kbInfo.inputMap[SDL_SCANCODE_LCTRL])
         {
             m_window->SetRelativeWindow(!m_window->GetRelativeWindow());
         }
 
         l_previousESCValue = m_kbInfo.inputMap[SDL_SCANCODE_ESCAPE];
+
+        return l_polledEvents;
+    }
+    
+    bool IO::Manager::GetKeyDownThisFrame(char _key)
+    {
+        int l_sdlCode = SDL_GetScancodeFromKey(_key, NULL);
+        return m_kbInfo.inputMap[l_sdlCode] && !m_lastFrameKBInfo.inputMap[l_sdlCode];
     }
 
     bool IO::Manager::GetKeyDown(char _key)
@@ -257,12 +285,12 @@ namespace RanakEngine::IO
         return m_audio;
     }
 
-    MouseInfo* IO::Manager::GetMouseInfo()
+    MouseInfo& IO::Manager::GetMouseInfo()
     {
-        return &m_mouseInfo;
+        return m_mouseInfo;
     }
 
-    KBInfo IO::Manager::GetKBInfo()
+    KBInfo& IO::Manager::GetKBInfo()
     {
         return m_kbInfo;
     }

@@ -27,8 +27,10 @@ namespace RanakEngine::IO
         std::weak_ptr<Core::Manager> m_core;
         std::shared_ptr<Window> m_window;
         std::shared_ptr<Audio> m_audio;
-        KBInfo m_kbInfo;
-        MouseInfo m_mouseInfo;
+        
+        KBInfo m_kbInfo, m_lastFrameKBInfo;
+        
+        MouseInfo m_mouseInfo, m_lastFrameMouseInfo;
         
         static inline bool m_fileDialogEnded = true;
         static inline std::string m_defaultFilePath = "./";
@@ -52,8 +54,12 @@ namespace RanakEngine::IO
         std::string OpenFileDialog();
         std::string SaveFileDialog();
 
-        void UpdateInputs();
+        std::vector<SDL_Event> UpdateInputs();
 
+        // Returns true if key was pressed down just this frame (and not previous frame)
+        bool GetKeyDownThisFrame(char _key);
+
+        // Returns true if key is pressed down
         bool GetKeyDown(char _key);
         bool WindowFocused();
 
@@ -67,8 +73,11 @@ namespace RanakEngine::IO
 
         std::weak_ptr<Window> GetWindow();
         std::weak_ptr<Audio> GetAudio();
-        MouseInfo* GetMouseInfo();
-        KBInfo GetKBInfo();
+
+        MouseInfo& GetMouseInfo();
+        KBInfo& GetKBInfo();
+        MouseInfo& GetLastFrameMouseInfo() { return m_lastFrameMouseInfo; };
+        KBInfo& GetLastFrameKBInfo() { return m_lastFrameKBInfo;  };
     };
 }
 

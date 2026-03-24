@@ -6,6 +6,8 @@
 
 #include "RanakEngine/Log.h"
 
+#include "sol/sol.hpp"
+
 namespace RanakEngine::Core
 {
     Scene::Scene()
@@ -77,8 +79,10 @@ namespace RanakEngine::Core
     void Scene::AddRule(Rule &_rule)
     {
         _rule.CreateSignature();
-        m_rules.push_back(_rule);
-        m_sceneTable.raw_get<sol::table>("Rules").raw_set(_rule.GetName(), _rule);
+        std::shared_ptr<Rule> l_ruleShared = std::make_shared<Rule>(_rule);
+
+        m_rules.push_back(l_ruleShared);
+        m_sceneTable.raw_get<sol::table>("Rules").raw_set(_rule.GetName(), l_ruleShared);
     }
 
     void Scene::RemoveRule(Rule &_rule)
@@ -86,7 +90,7 @@ namespace RanakEngine::Core
         std::string l_name = _rule.GetName();
         for (int i = 0; i < m_rules.size(); i++)
         {
-            if (m_rules[i].GetName() == l_name)
+            if (m_rules[i]->GetName() == l_name)
             {
                 m_rules.erase(m_rules.begin() + i);
                 break;
@@ -100,10 +104,10 @@ namespace RanakEngine::Core
     {
         auto l_contextPtr = m_luaContext.lock();
 
-        for (Rule& l_rule : m_rules)
+        for (std::shared_ptr<Rule> l_rule : m_rules)
         {
-            l_rule.CreateSignature();
-            l_rule.Init(m_registry);
+            l_rule->CreateSignature();
+            l_rule->Init(m_registry);
         }
     }
 
@@ -111,9 +115,9 @@ namespace RanakEngine::Core
     {
         auto l_contextPtr = m_luaContext.lock();
 
-        for (Rule& l_rule : m_rules)
+        for (std::shared_ptr<Rule> l_rule : m_rules)
         {
-            l_rule.Update(m_registry);
+            l_rule->Update(m_registry);
         }
     }
 
@@ -121,9 +125,9 @@ namespace RanakEngine::Core
     {
         auto l_contextPtr = m_luaContext.lock();
 
-        for(Rule& l_rule : m_rules)
+        for (std::shared_ptr<Rule> l_rule : m_rules)
         {
-            l_rule.Draw(m_registry);
+            l_rule->Draw(m_registry);
         }
     }
 
