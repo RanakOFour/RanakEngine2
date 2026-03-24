@@ -18,6 +18,7 @@ namespace RanakEngine::IO
     , m_mouseInfo()
     , m_lastFrameKBInfo()
     , m_lastFrameMouseInfo()
+    , m_quitSignalCalled(false)
     {
         m_window = std::make_shared<Window>(_screenSize);
         m_audio = std::make_shared<Audio>();
@@ -158,6 +159,7 @@ namespace RanakEngine::IO
             {
             case SDL_EVENT_QUIT:
                 m_core.lock()->Stop();
+                m_quitSignalCalled = true;
                 break;
 
             case SDL_EVENT_MOUSE_BUTTON_DOWN:

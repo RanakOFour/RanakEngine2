@@ -32,6 +32,8 @@ namespace RanakEngine::IO
         
         MouseInfo m_mouseInfo, m_lastFrameMouseInfo;
         
+        bool m_quitSignalCalled;
+
         static inline bool m_fileDialogEnded = true;
         static inline std::string m_defaultFilePath = "./";
 
@@ -73,6 +75,8 @@ namespace RanakEngine::IO
 
         std::weak_ptr<Window> GetWindow();
         std::weak_ptr<Audio> GetAudio();
+
+        bool GetQuitSignal() { return m_quitSignalCalled; };
 
         MouseInfo& GetMouseInfo();
         KBInfo& GetKBInfo();
