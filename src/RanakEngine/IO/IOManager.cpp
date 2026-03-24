@@ -222,14 +222,7 @@ namespace RanakEngine::IO
         glClearColor(l_clearColour.x, l_clearColour.y, l_clearColour.z, l_clearColour.w);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // ImGui_ImplOpenGL3_NewFrame();
-        // ImGui_ImplSDL3_NewFrame();
-        // ImGui::NewFrame();
-
         _sceneToDraw->Draw();
-
-        // ImGui::Render();
-        // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         m_window->Swap();
     }

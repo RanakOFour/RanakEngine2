@@ -139,8 +139,8 @@ namespace RanakEngine::Core
             // Just AABB it
 
             sol::table l_transform = l_entity.second.as<sol::table>().traverse_raw_get<sol::table>("attributes", "Transform");
-            Vector3 l_position = l_transform.raw_get<Vector3>("Position");
-            Vector3 l_scale = l_transform.raw_get<Vector3>("Scale");
+            Vector3 l_position(l_transform.raw_get<Vector2>("Position"), l_transform.raw_get<float>("Layer"));
+            Vector3 l_scale(l_transform.raw_get<Vector2>("Scale"), 0.5f);
 
             Vector3 l_min = l_position - (l_scale);
             Vector3 l_max = l_position + (l_scale);

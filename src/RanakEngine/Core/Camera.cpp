@@ -12,11 +12,11 @@
 namespace RanakEngine::Core
 {
     Camera::Camera()
-    : m_position(0.0f, 0.0f, 3.0f)
+    : m_position(0.0f, 0.0f, 10.0f)
     , m_rotation(0.0f)
     , m_fov(45.0f)
     , m_projectionType(ProjectionType::Orthographic)
-    , m_cameraWidth(10.0f)
+    , m_cameraWidth(30.0f)
     , m_viewDirty(true)
     {
         SetOrthographic();
@@ -192,9 +192,13 @@ namespace RanakEngine::Core
             glBindTexture(GL_TEXTURE_2D, l_texture->GetID());
         }
 
-        glm::mat4 l_modelMat = CalculateModelMatrix(_transform.raw_get<Vector3>("Position"),
-                                                    _transform.raw_get<Vector3>("Rotation"),
-                                                    _transform.raw_get<Vector3>("Scale"));
+        Vector3 l_modelPos(_transform.raw_get<Vector2>("Position"), _transform.raw_get<float>("Layer"));
+        Vector3 l_modelRotation(0.0f, _transform.raw_get<float>("Rotation"), 0.0f);
+        Vector3 l_modelScale(_transform.raw_get<Vector2>("Scale"), 0.5f);
+
+        glm::mat4 l_modelMat = CalculateModelMatrix(l_modelPos,
+                                                    l_modelRotation,
+                                                    l_modelScale);
 
         l_shader->SetUniform("u_Model", l_modelMat);
         
@@ -239,6 +243,33 @@ namespace RanakEngine::Core
         glm::vec4(0.0f, 0.0f, l_screenSize.x, l_screenSize.y));
 
         return (Vector3)l_worldPos;
+    }
+
+    Vector2 Camera::WorldToScreenPoint(Vector2 _worldPoint)
+    {
+        auto l_window = IO::Manager::Instance().lock()->GetWindow().lock();
+        Vector2 l_screenSize = l_window->GetScreenSize();
+
+        if(m_viewDirty)
+        {
+            m_view = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
+            m_view = glm::inverse(m_view);
+            m_viewDirty = false;
+        }
+
+        glm::vec3 l_world3(_worldPoint.x, _worldPoint.y, 0.0f);
+
+        glm::vec4 l_clipSpacePos = m_projection * (m_view * glm::vec4(l_world3, 1.0f));
+
+        if(l_clipSpacePos.w != 0.0f)
+        {
+            glm::vec2 l_ndcSpacePos = glm::vec2(l_clipSpacePos.x, l_clipSpacePos.y) / l_clipSpacePos.w;
+            glm::vec2 l_windowSpacePos = (l_ndcSpacePos + 1.0f) * 0.5f * glm::vec2(l_screenSize);
+
+            return Vector2(l_windowSpacePos);
+        }
+
+        return Vector2(0.0f, 0.0f);
     }
 
     void Camera::SetPosition(Vector3 _p)

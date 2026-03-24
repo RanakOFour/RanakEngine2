@@ -8,7 +8,7 @@ namespace RanakEngine::IO
     namespace
     {
         static sol::table IOTable;
-        static std::shared_ptr<IO::Manager> IOManager;
+        std::shared_ptr<IO::Manager> IOManager;
     };
 
     void DefineLuaLib()
@@ -62,7 +62,6 @@ namespace RanakEngine::IO
     std::shared_ptr<IO::Manager> Init(Vector2 _screenSize)
     {
         IOManager = IO::Manager::Init(_screenSize);
-        // DefineLuaTypes();
         return IOManager;
     }
 

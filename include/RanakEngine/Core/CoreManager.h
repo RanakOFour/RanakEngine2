@@ -65,6 +65,7 @@ namespace RanakEngine::Core
         bool IsDebug();
 
         Vector3 ScreenToWorldPoint(Vector2 _screenPos);
+        Vector2 WorldPointToScreen(Vector2 _worldPoint);
 
         std::weak_ptr<Camera> GetCamera();
         std::shared_ptr<LuaContext> GetLuaContext();

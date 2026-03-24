@@ -4,7 +4,6 @@ set(CMAKE_CXX_STANDARD 17)
 project(RanakEngine)
 
 # Try to find system libraries first, fallback to external versions
-find_package(Lua QUIET)
 find_package(SDL3 QUIET)
 find_library(GL_LIBRARIES GL QUIET)
 

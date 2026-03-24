@@ -22,11 +22,11 @@ namespace RanakEngine::Core
         };
 
         private:
-        Vector3 m_position = Vector3(0.0f, 0.0f, 3.0f);
+        Vector3 m_position = Vector3(0.0f, 0.0f, 10.0f);
         float m_rotation = 0.0f;
 
         float m_fov = 45.0f;
-        float m_cameraWidth = 10.0f;
+        float m_cameraWidth = 30.0f;
 
         bool m_viewDirty = true;
 
@@ -59,6 +59,7 @@ namespace RanakEngine::Core
         void Draw(sol::table _transform, sol::table _drawable);
 
         Vector3 ScreenToWorldPoint(Vector2 _screenPos);
+        Vector2 WorldToScreenPoint(Vector2 _worldPos);
 
         void SetPosition(Vector3 _pos);
         Vector3 GetPosition();
