@@ -25,6 +25,7 @@ namespace RanakEngine::Core
     , m_name("")
     , m_signature()
     , m_categories()
+    , m_active(true)
     {
         m_table = LuaContext::Instance().lock()->CreateTable();
         m_context = LuaContext::Instance();
@@ -37,7 +38,7 @@ namespace RanakEngine::Core
 
     void Rule::Init(EntityRegistry& _registry)
     {
-        if(!m_initFunction.valid())
+        if(!m_active || !m_initFunction.valid())
         {
             return;
         }
@@ -59,7 +60,7 @@ namespace RanakEngine::Core
     void Rule::Update(EntityRegistry& _registry)
     {
        // Early quit for no function found/defined
-        if(!m_updateFunction.valid())
+        if(!m_active || !m_updateFunction.valid())
         {
             return;
         }
@@ -81,7 +82,7 @@ namespace RanakEngine::Core
     void Rule::Draw(EntityRegistry& _registry)
     {
         // Early quit for no function found/defined
-        if(!m_drawFunction.valid())
+        if(!m_active || !m_drawFunction.valid())
         {
             return;
         }
@@ -97,6 +98,16 @@ namespace RanakEngine::Core
                 m_drawFunction(this, l_entityData);
             }
         }
+    }
+
+    void Rule::SetActive(bool _a)
+    {
+        m_active = _a;
+    }
+
+    bool Rule::GetActive()
+    {
+        return m_active;
     }
 
     std::string Rule::GetName()

@@ -171,9 +171,9 @@ namespace RanakEngine::Core
         return (int)l_closestEntity;
     }
 
-    EntityRegistry* Scene::GetRegistry()
+    EntityRegistry& Scene::GetRegistry()
     {
-        return &m_registry;
+        return m_registry;
     }
 
     sol::table Scene::GetSceneTable()

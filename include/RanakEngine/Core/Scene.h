@@ -71,7 +71,7 @@ namespace Core
         // Returns -1 is no entity was hit.
         int Raycast(Ray& _ray, RaycastHit& _out);
 
-        EntityRegistry* GetRegistry();
+        EntityRegistry& GetRegistry();
         sol::table GetSceneTable();
     };
 };

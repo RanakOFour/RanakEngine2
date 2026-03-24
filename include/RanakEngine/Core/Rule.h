@@ -25,9 +25,12 @@ namespace RanakEngine::Core
         private:
         std::weak_ptr<LuaContext> m_context;
 
+        bool m_active;
+
         std::string m_name;
         std::bitset<1024> m_signature;
         std::vector<std::string> m_categories;
+        
         sol::protected_function m_initFunction;
         sol::protected_function m_updateFunction;
         sol::protected_function m_drawFunction;
@@ -42,8 +45,10 @@ namespace RanakEngine::Core
                                               "Init", &Rule::m_initFunction,
                                               "Update", &Rule::m_updateFunction,
                                               "Draw", &Rule::m_drawFunction,
-                                              "getCategories", sol::readonly(&Rule::GetCategories)
-                                     );
+                                              "getCategories", sol::readonly(&Rule::GetCategories),
+                                              "isActive", sol::readonly(&Rule::GetActive),
+                                              "setActive", sol::readonly(&Rule::SetActive)  
+                                    );
         }
 
         void CreateSignature();
@@ -62,6 +67,9 @@ namespace RanakEngine::Core
         void Init(EntityRegistry& _registry);
         void Update(EntityRegistry& _registry);
         void Draw(EntityRegistry& _registry);
+
+        void SetActive(bool _a);
+        bool GetActive();
 
         std::string GetName();
         std::bitset<1024> GetCategories();
