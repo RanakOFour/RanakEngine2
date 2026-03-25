@@ -99,15 +99,12 @@ namespace RanakEngine::Core
         return m_categoryFactory->GetByName(_name);
     }
 
-    void LuaContext::ReloadCategory(std::weak_ptr<Asset::LuaFile> _file)
+    void LuaContext::ReloadCategory(std::weak_ptr<Core::Category> _category)
     {
-        auto l_file = _file.lock();
-        if (!l_file)
-            return;
-            
+        auto l_category = _category.lock();
+        auto l_file = l_category->GetOriginFile().lock();
         
-        auto l_category = l_file->GetCategory().lock();
-        if (!l_category)
+        if (!l_file || !l_category)
             return;
         
         std::string l_categoryName = l_category->GetName();
@@ -117,7 +114,7 @@ namespace RanakEngine::Core
 
         auto l_newCategoryPtr = m_categoryFactory->ReloadCategory(l_newCategory, l_signature, l_categoryName).lock();
         l_file->SetCategory(l_newCategoryPtr);
-        l_newCategoryPtr->SetOriginFile(_file);
+        l_newCategoryPtr->SetOriginFile(l_file);
     }
 
     void LuaContext::SetGlobal(std::string _name, sol::object &_obj)

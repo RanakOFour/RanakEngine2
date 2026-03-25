@@ -66,7 +66,7 @@ namespace RanakEngine::Core
                 // If there is a match
                 if ((l_idSignature & l_pair.first).any())
                 {
-                    l_pair.second->RemoveMember(l_id);
+                    l_pair.second.lock()->RemoveMember(l_id);
                 }
             }
 
@@ -81,7 +81,7 @@ namespace RanakEngine::Core
     void EntityRegistry::AddToCategory(int _id, std::bitset<1024> _signature)
     {
         // Add to registry if not logged already
-        if (m_categories.find(_signature) == m_categories.end())
+        if (m_categories.find(_signature) == m_categories.end() || m_categories[_signature].lock() == nullptr)
         {
             // Ask context for registered category
             std::shared_ptr<Category> l_categoryPtr = m_luaContext.lock()->GetCategory(_signature).lock();
@@ -99,13 +99,15 @@ namespace RanakEngine::Core
             }
         }
 
+        std::shared_ptr<Category> l_category = m_categories[_signature].lock();
+
         // Category is registered
         // Edit entityData in table
         m_dataTable.traverse_raw_get<sol::table>(
                        "Entities",
                        _id,
                        "attributes")
-            .set(m_categories[_signature]->GetName(), m_categories[_signature]->AddMember(_id));
+            .set(l_category->GetName(), l_category->AddMember(_id));
 
         // Update entity signature
         m_entityBitset[_id] |= _signature;
@@ -116,17 +118,18 @@ namespace RanakEngine::Core
         // Category is registered
         if (m_categories.find(_signature) != m_categories.end())
         {
-            m_categories[_signature]->RemoveMember(_id);
+            auto l_category = m_categories[_signature].lock();
+            l_category->RemoveMember(_id);
             // There's probably a faster way to do this, but I haven't found it yet
             m_dataTable.traverse_raw_get<sol::table>(
                            "Entities",
                            _id,
                            "attributes",
-                           m_categories[_signature]->GetName())
+                           l_category->GetName())
                 .abandon();
 
             // The registry does not have to manage empty categories
-            if (m_categories[_signature]->GetSize() == 0)
+            if (l_category->GetSize() == 0)
             {
                 m_categories.erase(_signature);
             }
@@ -160,7 +163,7 @@ namespace RanakEngine::Core
     {
         for(auto& l_pair : m_categories)
         {
-            if(l_pair.second->GetName() == _name)
+            if(l_pair.second.lock()->GetName() == _name)
             {
                 return l_pair.second;
             }

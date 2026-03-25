@@ -21,7 +21,7 @@ namespace RanakEngine::Core
         int m_nextFreeId = 0;
         std::vector<int> m_idsToDelete;
         std::vector<int> m_freeIds;
-        std::unordered_map<std::bitset<1024>, std::shared_ptr<Category>> m_categories;
+        std::unordered_map<std::bitset<1024>, std::weak_ptr<Category>> m_categories;
         std::map<int, std::bitset<1024>> m_entityBitset;
         
         sol::table m_dataTable;

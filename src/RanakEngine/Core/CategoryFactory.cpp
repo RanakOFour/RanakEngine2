@@ -44,16 +44,25 @@ namespace RanakEngine::Core
 
     std::weak_ptr<Category> CategoryFactory::ReloadCategory(Category _category, std::bitset<1024> _signature, std::string _oldName)
     {
+        auto l_categoryPtr = m_signatureToCategory[_signature];
+        l_categoryPtr->m_baseAttributeTable.abandon();
+        l_categoryPtr->m_baseAttributeTable = _category.m_baseAttributeTable;
+        l_categoryPtr->m_name = _category.m_name;
+
+        m_nameToSignature.erase(_oldName);
+        m_nameToSignature[l_categoryPtr->m_name] = l_categoryPtr->m_signature;
+
+        return m_signatureToCategory[_signature];
+
         std::shared_ptr<Category> l_newCategoryPtr = std::make_shared<Category>(_category);
         l_newCategoryPtr->m_signature = _signature;
 
         // Remove the old category from our maps
-        auto l_signatureIt = m_nameToSignature.find(_oldName);
-        if (l_signatureIt != m_nameToSignature.end())
+        if (m_nameToSignature.find(_oldName) != m_nameToSignature.end())
         {
-            std::bitset<1024> l_signature = l_signatureIt->second;
+            std::bitset<1024> l_signature = m_nameToSignature[_oldName];
             m_signatureToCategory.erase(l_signature);
-            m_nameToSignature.erase(l_signatureIt);
+            m_nameToSignature.erase(_oldName);
         }
         
         m_nameToSignature[l_newCategoryPtr->GetName()] = _signature;
