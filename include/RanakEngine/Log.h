@@ -31,7 +31,7 @@ namespace RanakEngine::Log
         LogManager->LogMessage(Log::MessageContent::ERRORLOG, _message);
     }
 
-    std::string Table(sol::table);
+    std::string Table(sol::table _tableData, int _index);
 
     void DefineLuaLib();
 

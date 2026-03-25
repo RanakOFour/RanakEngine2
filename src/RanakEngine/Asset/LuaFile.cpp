@@ -42,6 +42,7 @@ namespace RanakEngine::Asset
 
     void LuaFile::Reload()
     {
+        m_toBeReloaded = false;
         Core::LuaContext::Instance().lock()
         ->ReloadCategory(m_category.lock()
                          ->GetOriginFile());
