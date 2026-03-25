@@ -110,6 +110,7 @@ namespace RanakEngine::Core
         std::string l_categoryName = l_category->GetName();
         std::bitset<1024> l_signature = l_category->GetSignature();
         
+        LoadScript(l_file);
         Category l_newCategory = RunScript<Category>(l_file);
 
         auto l_newCategoryPtr = m_categoryFactory->ReloadCategory(l_newCategory, l_signature, l_categoryName).lock();

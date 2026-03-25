@@ -63,6 +63,7 @@ namespace RanakEngine::Asset
     void LuaFile::SetCode(std::string _code)
     {
         m_contents.clear();
+        m_contents.resize(_code.size());
         m_contents.assign(_code.begin(), _code.end());
     }
 
