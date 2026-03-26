@@ -123,6 +123,11 @@ namespace RanakEngine::Core
         m_state[_name] = _obj;
     }
 
+    sol::table LuaContext::GetGlobalTable()
+    {
+        return m_state.globals();
+    }
+
     std::string LuaContext::GetCategoryNames()
     {
         return m_categoryFactory->GetCategoryNames();
