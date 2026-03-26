@@ -28,8 +28,12 @@ namespace RanakEngine::IO
 
         IOTable.set_function("GetKeyDown", [](char _key)
                              { return IOManager->GetKeyDown(_key); });
-        IOTable.set_function("WindowFocused", []()
+        IOTable.set_function("GetKeyDownThisFrame", [](char _key)
+                             { return IOManager->GetKeyDownThisFrame(_key); });
+
+        IOTable.set_function("IsWindowFocused", []()
                              { return IOManager->WindowFocused(); });
+
         IOTable.set_function("OpenFileDialog", []()
                              { return IOManager->OpenFileDialog(); });
         IOTable.set_function("SaveFileDialog", []()
@@ -37,12 +41,12 @@ namespace RanakEngine::IO
 
         IOTable.set_function("SetScreenSize", [](Vector2 _size)
                              { IOManager->SetScreenSize(_size); });
-        IOTable.set_function("ScreenSize", []()
+        IOTable.set_function("GetScreenSize", []()
                              { return IOManager->GetScreenSize(); });
 
         IOTable.set_function("SetClearColour", [](Vector4 _colour)
                              { IOManager->SetClearColour(_colour); });
-        IOTable.set_function("ClearColour", []()
+        IOTable.set_function("GetClearColour", []()
                              { return IOManager->GetClearColour(); });
 
         IOTable.set_function("PlayAudio", [](std::weak_ptr<Asset::Audio> _audio, bool _repeat)

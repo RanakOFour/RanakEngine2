@@ -14,7 +14,11 @@ namespace RanakEngine::Core
     , m_loadedScripts()
     {
         // Opens all basic libraries
-        m_state.open_libraries();
+        m_state.open_libraries(
+                               sol::lib::base,
+                               sol::lib::table,
+                               sol::lib::string
+                              );
 
         m_categoryFactory = std::make_shared<CategoryFactory>();
         Category::DefineUsertype(m_state);
