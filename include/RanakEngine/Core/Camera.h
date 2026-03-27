@@ -11,28 +11,46 @@
 
 namespace RanakEngine::Core
 {
+    /**
+     * @class Camera
+     * @brief Scene camera supporting orthographic and perspective projection.
+     *
+     * Owns the view and projection matrices used by the renderer.  The view
+     * matrix is rebuilt lazily whenever m_viewDirty is true (i.e. after a
+     * position or rotation change).
+     *
+     * Provides world<->screen conversion utilities (ScreenToWorldPoint,
+     * WorldToScreenPoint) used by the editor, raycasting, and Lua scripts.
+     *
+     * Camera is registered as a Lua usertype so Lua rules can reposition or
+     * query it at runtime via the global camera handle.
+     */
     class Camera
     {
         friend LuaContext;
         public:
+        /**
+         * @enum ProjectionType
+         * @brief Selects the mathematical model used to build the projection matrix.
+         */
         enum ProjectionType
         {
-            Perspective,
-            Orthographic
+            Perspective,  ///< 3-D perspective division — objects shrink with distance.
+            Orthographic  ///< Parallel projection — no depth shrinkage (2-D games).
         };
 
         private:
-        Vector3 m_position = Vector3(0.0f, 0.0f, 10.0f);
-        float m_rotation = 0.0f;
+        Vector3 m_position  = Vector3(0.0f, 0.0f, 10.0f); ///< Camera position in world space.
+        float   m_rotation  = 0.0f;                        ///< 2-D rotation around the Z axis (degrees).
 
-        float m_fov = 45.0f;
-        float m_cameraWidth = 30.0f;
+        float m_fov         = 45.0f;  ///< Vertical field of view in degrees (perspective only).
+        float m_cameraWidth = 30.0f;  ///< Half-width of the orthographic view frustum.
 
-        bool m_viewDirty = true;
+        bool m_viewDirty = true; ///< True when the view matrix needs rebuilding.
 
-        ProjectionType m_projectionType = ProjectionType::Orthographic;
-        glm::mat4 m_projection;
-        glm::mat4 m_view;
+        ProjectionType m_projectionType = ProjectionType::Orthographic; ///< Active projection mode.
+        glm::mat4 m_projection; ///< Cached projection matrix.
+        glm::mat4 m_view;       ///< Cached view matrix.
 
         static void DefineUsertype(sol::state& _state)
         {
@@ -56,32 +74,60 @@ namespace RanakEngine::Core
         Camera();
         ~Camera();
 
+        /**
+         * @brief Renders a single entity's drawable component via the camera.
+         * @param _transform Lua table with position/rotation/scale fields.
+         * @param _drawable  Lua table describing the renderable (e.g. texture, model).
+         */
         void Draw(sol::table _transform, sol::table _drawable);
 
+        /**
+         * @brief Converts a screen-space pixel coordinate to a world-space point.
+         * @param _screenPos Pixel coordinate (origin top-left).
+         * @return Corresponding world-space position.
+         */
         Vector3 ScreenToWorldPoint(Vector2 _screenPos);
+        /**
+         * @brief Converts a world-space position to a screen-space pixel coordinate.
+         * @param _worldPos World-space XY position.
+         * @return Screen-space pixel coordinate.
+         */
         Vector2 WorldToScreenPoint(Vector2 _worldPos);
 
+        /** @brief Sets the camera's world-space position. @param _pos New position. */
         void SetPosition(Vector3 _pos);
+        /** @brief Returns the camera's world-space position. */
         Vector3 GetPosition();
 
+        /** @brief Sets the camera's 2-D rotation in degrees. @param _rot Rotation angle. */
         void SetRotation(float _rot);
+        /** @brief Returns the camera's current 2-D rotation in degrees. */
         float GetRotation();
 
+        /** @brief Sets the vertical field of view (perspective only). @param _fov FOV in degrees. */
         void SetFOV(float _fov);
+        /** @brief Returns the vertical field of view in degrees. */
         float GetFOV();
 
+        /** @brief Sets the half-width of the orthographic view frustum. @param _width Width value. */
         void SetCameraWidth(float _width);
+        /** @brief Returns the orthographic half-width. */
         float GetCameraWidth();
 
+        /** @brief Returns true when the camera is in perspective mode. */
         bool IsPerspective() const
         {
             return m_projectionType == ProjectionType::Perspective;
         }
 
+        /** @brief Switches to perspective projection. */
         void SetPerspective();
+        /** @brief Switches to orthographic projection. */
         void SetOrthographic();
 
+        /** @brief Returns the current projection matrix (rebuilt if dirty). */
         glm::mat4 GetProjection();
+        /** @brief Returns the current view matrix (rebuilt if dirty). */
         glm::mat4 GetView();
     };
 }

@@ -18,24 +18,47 @@ namespace RanakEngine::Core
 {
     class LuaContext;
     class Scene;
+
+    /**
+     * @class Rule
+     * @brief Represents an ECR system (logic script) that operates on matching entities each frame.
+     *
+     * A Rule is created by running a Lua script that returns a Rule table constructed
+     * with the call-constructor syntax:
+     * @code{.lua}
+     *   return Rule {
+     *       categories = { "Moveable", "Physics" },
+     *       Init   = function(self, data) ... end,
+     *       Update = function(self, data, dt) ... end,
+     *       Draw   = function(self, data) ... end,
+     *   }
+     * @endcode
+     *
+     * At runtime Scene calls Init, Update, and Draw each frame.  For every entity
+     * whose combined signature includes all the rule's required category bits, the
+     * corresponding Lua function is invoked with that entity's data table.
+     */
     class Rule
     {
         friend Scene;
         friend LuaContext;
         private:
-        std::weak_ptr<LuaContext> m_context;
+        std::weak_ptr<LuaContext> m_context; ///< Scripting context used during Init/Update/Draw dispatch.
 
-        bool m_active;
+        bool        m_active;     ///< When false the rule is skipped each frame.
+        std::string m_name;       ///< Human-readable rule name (set from the Lua filename).
+        std::bitset<1024>          m_signature;  ///< Combined signature of all required Categories.
+        std::vector<std::string>   m_categories; ///< Names of required Categories (used to build m_signature).
 
-        std::string m_name;
-        std::bitset<1024> m_signature;
-        std::vector<std::string> m_categories;
-        
-        sol::protected_function m_initFunction;
-        sol::protected_function m_updateFunction;
-        sol::protected_function m_drawFunction;
-        sol::table m_table;
+        sol::protected_function m_initFunction;   ///< Lua Init callback.
+        sol::protected_function m_updateFunction; ///< Lua Update callback.
+        sol::protected_function m_drawFunction;   ///< Lua Draw callback.
+        sol::table              m_table;          ///< Shared rule-level data table visible to all callbacks.
 
+        /**
+         * @brief Registers the Rule usertype with the given Lua state so scripts can construct Rules.
+         * @param _state Reference to the sol::state to register with.
+         */
         static void DefineUsertype(sol::state& _state)
         {
             _state.new_usertype<Rule>("Rule",
@@ -60,28 +83,47 @@ namespace RanakEngine::Core
                                     );
         }
 
+        /**
+         * @brief Builds m_signature by OR-ing together the signatures of all required Categories.
+         *
+         * Called once by LuaContext::CreateRule() after the rule table has been
+         * populated from Lua.
+         */
         void CreateSignature();
 
         public:
         Rule();
         ~Rule();
 
-        /* These will call the stand-in functions inside the m_table,
-         passing in each entities data to the lua function 1 by one.
-         This way, the lua function will have the header:
-         Rule:Update(_entityData),
-         Where _entityData is a table containing a single entities data.
-         I should also probably hold the dt value somewhere else, too
+        /**
+         * @brief Calls the Lua Init function once for every matching entity.
+         * @param _registry The scene's EntityRegistry used to enumerate entities.
          */
         void Init(EntityRegistry& _registry);
+        /**
+         * @brief Calls the Lua Update function once per frame for every matching entity.
+         * @param _registry The scene's EntityRegistry.
+         */
         void Update(EntityRegistry& _registry);
+        /**
+         * @brief Calls the Lua Draw function once per frame for every matching entity.
+         * @param _registry The scene's EntityRegistry.
+         */
         void Draw(EntityRegistry& _registry);
 
+        /**
+         * @brief Enables or disables this rule.
+         * @param _a True to activate, false to deactivate.
+         */
         void SetActive(bool _a);
+        /** @brief Returns true when this rule is active. */
         bool GetActive();
 
+        /** @brief Returns the rule's name. */
         std::string GetName();
+        /** @brief Returns the combined Category signature this rule requires. */
         std::bitset<1024> GetCategories();
+        /** @brief Returns the rule-level shared data table. */
         sol::table GetData();
     };
 }

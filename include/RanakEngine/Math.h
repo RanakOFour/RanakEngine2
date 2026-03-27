@@ -8,8 +8,10 @@
 
 namespace RanakEngine::Math
 {
+    /** @brief Registers math Lua bindings (Vector2, Vector3, Vector4, Quaternion) with the LuaContext. */
     void DefineLuaLib();
 
+    /** @brief Releases any math-subsystem resources (currently a no-op). */
     void Stop();
 }
 

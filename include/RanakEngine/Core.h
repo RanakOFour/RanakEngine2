@@ -14,8 +14,15 @@
 
 namespace RanakEngine::Core
 {
+    /** @brief Registers all Core Lua bindings (Scene, Rule, Camera, …) with the LuaContext. */
     void DefineLuaLib();
+    /**
+     * @brief Creates the Core::Manager singleton, LuaContext, and main Camera.
+     * @param _isDebug When true enables verbose engine logging.
+     * @return Shared pointer to the initialised Core::Manager.
+     */
     std::shared_ptr<Core::Manager> Init(bool _isDebug);
+    /** @brief Stops the core update loop and releases engine resources. */
     void Stop();
 }
 
