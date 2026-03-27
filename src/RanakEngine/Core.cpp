@@ -22,6 +22,9 @@ namespace RanakEngine::Core
         std::weak_ptr<Camera> l_camera = CoreManager->GetCamera();
         CoreTable.set("Camera", l_camera.lock());
 
+        std::shared_ptr<Scene> l_scene = CoreManager->GetScene().lock();
+        CoreTable.set("CurrentScene", l_scene);
+
         l_context->SetGlobal("Core", CoreTable);
     }
 

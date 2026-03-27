@@ -31,7 +31,7 @@ namespace Core
 
         std::weak_ptr<Category> RegisterCategory(Category _category);
 
-        std::weak_ptr<Category> ReloadCategory(Category _category, std::bitset<1024> _signature, std::string _oldName);
+        std::weak_ptr<Category> ReloadCategory(std::shared_ptr<Category> _oldCategory, Category _newCategory);
 
         public:
         CategoryFactory();

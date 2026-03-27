@@ -27,7 +27,7 @@ namespace RanakEngine::Core
 
         std::string m_name = "";
         std::bitset<1024> m_signature;
-        sol::table m_baseAttributeTable;
+        sol::table m_fields;
 
         int m_size = 0;
         std::vector<sol::table> m_entityDataTables;
@@ -38,23 +38,23 @@ namespace RanakEngine::Core
         {
             _state.new_usertype<Category>("Category", sol::constructors<Category(), Category(std::string, sol::table)>(),
                                             "name", sol::readonly(&Category::m_name),
-                                            "baseAttributes", sol::readonly(&Category::m_baseAttributeTable),
+                                            "baseFields", sol::readonly(&Category::m_fields),
                                             "getMembers", sol::readonly(&Category::GetMembers),
-                                            "getAttributesFor", sol::readonly(&Category::GetAttributesFor),
+                                            "getFieldsFor", sol::readonly(&Category::GetFieldsFor),
                                             "getSize", sol::readonly(&Category::GetSize)
                                          );
         };
 
         public:
         Category();
-        Category(std::string _name, sol::table _baseAttributes);
+        Category(std::string _name, sol::table _baseFields);
         ~Category();
 
         sol::table& AddMember(int _id);
         void RemoveMember(int id);
 
 
-        sol::table GetAttributesFor(int _id);
+        sol::table GetFieldsFor(int _id);
         std::vector<int> GetMembers();
 
         sol::table& GetBaseData();

@@ -1,6 +1,7 @@
 #include "RanakEngine/Core/EntityRegistry.h"
 #include "RanakEngine/Core/LuaContext.h"
 #include "RanakEngine/Core/Category.h"
+#include "RanakEngine/Log.h"
 
 namespace RanakEngine::Core
 {
@@ -39,9 +40,12 @@ namespace RanakEngine::Core
         l_newEntityTable.create_named("attributes");
 
         // Add to transform
-        std::bitset<1024> l_signature = m_luaContext.lock()->GetCategory("Transform")
-                                       .lock()->GetSignature();
-        AddToCategory(l_newID, l_signature);
+        auto l_transformCategory = m_luaContext.lock()->GetCategory("Transform").lock();
+        
+        if(l_transformCategory)
+        {
+            AddToCategory(l_newID, l_transformCategory->GetSignature());
+        }
 
         return l_newID;
     }
@@ -60,116 +64,103 @@ namespace RanakEngine::Core
         for (int l_id : m_idsToDelete)
         {
             auto l_idSignature = m_entityBitset[l_id];
-
-            for (auto l_pair : m_categories)
+            auto l_context = m_luaContext.lock();
+            
+            for (int i = 0; i < 1024; ++i)
             {
-                // If there is a match
-                if ((l_idSignature & l_pair.first).any())
+                if (l_idSignature.test(i))
                 {
-                    l_pair.second.lock()->RemoveMember(l_id);
+                    std::bitset<1024> l_sig;
+                    l_sig.set(i);
+                    auto l_cat = l_context->GetCategory(l_sig).lock();
+                    if (l_cat)
+                    {
+                        l_cat->RemoveMember(l_id);
+                    }
                 }
             }
 
             m_entityBitset.erase(l_id);
-
             m_freeIds.push_back(l_id);
         }
 
         m_idsToDelete.clear();
+
+        // Rebuild active categories set (expensive but only after deletions)
+        UpdateActiveCategories();
+    }
+
+    void EntityRegistry::UpdateActiveCategories()
+    {
+        m_activeCategories.reset();
+        for (const auto& pair : m_entityBitset)
+        {
+            m_activeCategories |= pair.second;
+        }
     }
 
     void EntityRegistry::AddToCategory(int _id, std::bitset<1024> _signature)
     {
-        // Add to registry if not logged already
-        if (m_categories.find(_signature) == m_categories.end() || m_categories[_signature].lock() == nullptr)
-        {
-            // Ask context for registered category
-            std::shared_ptr<Category> l_categoryPtr = m_luaContext.lock()->GetCategory(_signature).lock();
+        auto l_context = m_luaContext.lock();
+        auto l_category = l_context->GetCategory(_signature).lock();
 
-            if (l_categoryPtr.get() != nullptr)
-            {
-                // Add valid ptr to category map
-                m_categories[_signature] = l_categoryPtr;
-                m_dataTable.raw_get<sol::table>("Categories")
-                    .set(l_categoryPtr->GetName(), l_categoryPtr.get());
-            }
-            else
-            {
-                return;
-            }
+        if (!l_category)
+        {
+            Log::Error("Cannot add entity to category with unknown signature.");
+            return;
         }
 
-        std::shared_ptr<Category> l_category = m_categories[_signature].lock();
+        // Add component data to category storage
+        sol::table l_componentTable = l_category->AddMember(_id);
 
-        // Category is registered
-        // Edit entityData in table
+        // Store reference in the entity's combined attributes table
         m_dataTable.traverse_raw_get<sol::table>(
                        "Entities",
                        _id,
                        "attributes")
-            .set(l_category->GetName(), l_category->AddMember(_id));
+            .set(l_category->GetName(), l_componentTable);
 
         // Update entity signature
         m_entityBitset[_id] |= _signature;
+        m_activeCategories |= _signature;
     }
 
     void EntityRegistry::RemoveFromCategory(int _id, std::bitset<1024> _signature)
     {
-        // Category is registered
-        if (m_categories.find(_signature) != m_categories.end())
-        {
-            auto l_category = m_categories[_signature].lock();
-            l_category->RemoveMember(_id);
-            // There's probably a faster way to do this, but I haven't found it yet
-            m_dataTable.traverse_raw_get<sol::table>(
-                           "Entities",
-                           _id,
-                           "attributes",
-                           l_category->GetName())
-                .abandon();
+        auto l_context = m_luaContext.lock();
+        auto l_category = l_context->GetCategory(_signature).lock();
 
-            // The registry does not have to manage empty categories
-            if (l_category->GetSize() == 0)
-            {
-                m_categories.erase(_signature);
-            }
+        if (!l_category)
+        {
+            return;
         }
+
+        l_category->RemoveMember(_id);
+        // Remove from entity's combined table
+        m_dataTable.traverse_raw_get<sol::table>(
+                       "Entities",
+                       _id,
+                       "attributes",
+                       l_category->GetName())
+            .abandon();
 
         // Update entity signature
         m_entityBitset[_id] ^= _signature;
-    }
 
-    sol::table EntityRegistry::GetEntityTable()
-    {
-        return m_dataTable.raw_get<sol::table>("Entities");
-    }
-
-    sol::table EntityRegistry::GetCategoryTable()
-    {
-        return m_dataTable.raw_get<sol::table>("Categories");
-    }
-
-    std::weak_ptr<Category> EntityRegistry::GetCategory(std::bitset<1024> _signature)
-    {
-        if (m_categories.find(_signature) != m_categories.end())
+        // If after removal, no entity uses this category, remove from active set
+        bool l_stillInUse = false;
+        for (const auto& pair : m_entityBitset)
         {
-            return m_categories[_signature];
-        }
-
-        return std::weak_ptr<Category>();
-    }
-
-    std::weak_ptr<Category> EntityRegistry::GetCategory(std::string _name)
-    {
-        for(auto& l_pair : m_categories)
-        {
-            if(l_pair.second.lock()->GetName() == _name)
+            if ((pair.second & _signature).any())
             {
-                return l_pair.second;
+                l_stillInUse = true;
+                break;
             }
         }
-
-        return std::weak_ptr<Category>();
+        if (!l_stillInUse)
+        {
+            m_activeCategories &= ~_signature;
+        }
     }
 
     std::vector<int> EntityRegistry::GetEntitiesWith(std::bitset<1024> _combinedSignature)
@@ -206,5 +197,33 @@ namespace RanakEngine::Core
     int EntityRegistry::GetEntityCount()
     {
         return m_entityBitset.size();
+    }
+
+    sol::table EntityRegistry::GetEntityTable()
+    {
+        return m_dataTable.raw_get<sol::table>("Entities");
+    }
+
+    sol::table EntityRegistry::GetCategoryTable()
+    {
+        auto l_context = m_luaContext.lock();
+        sol::table l_categoryTable = l_context->CreateTable();
+
+        // Iterate over active categories and add them to the table
+        for (int i = 0; i < 1024; ++i)
+        {
+            if (m_activeCategories.test(i))
+            {
+                std::bitset<1024> l_sig;
+                l_sig.set(i);
+                auto l_cat = l_context->GetCategory(l_sig).lock();
+                if (l_cat)
+                {
+                    l_categoryTable.set(l_cat->GetName(), l_cat.get());
+                }
+            }
+        }
+
+        return l_categoryTable;
     }
 }

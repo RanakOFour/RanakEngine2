@@ -42,22 +42,35 @@ namespace RanakEngine::Core
         return m_registry.AddEntity();
     }
 
-    int Scene::AddEntity(std::bitset<1024> _signature)
-    {
-        int l_newEntityID = m_registry.AddEntity();
-        m_registry.AddToCategory(l_newEntityID, _signature);
-
-        return l_newEntityID;
-    }
-
-    void Scene::AddEntityToCategory(int _id, std::bitset<1024> _signature)
-    {
-        m_registry.AddToCategory(_id, _signature);
-    }
-
     void Scene::RemoveEntity(int _id)
     {
         m_registry.RemoveEntity(_id);
+    }
+
+    void Scene::AddToCategory(int _id, std::string _categoryName)
+    {
+        auto l_category = m_luaContext.lock()->GetCategory(_categoryName).lock();
+        if (!l_category)
+        {
+            Log::Error("Category '" + _categoryName + "' not found.");
+            return;
+        }
+
+        m_registry.AddToCategory(_id, l_category->GetSignature());
+    }
+
+    void Scene::RemoveFromCategory(int _id, std::string _categoryName)
+    {
+        auto l_category = m_luaContext.lock()->GetCategory(_categoryName).lock();
+        if (l_category)
+        {
+            m_registry.RemoveFromCategory(_id, l_category->GetSignature());
+        }
+    }
+
+    sol::table Scene::GetAttributesOf(int _id)
+    {
+        return m_registry.GetEntityAttributes(_id);
     }
 
     void Scene::RenameEntity(int _id, const std::string _newName)
@@ -66,14 +79,15 @@ namespace RanakEngine::Core
         l_entity["name"] = _newName;
     }
 
-    void Scene::RemoveCategory(std::bitset<1024> _signature)
+    std::vector<int> Scene::GetEntitiesWith(const std::vector<std::string>& _categoryNames)
     {
-        std::vector<int> l_entities = m_registry.GetEntitiesWith(_signature);
-
-        for (int l_entity : l_entities)
+        std::bitset<1024> l_signature;
+        for (const auto& l_name : _categoryNames)
         {
-            m_registry.RemoveFromCategory(l_entity, _signature);
+            auto cat = m_luaContext.lock()->GetCategory(l_name).lock();
+            if (cat) l_signature |= cat->GetSignature();
         }
+        return m_registry.GetEntitiesWith(l_signature);
     }
 
     void Scene::AddRule(Rule &_rule)
@@ -183,5 +197,10 @@ namespace RanakEngine::Core
     sol::table Scene::GetSceneTable()
     {
         return m_sceneTable;
+    }
+
+    sol::table Scene::GetEntityTable()
+    {
+        return m_sceneTable.raw_get<sol::table>("Entities");
     }
 }

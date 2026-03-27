@@ -2,6 +2,7 @@
 #include "RanakEngine/Core/Rule.h"
 #include "RanakEngine/Core/Category.h"
 #include "RanakEngine/Core/Camera.h"
+#include "RanakEngine/Core/Scene.h"
 
 #include "RanakEngine/Assets.h"
 
@@ -24,6 +25,7 @@ namespace RanakEngine::Core
         Category::DefineUsertype(m_state);
         Rule::DefineUsertype(m_state);
         Camera::DefineUsertype(m_state);
+        Scene::DefineUsertype(m_state);
     }
 
     LuaContext::~LuaContext()
@@ -105,21 +107,29 @@ namespace RanakEngine::Core
 
     void LuaContext::ReloadCategory(std::weak_ptr<Core::Category> _category)
     {
-        auto l_category = _category.lock();
-        auto l_file = l_category->GetOriginFile().lock();
-        
-        if (!l_file || !l_category)
-            return;
-        
-        std::string l_categoryName = l_category->GetName();
-        std::bitset<1024> l_signature = l_category->GetSignature();
-        
+        auto l_oldCategory = _category.lock();
+        if (!l_oldCategory) return;
+
+        auto l_file = l_oldCategory->GetOriginFile().lock();
+        if (!l_file) return;
+
+        // Reload the Lua file to get the new definition
         LoadScript(l_file);
         Category l_newCategory = RunScript<Category>(l_file);
 
-        auto l_newCategoryPtr = m_categoryFactory->ReloadCategory(l_newCategory, l_signature, l_categoryName).lock();
-        l_file->SetCategory(l_newCategoryPtr);
-        l_newCategoryPtr->SetOriginFile(l_file);
+        // Attempt to reload through the factory (will abort if category has entities)
+        auto l_newCategoryPtr = m_categoryFactory->ReloadCategory(l_oldCategory, l_newCategory).lock();
+        if (l_newCategoryPtr)
+        {
+            l_newCategoryPtr->SetOriginFile(l_file);
+            l_file->SetCategory(l_newCategoryPtr);
+            // The factory has already replaced the old category; any registry that retrieves
+            // by signature will get the new one automatically (since they query the factory).
+        }
+        else
+        {
+            Log::Error("Reload of category '" + l_oldCategory->GetName() + "' failed because it still has entities.");
+        }
     }
 
     void LuaContext::SetGlobal(std::string _name, sol::object &_obj)

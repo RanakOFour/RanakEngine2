@@ -25,7 +25,7 @@ namespace RanakEngine::Core
     {
         std::shared_ptr<Category> l_newCategoryPtr = std::make_shared<Category>();
         l_newCategoryPtr->m_name = _category.m_name;
-        l_newCategoryPtr->m_baseAttributeTable = _category.m_baseAttributeTable;
+        l_newCategoryPtr->m_fields = _category.m_fields;
         l_newCategoryPtr->m_originFile = _category.m_originFile;
 
         std::bitset<1024> l_newSignature;
@@ -42,20 +42,34 @@ namespace RanakEngine::Core
         return l_newCategoryPtr;
     }
 
-    std::weak_ptr<Category> CategoryFactory::ReloadCategory(Category _category, std::bitset<1024> _signature, std::string _oldName)
+    std::weak_ptr<Category> CategoryFactory::ReloadCategory(std::shared_ptr<Category> _oldCategory, Category _newCategory)
     {
-        m_signatureToCategory.erase(_signature);
-        m_nameToSignature.erase(_oldName);
+        // Check if the old category has any entities – if yes, abort reload to avoid data loss
+        if (_oldCategory->GetSize() > 0)
+        {
+            Log::Error("Cannot reload category '" + _oldCategory->GetName() + "' because it is in use by entities.");
+            return _oldCategory; // or return an empty weak_ptr to indicate failure
+        }
 
+        std::bitset<1024> l_signature = _oldCategory->GetSignature();
+        std::string l_oldName = _oldCategory->GetName();
+
+        // Remove old mapping
+        m_signatureToCategory.erase(l_signature);
+        m_nameToSignature.erase(l_oldName);
+
+        // Create new category with the new definition but keep the same signature
         std::shared_ptr<Category> l_newCategoryPtr = std::make_shared<Category>();
-        l_newCategoryPtr->m_name = _category.m_name;
-        l_newCategoryPtr->m_baseAttributeTable = _category.m_baseAttributeTable;
-        l_newCategoryPtr->m_signature = _signature;
+        l_newCategoryPtr->m_name = _newCategory.m_name;
+        l_newCategoryPtr->m_fields = _newCategory.m_fields;
+        l_newCategoryPtr->m_signature = l_signature;  // preserve signature
+        l_newCategoryPtr->m_originFile = _newCategory.GetOriginFile();
 
-        m_nameToSignature[l_newCategoryPtr->m_name] = _signature;
-        m_signatureToCategory[_signature] = l_newCategoryPtr;
+        // Insert new mappings
+        m_nameToSignature[l_newCategoryPtr->m_name] = l_signature;
+        m_signatureToCategory[l_signature] = l_newCategoryPtr;
 
-        return m_signatureToCategory[_signature];
+        return l_newCategoryPtr;
     }
 
     std::weak_ptr<Category> CategoryFactory::GetByName(std::string _name)

@@ -26,7 +26,11 @@ namespace RanakEngine::Core
         
         sol::table m_dataTable;
 
+        std::bitset<1024> m_activeCategories;
+
         void DeleteFlaggedEntities();
+        void UpdateActiveCategories();
+
         public:
         EntityRegistry();
         ~EntityRegistry();
@@ -37,8 +41,6 @@ namespace RanakEngine::Core
         void AddToCategory(int _id, std::bitset<1024> _signature);
         void RemoveFromCategory(int _id, std::bitset<1024> _signature);
 
-        std::weak_ptr<Category> GetCategory(std::bitset<1024> _signature);
-        std::weak_ptr<Category> GetCategory(std::string _name);
         std::vector<int> GetEntitiesWith(std::bitset<1024> _combinedSignature);
 
         std::string GetEntityName(int _id);

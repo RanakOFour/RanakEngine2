@@ -21,8 +21,10 @@ namespace Core
     struct Ray;
     struct RaycastHit;
     class Camera;
+    class LuaContext;
     class Scene
     {
+        friend LuaContext;
         private:
         std::weak_ptr<LuaContext> m_luaContext;
 
@@ -35,15 +37,20 @@ namespace Core
 
         std::vector<std::shared_ptr<Rule>> m_rules;
 
-        static void DefineUsertype()
+        static void DefineUsertype(sol::state& _state)
         {
-            auto l_context = LuaContext::Instance().lock();
-            l_context->AddUserType<Scene>("Scene", sol::constructors<Scene(), Scene(sol::table)>(),
-                                          "name", sol::readonly(&Scene::m_name),
-                                          "camera", &Scene::m_camera,
-                                          "registry", sol::readonly(&Scene::m_sceneTable),
-                                          "rules", sol::readonly(&Scene::m_rules)
-                                         );
+            _state.new_usertype<Scene>("Scene", sol::constructors<Scene(), Scene(sol::table)>(),
+                                        "name", sol::property(&Scene::GetName),
+                                        "addEntity", &Scene::AddEntity,
+                                        "removeEntity", &Scene::RemoveEntity,
+                                        "addToCategory", &Scene::AddToCategory,
+                                        "removeFromCategory", &Scene::RemoveFromCategory,
+                                        "getAttributesOf", &Scene::GetAttributesOf,
+                                        "addRule", &Scene::AddRule,
+                                        "removeRule", &Scene::RemoveRule,
+                                        "getEntitiesWith", &Scene::GetEntitiesWith,
+                                        "getEntityTable", &Scene::GetEntityTable
+                                        );
         };
 
         public:
@@ -52,13 +59,16 @@ namespace Core
         ~Scene();
 
         int AddEntity();
-        int AddEntity(std::bitset<1024> _signature);
-        void AddEntityToCategory(int _id, std::bitset<1024> _bitset);
         void RemoveEntity(int _id);
+
+        void AddToCategory(int _id, std::string _categoryName);
+        void RemoveFromCategory(int _id, std::string _categoryName);
+
+        sol::table GetAttributesOf(int _id);
 
         void RenameEntity(int _id, const std::string _newName);
 
-        void RemoveCategory(std::bitset<1024> _signature);
+        std::vector<int> GetEntitiesWith(const std::vector<std::string>& _categoryNames);
 
         void AddRule(Rule& _rule);
         void RemoveRule(Rule& _rule);
@@ -72,6 +82,8 @@ namespace Core
         int Raycast(Ray& _ray, RaycastHit& _out);
 
         EntityRegistry& GetRegistry();
+        std::string GetName() const { return m_name; }
+        sol::table GetEntityTable();
         sol::table GetSceneTable();
     };
 };

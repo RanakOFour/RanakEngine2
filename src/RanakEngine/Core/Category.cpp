@@ -12,10 +12,10 @@ namespace RanakEngine::Core
     , m_entityToIndex()
     , m_indexToEntity()
     {
-        m_baseAttributeTable = LuaContext::Instance().lock()->CreateTable();
+        m_fields = LuaContext::Instance().lock()->CreateTable();
     }
 
-    Category::Category(std::string _name, sol::table _baseAttributes)
+    Category::Category(std::string _name, sol::table _baseFields)
     : m_name(_name)
     , m_signature()
     , m_size(0)
@@ -23,7 +23,7 @@ namespace RanakEngine::Core
     , m_entityToIndex()
     , m_indexToEntity()
     {
-        m_baseAttributeTable = _baseAttributes;
+        m_fields = _baseFields;
     }
 
     Category::~Category()
@@ -56,7 +56,7 @@ namespace RanakEngine::Core
         
         // Create new table for entity
         sol::table l_newTable = l_luaContext->CreateTable();
-        CloneTable(m_baseAttributeTable, l_newTable, l_luaContext.get());
+        CloneTable(m_fields, l_newTable, l_luaContext.get());
 
         m_entityDataTables.push_back(l_newTable);
         m_entityToIndex[_id] = m_size;
@@ -99,10 +99,10 @@ namespace RanakEngine::Core
 
     sol::table& Category::GetBaseData()
     {
-        return m_baseAttributeTable;
+        return m_fields;
     }
 
-    sol::table Category::GetAttributesFor(int _id)
+    sol::table Category::GetFieldsFor(int _id)
     {
         if(m_entityToIndex.find(_id) == m_entityToIndex.end())
         {
