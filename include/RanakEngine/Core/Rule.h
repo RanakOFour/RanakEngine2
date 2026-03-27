@@ -38,7 +38,16 @@ namespace RanakEngine::Core
 
         static void DefineUsertype(sol::state& _state)
         {
-            _state.new_usertype<Rule>("Rule", sol::constructors<Rule()>(),
+            _state.new_usertype<Rule>("Rule",
+                                              sol::call_constructor,
+                                              sol::factories([](sol::table _opts) -> Rule {
+                                                  Rule r;
+                                                  sol::optional<std::vector<std::string>> cats = _opts.get<sol::optional<std::vector<std::string>>>("categories");
+                                                  if (cats.has_value()) r.m_categories = *cats;
+                                                  sol::optional<sol::table> fields = _opts.get<sol::optional<sol::table>>("fields");
+                                                  if (fields.has_value()) r.m_table = *fields;
+                                                  return r;
+                                              }),
                                               "name", &Rule::m_name,
                                               "categories", &Rule::m_categories,
                                               "fields", &Rule::m_table,
@@ -47,7 +56,7 @@ namespace RanakEngine::Core
                                               "Draw", &Rule::m_drawFunction,
                                               "getCategories", sol::readonly(&Rule::GetCategories),
                                               "isActive", sol::readonly(&Rule::GetActive),
-                                              "setActive", sol::readonly(&Rule::SetActive)  
+                                              "setActive", sol::readonly(&Rule::SetActive)
                                     );
         }
 

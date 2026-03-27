@@ -26,6 +26,19 @@ namespace RanakEngine::Core
         Rule::DefineUsertype(m_state);
         Camera::DefineUsertype(m_state);
         Scene::DefineUsertype(m_state);
+
+        // Field(default, opts) — wraps a default value with optional editor metadata.
+        // CloneTable extracts only the default when creating per-entity data.
+        m_state.set_function("Field", [this](sol::object _default, sol::optional<sol::table> _opts) -> sol::table {
+            sol::table l_field = m_state.create_table();
+            l_field["__isField"] = true;
+            l_field["default"]   = _default;
+            if (_opts.has_value())
+            {
+                l_field["opts"] = *_opts;
+            }
+            return l_field;
+        });
     }
 
     LuaContext::~LuaContext()
@@ -87,6 +100,8 @@ namespace RanakEngine::Core
     {
         Log::Message("Creating category from file " + _file.lock()->GetPath() + "...\n");
         Category l_categoryTable = RunScript<Category>(_file);
+        // Derive the category name from the filename rather than relying on the Lua script to supply it.
+        l_categoryTable.m_name = _file.lock()->GetName();
         l_categoryTable.SetOriginFile(_file);
         
         auto l_categoryPtr = m_categoryFactory->RegisterCategory(l_categoryTable);
@@ -105,6 +120,15 @@ namespace RanakEngine::Core
         return m_categoryFactory->GetByName(_name);
     }
 
+    Rule LuaContext::CreateRule(std::weak_ptr<Asset::LuaFile> _file)
+    {
+        Log::Message("Creating rule from file " + _file.lock()->GetPath() + "...\n");
+        Rule l_rule = RunScript<Rule>(_file);
+        // Derive the rule name from the filename, matching the same convention as categories.
+        l_rule.m_name = _file.lock()->GetName();
+        return l_rule;
+    }
+
     void LuaContext::ReloadCategory(std::weak_ptr<Core::Category> _category)
     {
         auto l_oldCategory = _category.lock();
@@ -116,6 +140,7 @@ namespace RanakEngine::Core
         // Reload the Lua file to get the new definition
         LoadScript(l_file);
         Category l_newCategory = RunScript<Category>(l_file);
+        l_newCategory.m_name = l_file->GetName();
 
         // Attempt to reload through the factory (will abort if category has entities)
         auto l_newCategoryPtr = m_categoryFactory->ReloadCategory(l_oldCategory, l_newCategory).lock();

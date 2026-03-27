@@ -94,7 +94,7 @@ namespace RanakEngine::Asset
 
     std::string LuaFile::GetCode()
     {
-        std::string l_toReturn = std::string(m_contents.data());
+        std::string l_toReturn = std::string(m_contents.data(), m_contents.size());
         return l_toReturn;
     }
 }

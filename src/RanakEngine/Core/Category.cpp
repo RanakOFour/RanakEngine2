@@ -38,10 +38,31 @@ namespace RanakEngine::Core
         {
             if(l_pair.second.get_type() == sol::type::table)
             {
-                sol::table l_newCopyTarget = l_pair.second.as<sol::table>();
+                sol::table l_valueTable = l_pair.second.as<sol::table>();
+
+                // If this is a Field wrapper, extract just the default value for the entity
+                sol::optional<bool> l_isField = l_valueTable["__isField"];
+                if (l_isField.has_value() && *l_isField)
+                {
+                    sol::object l_default = l_valueTable["default"];
+                    if (l_default.get_type() == sol::type::table)
+                    {
+                        sol::table l_defaultTable = l_default.as<sol::table>();
+                        _target[l_pair.first] = _context->CreateTable();
+                        sol::table l_newTarget = _target.raw_get<sol::table>(l_pair.first);
+                        CloneTable(l_defaultTable, l_newTarget, _context);
+                    }
+                    else
+                    {
+                        _target[l_pair.first] = l_default;
+                    }
+                    continue;
+                }
+
+                // Regular nested table — recurse
                 _target[l_pair.first] = _context->CreateTable();
                 sol::table l_newTarget = _target.raw_get<sol::table>(l_pair.first);
-                CloneTable(l_newCopyTarget, l_newTarget, _context);
+                CloneTable(l_valueTable, l_newTarget, _context);
             }
             else
             {

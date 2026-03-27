@@ -3,6 +3,7 @@
 
 #include "RanakEngine/Asset/LuaFile.h"
 #include "RanakEngine/Core/CategoryFactory.h"
+#include "RanakEngine/Core/Rule.h"
 
 #define SOL_ALL_SAFETIES_ON 1
 #include "sol/sol.hpp"
@@ -67,6 +68,8 @@ namespace RanakEngine::Core
         std::weak_ptr<Core::Category> CreateCategory(std::weak_ptr<Asset::LuaFile> _file);
         std::weak_ptr<Core::Category> GetCategory(std::bitset<1024> _signature);
         std::weak_ptr<Core::Category> GetCategory(std::string _name);
+
+        Rule CreateRule(std::weak_ptr<Asset::LuaFile> _file);
 
         void ReloadCategory(std::weak_ptr<Core::Category> _category);
 
