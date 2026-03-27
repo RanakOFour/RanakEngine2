@@ -148,8 +148,6 @@ namespace RanakEngine::Core
         {
             l_newCategoryPtr->SetOriginFile(l_file);
             l_file->SetCategory(l_newCategoryPtr);
-            // The factory has already replaced the old category; any registry that retrieves
-            // by signature will get the new one automatically (since they query the factory).
         }
         else
         {
