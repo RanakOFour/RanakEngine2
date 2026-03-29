@@ -7,7 +7,13 @@
 #include "GLM/ext.hpp"
 #include "RanakEngine/Math.h"
 #include "RanakEngine/Core/LuaContext.h"
-#include "RanakEngine/Asset/Shader.h"
+
+namespace RanakEngine::Asset
+{
+    class Model;
+    class Texture;
+    class Shader;
+}
 
 namespace RanakEngine::Core
 {
@@ -52,10 +58,19 @@ namespace RanakEngine::Core
         glm::mat4 m_projection; ///< Cached projection matrix.
         glm::mat4 m_view;       ///< Cached view matrix.
 
+        inline static std::string DefaultModelPath = "./resources/Models/FlatTexture.obj";
+        inline static std::string DefaultShaderPath = "./resources/Shaders/default/frag.fs;./resources/Shaders/default/vert.vs";
+
         static void DefineUsertype(sol::state& _state)
         {
             _state.new_usertype<Camera>("Camera",
-                                        "Draw", &Camera::Draw,
+                                        "Draw", sol::overload(static_cast<void (Camera::*)(sol::table)>(&Camera::Draw),
+                                                              static_cast<void (Camera::*)(sol::table, 
+                                                                                           std::weak_ptr<Asset::Model>,
+                                                                                           std::weak_ptr<Asset::Texture>,
+                                                                                           std::weak_ptr<Asset::Shader>
+                                                                                          )>(&Camera::Draw)),
+
                                         "ScreenToWorldPoint", &Camera::ScreenToWorldPoint,
                                         "setPosition", &Camera::SetPosition,
                                         "getPosition", &Camera::GetPosition,
@@ -79,7 +94,14 @@ namespace RanakEngine::Core
          * @param _transform Lua table with position/rotation/scale fields.
          * @param _drawable  Lua table describing the renderable (e.g. texture, model).
          */
-        void Draw(sol::table _transform, sol::table _drawable);
+        void Draw(sol::table _entityData);
+
+        void Draw(
+                  sol::table _transform,
+                  std::weak_ptr<Asset::Model> _model,
+                  std::weak_ptr<Asset::Texture> _texture,
+                  std::weak_ptr<Asset::Shader> _shader
+                 );
 
         /**
          * @brief Converts a screen-space pixel coordinate to a world-space point.
