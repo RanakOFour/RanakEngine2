@@ -148,7 +148,10 @@ namespace RanakEngine::Core
         if(l_shaderCatOpt.has_value())
         {
             sol::optional<std::weak_ptr<Asset::Shader>> l_shaderPtr = _entityData.traverse_raw_get<sol::optional<std::weak_ptr<Asset::Shader>>>("Shader", "asset");
-            std::string l_shaderPath = _entityData.traverse_raw_get<std::string>("Shader", "shaderPath");
+            std::string l_vertPath = _entityData.traverse_raw_get<std::string>("Shader", "vertshaderPath");
+            std::string l_fragPath = _entityData.traverse_raw_get<std::string>("Shader", "fragshaderPath");
+            
+            std::string l_shaderPath = l_vertPath + ";" + l_fragPath;
                 
             if(!l_shaderPtr.has_value())
             {
