@@ -2,6 +2,7 @@
 #include "RanakEngine/Core/LuaContext.h"
 #include "RanakEngine/Core/EntityRegistry.h"
 #include "RanakEngine/Core/Category.h"
+#include "RanakEngine/Asset/LuaFile.h"
 #include "RanakEngine/Log.h"
 #include "RanakEngine/Math.h"
 
@@ -123,5 +124,15 @@ namespace RanakEngine::Core
     sol::table Rule::GetData()
     {
         return m_table;
+    }
+
+    void Rule::SetOriginFile(std::weak_ptr<Asset::LuaFile> _file)
+    {
+        m_originFile = _file;
+    }
+
+    std::weak_ptr<Asset::LuaFile> Rule::GetOriginFile()
+    {
+        return m_originFile;
     }
 }

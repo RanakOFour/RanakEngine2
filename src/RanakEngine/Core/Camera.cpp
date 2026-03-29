@@ -65,12 +65,12 @@ namespace RanakEngine::Core
             _drawable.raw_set("model", l_modelWPtr);
             l_modelPtr = _drawable.raw_get<std::weak_ptr<Asset::Model>>("model");
 
-            l_model = l_modelPtr.value().lock();
+            l_model = (*l_modelPtr).lock();
         }
         else
         {
             // Check if path has changed
-            l_model = l_modelPtr.value().lock();
+            l_model = (*l_modelPtr).lock();
             if(l_modelPath != "" && l_model->GetPath() != l_modelPath)
             {
                 auto l_modelWPtr = Asset::Load<Asset::Model>(l_modelPath);

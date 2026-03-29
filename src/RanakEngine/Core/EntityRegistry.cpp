@@ -110,6 +110,12 @@ namespace RanakEngine::Core
             return;
         }
 
+        // Guard against double-adds: if the entity is already in this category, do nothing.
+        if (m_entityBitset.count(_id) && (m_entityBitset[_id] & _signature).any())
+        {
+            return;
+        }
+
         // Add component data to category storage
         sol::table l_componentTable = l_category->AddMember(_id);
 

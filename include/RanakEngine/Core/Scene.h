@@ -76,6 +76,7 @@ namespace Core
 
         public:
         Scene();
+
         /** @brief Constructs a Scene, initialising it with the data from a Lua table. */
         Scene(sol::table _tableData);
         ~Scene();

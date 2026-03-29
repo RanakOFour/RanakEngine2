@@ -104,10 +104,7 @@ namespace RanakEngine::Core
         l_categoryTable.m_name = _file.lock()->GetName();
         l_categoryTable.SetOriginFile(_file);
         
-        auto l_categoryPtr = m_categoryFactory->RegisterCategory(l_categoryTable);
-        _file.lock()->SetCategory(l_categoryPtr.lock());
-
-        return l_categoryPtr;
+        return m_categoryFactory->RegisterCategory(l_categoryTable);
     }
 
     std::weak_ptr<Category> LuaContext::GetCategory(std::bitset<1024> _signature)
@@ -126,6 +123,7 @@ namespace RanakEngine::Core
         Rule l_rule = RunScript<Rule>(_file);
         // Derive the rule name from the filename, matching the same convention as categories.
         l_rule.m_name = _file.lock()->GetName();
+        l_rule.SetOriginFile(_file);
         return l_rule;
     }
 
@@ -147,7 +145,6 @@ namespace RanakEngine::Core
         if (l_newCategoryPtr)
         {
             l_newCategoryPtr->SetOriginFile(l_file);
-            l_file->SetCategory(l_newCategoryPtr);
         }
         else
         {

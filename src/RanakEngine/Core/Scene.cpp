@@ -1,9 +1,5 @@
-#include "RanakEngine/Core/Scene.h"
-#include "RanakEngine/Core/LuaContext.h"
-#include "RanakEngine/Core/CategoryFactory.h"
-#include "RanakEngine/Core/Category.h"
-#include "RanakEngine/Core/Raycast.h"
 
+#include "RanakEngine/Core.h"
 #include "RanakEngine/Log.h"
 
 #include "sol/sol.hpp"
@@ -15,11 +11,11 @@ namespace RanakEngine::Core
     , m_registry()
     , m_rules()
     {
-        auto l_luaContext = LuaContext::Instance().lock();
-        m_sceneTable = l_luaContext->CreateTable();
+        m_luaContext = LuaContext::Instance();
+        m_sceneTable = m_luaContext.lock()->CreateTable();
         m_sceneTable.set("Entities", m_registry.GetEntityTable());
         m_sceneTable.set("Categories", m_registry.GetCategoryTable());
-        m_sceneTable.set("Rules", l_luaContext->CreateTable());
+        m_sceneTable.set("Rules", m_luaContext.lock()->CreateTable());
     }
 
     Scene::Scene(sol::table _tableData)

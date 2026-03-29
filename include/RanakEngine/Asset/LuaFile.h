@@ -8,7 +8,6 @@
 
 namespace RanakEngine::Core
 {
-    class Category;
     class LuaContext;
 }
 
@@ -18,26 +17,18 @@ namespace RanakEngine::Asset
      * @class LuaFile
      * @brief Asset that represents a Lua source file used by the ECR system.
      *
-     * Extends AssetFile with the ability to be reloaded at runtime (hot-reload),
-     * written back to disk, and associated with the Category it defines.  The
-     * LuaContext uses LuaFile to compile and run scripts; the TextEditTab uses
-     * it to display and edit source code in the editor.
+     * Extends AssetFile with the ability to be reloaded at runtime and written
+     * back to disk.  The LuaContext uses LuaFile to compile and run
+     * scripts; the TextEditTab uses it to display and edit source code.
      *
      * The "reloaded" flag is set by FlagReloaded() and cleared after the
      * TextEditTab saves, allowing the UI to show an unsaved-changes indicator.
      */
     class LuaFile : public AssetFile
     {
-        friend Core::LuaContext;
-
         private:
         bool m_toBeReloaded; ///< True when the file has been modified but not yet re-executed.
-        std::string m_name;  ///< Human-readable name derived from the filename (no extension).
-
-        std::weak_ptr<Core::Category> m_category; ///< The Category this file defines (may be expired for rule files).
-
-        /** @brief Associates this file with the given Category after a successful compile. */
-        void SetCategory(std::shared_ptr<Core::Category> _category);
+        std::string m_name;  ///< File name (Without extension).
 
         public:
         /**
@@ -50,8 +41,9 @@ namespace RanakEngine::Asset
         /**
          * @brief Re-reads the file from disk, replacing m_contents.
          *
-         * Called during hot-reload to pick up external edits.  The LuaContext
-         * must subsequently re-compile and re-run the script.
+         * Resolves the associated Category at call-time via
+         * LuaContext::GetCategory(GetName()) and triggers a hot-reload through
+         * the scripting context.
          */
         void Reload();
 
@@ -70,9 +62,6 @@ namespace RanakEngine::Asset
         void SetCode(std::string _code);
         /** @brief Returns the current in-memory Lua source as a std::string. */
         std::string GetCode();
-
-        /** @brief Returns a weak pointer to the Category this file defines. */
-        std::weak_ptr<Core::Category> GetCategory();
 
         /** @brief Returns the filename without extension used as the category/rule name. */
         std::string GetName();

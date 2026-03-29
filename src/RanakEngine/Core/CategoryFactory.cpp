@@ -23,6 +23,13 @@ namespace RanakEngine::Core
 
     std::weak_ptr<Category> CategoryFactory::RegisterCategory(Category _category)
     {
+        // If a category with this name already exists, return the existing one to
+        // prevent duplicate registrations (e.g. from loading the same scene twice).
+        if (m_nameToSignature.count(_category.m_name))
+        {
+            return m_signatureToCategory[m_nameToSignature[_category.m_name]];
+        }
+
         std::shared_ptr<Category> l_newCategoryPtr = std::make_shared<Category>();
         l_newCategoryPtr->m_name = _category.m_name;
         l_newCategoryPtr->m_fields = _category.m_fields;

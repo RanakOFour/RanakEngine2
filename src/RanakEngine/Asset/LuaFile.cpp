@@ -1,7 +1,6 @@
 #include "RanakEngine/Asset/LuaFile.h"
 #include "RanakEngine/Core/LuaContext.h"
 #include "RanakEngine/Core/CoreManager.h"
-#include "RanakEngine/Core/Category.h"
 #include "RanakEngine/Log.h"
 
 #include <fstream> 
@@ -43,8 +42,11 @@ namespace RanakEngine::Asset
     void LuaFile::Reload()
     {
         m_toBeReloaded = false;
-        Core::LuaContext::Instance().lock()
-        ->ReloadCategory(m_category);
+        // Resolve the associated Category at call-time by name rather than
+        // storing a forward pointer on the file itself.
+        auto l_context  = Core::LuaContext::Instance().lock();
+        auto l_category = l_context->GetCategory(m_name);
+        l_context->ReloadCategory(l_category);
     }
 
     void LuaFile::Save()
@@ -67,11 +69,6 @@ namespace RanakEngine::Asset
         m_contents.assign(_code.begin(), _code.end());
     }
 
-    void LuaFile::SetCategory(std::shared_ptr<Core::Category> _category)
-    {
-        m_category = _category;
-    }
-
     void LuaFile::FlagReloaded()
     {
         m_toBeReloaded = true;
@@ -80,11 +77,6 @@ namespace RanakEngine::Asset
     bool LuaFile::GetReloaded()
     {
         return m_toBeReloaded;
-    }
-
-    std::weak_ptr<Core::Category> LuaFile::GetCategory()
-    {
-        return m_category;
     }
 
     std::string LuaFile::GetName()

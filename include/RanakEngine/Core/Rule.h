@@ -43,7 +43,8 @@ namespace RanakEngine::Core
         friend Scene;
         friend LuaContext;
         private:
-        std::weak_ptr<LuaContext> m_context; ///< Scripting context used during Init/Update/Draw dispatch.
+        std::weak_ptr<LuaContext>    m_context;    ///< Scripting context used during Init/Update/Draw dispatch.
+        std::weak_ptr<Asset::LuaFile> m_originFile; ///< The .lua file this rule was loaded from.
 
         bool        m_active;     ///< When false the rule is skipped each frame.
         std::string m_name;       ///< Human-readable rule name (set from the Lua filename).
@@ -125,6 +126,14 @@ namespace RanakEngine::Core
         std::bitset<1024> GetCategories();
         /** @brief Returns the rule-level shared data table. */
         sol::table GetData();
+
+        /**
+         * @brief Associates this rule with the .lua file it was loaded from.
+         * @param _file Weak pointer to the source LuaFile.
+         */
+        void SetOriginFile(std::weak_ptr<Asset::LuaFile> _file);
+        /** @brief Returns a weak pointer to the source .lua file, if any. */
+        std::weak_ptr<Asset::LuaFile> GetOriginFile();
     };
 }
 

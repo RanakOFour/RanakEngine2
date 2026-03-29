@@ -44,11 +44,11 @@ namespace RanakEngine::Core
         private:
         std::weak_ptr<Asset::LuaFile> m_originFile; ///< The .lua file this category was loaded from.
 
-        std::string           m_name;      ///< The category's unique name (derived from filename).
+        std::string           m_name;      ///< The category's name (derived from filename).
         std::bitset<1024>     m_signature; ///< Unique per-bit identifier assigned by CategoryFactory.
         sol::table            m_fields;    ///< Base (default) field table shared by all members.
 
-        int                        m_size;             ///< Number of entities currently in this category.
+        int                        m_size;             ///< Number of entities in this category.
         std::vector<sol::table>    m_entityDataTables; ///< Per-entity field tables (indexed by m_entityToIndex).
         std::map<int, int>         m_entityToIndex;    ///< Entity ID -> data-table index.
         std::map<int, int>         m_indexToEntity;    ///< Data-table index -> entity ID.
@@ -58,7 +58,13 @@ namespace RanakEngine::Core
             _state.new_usertype<Category>("Category",
                                             sol::call_constructor,
                                             sol::factories([](sol::table _fields) {
-                                                return Category("", _fields);
+                                                if(!_fields.valid())
+                                                {
+                                                    throw std::runtime_error("Category constructor requires a table argument.");
+                                                }
+
+                                                std::string l_name = _fields.get_or<std::string>("name", "");
+                                                return Category(l_name, _fields);
                                             }),
                                             "name", sol::readonly(&Category::m_name),
                                             "baseFields", sol::readonly(&Category::m_fields),
