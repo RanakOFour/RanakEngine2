@@ -84,6 +84,8 @@ namespace RanakEngine::Core
          */
         std::vector<int> GetEntitiesWith(std::bitset<1024> _combinedSignature);
 
+        std::vector<int> GetAllRegisteredIds();
+
         /**
          * @brief Returns a human-readable name for the entity (e.g. "Entity 3").
          * @param _id Entity ID.

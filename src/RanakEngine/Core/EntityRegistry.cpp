@@ -185,6 +185,16 @@ namespace RanakEngine::Core
         return l_entities;
     }
 
+    std::vector<int> EntityRegistry::GetAllRegisteredIds()
+    {
+        std::vector<int> l_ids;
+        for (const auto& pair : m_entityBitset)
+        {
+            l_ids.push_back(pair.first);
+        }
+        return l_ids;
+    }
+
     std::string EntityRegistry::GetEntityName(int _id)
     {
         return  m_dataTable.traverse_raw_get<std::string>("Entities", _id, "name");
