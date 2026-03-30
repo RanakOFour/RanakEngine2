@@ -36,10 +36,10 @@ namespace RanakEngine
             l_fileStream.open("./resources/Categories/Transform.lua", std::ios::out);
 
             l_fileStream << "return Category {\n"
-                            "        Position = Vector2.new(0.0),\n"
+                            "        Position = Vector2(0.0),\n"
                             "        Layer = 0,\n"
                             "        Rotation = 0.0,\n"
-                            "        Scale = Vector2.new(1.0)\n"
+                            "        Scale = Vector2(1.0)\n"
                             "}";
 
             l_fileStream.close();

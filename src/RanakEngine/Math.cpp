@@ -21,7 +21,10 @@ namespace RanakEngine::Math
 
         // Add usertypes for Vector2, Vector3, and Vector4
         l_context->AddUserType<Vector2>("Vector2",
-                                        sol::constructors<Vector2(), Vector2(float), Vector2(float, float)>(),
+                                        sol::call_constructor,
+                                        sol::factories([](float _x, float _y) { return Vector2(_x, _y); },
+                                                       [](float _value) { return Vector2(_value); },
+                                                       []() { return Vector2(); }),
                                         "x", &Vector2::x,
                                         "y", &Vector2::y,
                                         "Length", &Vector2::Length,
@@ -33,7 +36,10 @@ namespace RanakEngine::Math
                                         "ToString", &Vector2::ToString);
 
         l_context->AddUserType<Vector3>("Vector3",
-                                        sol::constructors<Vector3(), Vector3(float), Vector3(Vector2, float), Vector3(float, float, float)>(),
+                                        sol::call_constructor,
+                                        sol::factories([](float _x, float _y, float _z) { return Vector3(_x, _y, _z); },
+                                                       [](float _value) { return Vector3(_value); },
+                                                       []() { return Vector3(); }),
                                         "x", &Vector3::x,
                                         "y", &Vector3::y,
                                         "z", &Vector3::z,
@@ -46,9 +52,10 @@ namespace RanakEngine::Math
                                         "ToString", &Vector3::ToString);
 
         l_context->AddUserType<Vector4>("Vector4",
-                                        sol::constructors<Vector4(), Vector4(float), Vector4(Vector2, float, float),
-                                                          Vector4(Vector2, Vector2), Vector4(Vector3, float),
-                                                          Vector4(float, float, float, float)>(),
+                                        sol::call_constructor,
+                                        sol::factories([](float _x, float _y, float _z, float _w) { return Vector4(_x, _y, _z, _w); },
+                                                       [](float _value) { return Vector4(_value); },
+                                                       []() { return Vector4(); }),
                                         "x", &Vector4::x,
                                         "y", &Vector4::y,
                                         "z", &Vector4::z,
