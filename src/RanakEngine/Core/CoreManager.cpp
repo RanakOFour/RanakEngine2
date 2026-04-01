@@ -3,6 +3,7 @@
 #include "RanakEngine/Core/Scene.h"
 #include "RanakEngine/Core/Camera.h"
 #include "RanakEngine/IO/IOManager.h"
+#include "RanakEngine/Physics/PhysicsManager.h"
 #include "RanakEngine/Log.h"
 
 #include "SDL3/SDL.h"
@@ -62,6 +63,8 @@ namespace RanakEngine::Core
 
         m_currentScene->Init();
 
+        auto l_physicsManager = Physics::Manager::Get().lock();
+
         while (m_running)
         {
             l_startCounters = l_currentCounters;
@@ -73,13 +76,11 @@ namespace RanakEngine::Core
             // Update IO
             l_IOManager->UpdateInputs();
 
-            // if (l_IOManager->WindowFocused())
-            // {
-            //     // Do systems
-            //     m_currentScene->Update(m_deltaTime);
-
-            //     // m_Physics.lock()->Update(m_deltaTime);
-            // }
+            // Step physics world before game logic
+            if (l_physicsManager)
+            {
+                l_physicsManager->Step(m_deltaTime);
+            }
 
             m_currentScene->Update(m_deltaTime);
 

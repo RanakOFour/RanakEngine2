@@ -32,6 +32,7 @@ file(GLOB_RECURSE RANAK_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/*.cp
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/IO/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Log/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Math/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Physics/*.cpp"
     )
 
 file(GLOB_RECURSE RANAK_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/*.h"
@@ -40,6 +41,7 @@ file(GLOB_RECURSE RANAK_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/
     "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/IO/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/Log/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/Math/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/Physics/*.h"
     )
 
 add_library(RanakEngine STATIC ${RANAK_HEADER} ${RANAK_SOURCE})
@@ -54,7 +56,8 @@ target_include_directories(RanakEngine PUBLIC
 
 # Link against system libraries if found, otherwise extern
 if(WIN32)
-    target_link_libraries(RanakEngine PRIVATE opengl32 glew32 box2d)
+    target_link_libraries(RanakEngine PRIVATE opengl32 glew32)
+    target_link_libraries(RanakEngine PUBLIC box2d)
     if(SDL3_FOUND)
         target_link_libraries(RanakEngine PRIVATE SDL3::SDL3)
     endif()
@@ -78,5 +81,5 @@ elseif(UNIX)
         target_link_libraries(RanakEngine PRIVATE lua)
     endif()
 
-    target_link_libraries(RanakEngine PRIVATE box2d)
+    target_link_libraries(RanakEngine PUBLIC box2d)
 endif()

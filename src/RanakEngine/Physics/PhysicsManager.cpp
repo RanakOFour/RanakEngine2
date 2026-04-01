@@ -2,23 +2,11 @@
 
 namespace RanakEngine::Physics
 {
-    std::shared_ptr<Physics::Manager> Manager::Init()
-    {
-        if (!m_self)
-        {
-            m_self = std::make_shared<Manager>();
-        }
-
-        return m_self;
-    };
-
     Manager::Manager()
     : m_world()
     {
         b2WorldDef l_worldDef = b2DefaultWorldDef();
-        
-        l_worldDef.gravity = (b2Vec2){0.0f, -9.81f};
-
+        l_worldDef.gravity = {0.0f, -9.81f};
         m_world = b2CreateWorld(&l_worldDef);
     }
 
@@ -27,12 +15,13 @@ namespace RanakEngine::Physics
         b2DestroyWorld(m_world);
     }
 
-    void Manager::Init()
+    std::shared_ptr<Physics::Manager> Manager::Init()
     {
         if (!m_self)
         {
-            m_self = std::make_shared<Manager>();
+            m_self.reset(new Manager());
         }
+        return m_self;
     }
 
     void Manager::Stop()
@@ -40,19 +29,37 @@ namespace RanakEngine::Physics
         m_self.reset();
     }
 
-    void Manager::Step(float _deltaTime)
+    b2BodyId Manager::CreateBody(const b2BodyDef* _def)
     {
-        m_world->Step(_deltaTime, 8, 3);
+        return b2CreateBody(m_world, _def);
     }
 
-    void Manager::SetGravity(const Vector2 &_gravity)
+    void Manager::DestroyBody(b2BodyId _body)
     {
-        m_world->SetGravity(b2Vec2(_gravity.x, _gravity.y));
+        b2DestroyBody(_body);
+    }
+
+    void Manager::Step(float _deltaTime)
+    {
+        b2World_Step(m_world, _deltaTime, 4);
+    }
+
+    void Manager::Reset()
+    {
+        b2DestroyWorld(m_world);
+        b2WorldDef l_worldDef = b2DefaultWorldDef();
+        l_worldDef.gravity = {0.0f, -9.81f};
+        m_world = b2CreateWorld(&l_worldDef);
+    }
+
+    void Manager::SetGravity(const Vector2& _gravity)
+    {
+        b2World_SetGravity(m_world, {_gravity.x, _gravity.y});
     }
 
     Vector2 Manager::GetGravity() const
     {
-        b2Vec2 l_gravity = m_world->GetGravity();
+        b2Vec2 l_gravity = b2World_GetGravity(m_world);
         return Vector2(l_gravity.x, l_gravity.y);
     }
 

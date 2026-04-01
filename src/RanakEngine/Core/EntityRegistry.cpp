@@ -19,6 +19,27 @@ namespace RanakEngine::Core
 
     EntityRegistry::~EntityRegistry()
     {
+        // Remove all entities from their category data tables so that global
+        // Category objects don't accumulate orphaned entries across scene changes.
+        auto l_context = m_luaContext.lock();
+        if (!l_context) return;
+
+        for (const auto& l_pair : m_entityBitset)
+        {
+            int l_id = l_pair.first;
+            const std::bitset<1024>& l_sig = l_pair.second;
+            for (int i = 0; i < 1024; ++i)
+            {
+                if (l_sig.test(i))
+                {
+                    std::bitset<1024> l_catSig;
+                    l_catSig.set(i);
+                    auto l_cat = l_context->GetCategory(l_catSig).lock();
+                    if (l_cat)
+                        l_cat->RemoveMember(l_id);
+                }
+            }
+        }
     }
 
     int EntityRegistry::AddEntity()

@@ -9,7 +9,7 @@
 #include "RanakEngine/Assets.h"
 #include "RanakEngine/Core.h"
 #include "RanakEngine/IO.h"
-// #include "RanakEngine/Physics.h"
+#include "RanakEngine/Physics.h"
 
 namespace RanakEngine
 {
@@ -23,9 +23,10 @@ namespace RanakEngine
      */
     struct EngineContents
     {
-        std::shared_ptr<Asset::Manager> resources; ///< Asset management subsystem.
-        std::shared_ptr<Core::Manager>  core;      ///< Core ECR + scripting subsystem.
-        std::shared_ptr<IO::Manager>    io;        ///< Window, input, and audio subsystem.
+        std::shared_ptr<Asset::Manager>    resources; ///< Asset management subsystem.
+        std::shared_ptr<Core::Manager>     core;      ///< Core ECR + scripting subsystem.
+        std::shared_ptr<IO::Manager>       io;        ///< Window, input, and audio subsystem.
+        std::shared_ptr<Physics::Manager>  physics;   ///< Physics simulation subsystem.
     };
 
     /**

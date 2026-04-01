@@ -4,6 +4,8 @@
 #include "RanakEngine/Core/Camera.h"
 #include "RanakEngine/Core/Scene.h"
 
+#include "RanakEngine/Physics/PhysicsBody.h"
+
 #include "RanakEngine/Assets.h"
 
 #include "RanakEngine/Log.h"
@@ -26,6 +28,7 @@ namespace RanakEngine::Core
         Rule::DefineUsertype(m_state);
         Camera::DefineUsertype(m_state);
         Scene::DefineUsertype(m_state);
+        Physics::Body::DefineUserType(m_state);
 
         // Field(default, opts) — wraps a default value with optional editor metadata.
         // CloneTable extracts only the default when creating per-entity data.

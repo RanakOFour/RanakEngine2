@@ -13,7 +13,7 @@ namespace RanakEngine::Physics
     class Manager
     {
         private:
-        static std::shared_ptr<Physics::Manager> m_self;
+        inline static std::shared_ptr<Physics::Manager> m_self;
         b2WorldId m_world;
 
         Manager();
@@ -27,6 +27,7 @@ namespace RanakEngine::Physics
         void DestroyBody(b2BodyId _body);
 
         void Step(float _deltaTime);
+        void Reset();
 
         void SetGravity(const Vector2 &_gravity);
         Vector2 GetGravity() const;
