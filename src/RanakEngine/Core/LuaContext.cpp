@@ -74,15 +74,16 @@ namespace RanakEngine::Core
     {
         auto l_file = _file.lock();
         std::string l_path = l_file->GetPath();
-        std::string l_code = l_file->GetCode();
 
-        m_loadedScripts[l_path] = m_state.load_file(l_path);
-        if (!m_loadedScripts[l_path].valid())
+        sol::load_result l_loaded = m_state.load_file(l_path);
+        if (!l_loaded.valid())
         {
-            sol::error l_err = m_loadedScripts[l_path];
+            sol::error l_err = l_loaded;
             Log::Message("Could not load script " + l_path + "!\n" + std::string(l_err.what()));
-            m_loadedScripts.erase(l_path);
+            return;
         }
+        
+        m_loadedScripts[l_path] = l_loaded.get<sol::protected_function>();
     }
 
     sol::table LuaContext::CreateTable()

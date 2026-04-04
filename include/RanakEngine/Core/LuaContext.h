@@ -35,8 +35,8 @@ namespace RanakEngine::Core
     {
     private:
         inline static std::weak_ptr<LuaContext> m_self; ///< Weak self-reference for the singleton pattern.
-        sol::state                               m_state;        ///< The underlying Lua VM.
-        std::map<std::string, sol::load_result>  m_loadedScripts; ///< Path -> compiled chunk cache.
+        sol::state                                       m_state;        ///< The underlying Lua VM.
+        std::map<std::string, sol::protected_function>  m_loadedScripts; ///< Path -> compiled chunk cache (registry-backed, stable across stack changes).
         std::shared_ptr<Core::CategoryFactory>   m_categoryFactory; ///< Owned category registry.
 
         LuaContext();
@@ -76,12 +76,28 @@ namespace RanakEngine::Core
                 LoadScript(_file);
             }
 
+            // LoadScript logs an error and returns without inserting on failure.
+            if (m_loadedScripts.find(l_path) == m_loadedScripts.end())
+            {
+                if constexpr (std::is_void<T>::value)
+                    return;
+                else
+                    return T{};
+            }
+
             sol::protected_function_result l_result = m_loadedScripts[l_path]();
 
             if (!l_result.valid())
             {
                 sol::error l_err = l_result;
                 printf("Error running script \"%s\":\n%s\n", l_path.c_str(), l_err.what());
+                // Return a default value; do NOT call l_result.get<T>() on an
+                // invalid result — doing so throws a sol2 exception that escapes
+                // through the Lua/C++ boundary and breaks the entire call chain.
+                if constexpr (std::is_void<T>::value)
+                    return;
+                else
+                    return T{};
             }
 
             // Return on void
