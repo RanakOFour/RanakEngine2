@@ -34,12 +34,12 @@ namespace RanakEngine
         Log::Message("Stopping Asset");
         Asset::Stop();
 
-        Log::Message("Stopping Log");
-        Log::Stop();
-
         Math::Stop();
 
         Log::Message("Stopping Core");
         Core::Stop();
+
+        Log::Message("Stopping Log");
+        Log::Stop();
     }
 }

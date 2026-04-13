@@ -59,6 +59,13 @@ namespace RanakEngine::Log
 
                 l_Logger->m_threadMutex.unlock();
 
+                // Notify external listeners
+                {
+                    std::lock_guard<std::mutex> l_lk(l_Logger->m_listenerMutex);
+                    for (auto& l_cb : l_Logger->m_listeners)
+                        l_cb(l_currentMessage.severity, l_currentMessage.contents);
+                }
+
                 // Print non-debug messages
                 switch (l_currentMessage.severity)
                 {
@@ -182,6 +189,16 @@ namespace RanakEngine::Log
             l_self->m_threadMutex.lock();
             l_self->m_messageQueue.push(MessageContent{(MessageContent::Severity)_severity, _message});
             l_self->m_threadMutex.unlock();
+        }
+    }
+
+    void Manager::AddListener(LogCallback _callback)
+    {
+        auto l_self = m_self.lock();
+        if (l_self)
+        {
+            std::lock_guard<std::mutex> l_lk(l_self->m_listenerMutex);
+            l_self->m_listeners.push_back(std::move(_callback));
         }
     }
 }

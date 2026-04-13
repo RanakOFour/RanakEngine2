@@ -6,6 +6,8 @@
 #include <thread>
 #include <mutex>
 #include <memory>
+#include <functional>
+#include <vector>
 
 #include "GL/glew.h"
 
@@ -34,12 +36,18 @@ namespace RanakEngine::Log
     {
         friend IO::Manager;
         private:
+        /// Callback signature: severity, contents
+        using LogCallback = std::function<void(MessageContent::Severity, const std::string&)>;
+
         /// Static weak pointer to the Logger singleton instance
         static inline std::weak_ptr<Log::Manager> m_self;
         
         std::queue<MessageContent> m_messageQueue; ///< Thread-safe queue of pending log messages
         std::thread m_watchThread; ///< Background thread for monitoring/processing logs
         std::mutex m_threadMutex; ///< Mutex protecting the message queue
+
+        std::vector<LogCallback> m_listeners; ///< External listeners called on each log message
+        std::mutex m_listenerMutex; ///< Protects m_listeners
 
         bool m_running = false; ///< Whether the logging system is currently running
 
@@ -128,6 +136,12 @@ namespace RanakEngine::Log
          * @return bool True if no messages are pending, false otherwise.
          */
         bool Empty() { return m_messageQueue.empty(); };
+
+        /**
+         * @brief Registers an external listener that receives copies of all log messages.
+         * @param _callback Function called with (severity, message) from the logging thread.
+         */
+        static void AddListener(LogCallback _callback);
 
         /**
          * @brief Checks if the logging system is running.
