@@ -44,6 +44,28 @@ namespace RanakEngine::Physics
             return Physics::Body(l_manager->CreateBody(&l_def));
         });
 
+        PhysicsTable.set_function("CreateBody", [](Vector2 _position, float _rotation, std::string _typeStr) -> Physics::Body
+        {
+            auto l_manager = Physics::Manager::Get().lock();
+            if (!l_manager)
+            {
+                throw std::runtime_error("PhysicsManager not initialized");
+            }
+
+            b2BodyDef l_def = b2DefaultBodyDef();
+            l_def.position = {_position.x, _position.y};
+            l_def.rotation = b2MakeRot(Math::DegToRad(_rotation));
+
+            if (_typeStr == "static")
+                l_def.type = b2_staticBody;
+            else if (_typeStr == "kinematic")
+                l_def.type = b2_kinematicBody;
+            else
+                l_def.type = b2_dynamicBody;
+
+            return Physics::Body(l_manager->CreateBody(&l_def));
+        });
+
         // Physics.AddBoxShape(body: Body, halfW, halfH, density, friction, restitution)
         PhysicsTable.set_function("AddBoxShape", [](Physics::Body& _body, float _halfW, float _halfH,
                                                      float _density, float _friction, float _restitution)

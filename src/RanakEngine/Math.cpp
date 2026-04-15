@@ -20,6 +20,8 @@ namespace RanakEngine::Math
 #pragma region MATHSETUP
 
         MathTable.set_function("PI", &PI);
+        MathTable.set_function("DegToRad", &DegToRad);
+        MathTable.set_function("RadToDeg", &RadToDeg);
 
         // Add usertypes for Vector2, Vector3, and Vector4
         l_context->AddUserType<Vector2>("Vector2",

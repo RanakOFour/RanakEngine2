@@ -18,6 +18,7 @@ namespace RanakEngine::IO
         Vector2 position = Vector2(0.0f); ///< Current mouse position in screen coordinates
         bool RMBDown = false; ///< Whether the right mouse button is currently pressed
         bool LMBDown = false; ///< Whether the left mouse button is currently pressed
+        bool MMBDown = false; ///< Whether the middle mouse button is currently pressed
     };
 }
 

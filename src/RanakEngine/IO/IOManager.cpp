@@ -164,24 +164,20 @@ namespace RanakEngine::IO
 
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
                 if (l_event.button.button == SDL_BUTTON_LEFT)
-                {
                     m_mouseInfo.LMBDown = true;
-                }
+                else if (l_event.button.button == SDL_BUTTON_MIDDLE)
+                    m_mouseInfo.MMBDown = true;
                 else
-                {
                     m_mouseInfo.RMBDown = true;
-                }
                 break;
 
             case SDL_EVENT_MOUSE_BUTTON_UP:
                 if (l_event.button.button == SDL_BUTTON_LEFT)
-                {
                     m_mouseInfo.LMBDown = false;
-                }
+                else if (l_event.button.button == SDL_BUTTON_MIDDLE)
+                    m_mouseInfo.MMBDown = false;
                 else
-                {
                     m_mouseInfo.RMBDown = false;
-                }
                 break;
 
             case SDL_EVENT_MOUSE_WHEEL:
