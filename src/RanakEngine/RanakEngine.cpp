@@ -36,10 +36,11 @@ namespace RanakEngine
 
         Math::Stop();
 
-        Log::Message("Stopping Core");
-        Core::Stop();
-
         Log::Message("Stopping Log");
         Log::Stop();
+
+        // Core shuts down Lua, which should be the last thing to stop since other subsystems
+        // have Lua tables that need to be cleaned up.
+        Core::Stop();
     }
 }
