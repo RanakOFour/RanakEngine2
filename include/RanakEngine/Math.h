@@ -8,6 +8,8 @@
 
 namespace RanakEngine::Math
 {
+    static float PI() { return 3.14159265358979f; };
+
     /** @brief Registers math Lua bindings (Vector2, Vector3, Vector4, Quaternion) with the LuaContext. */
     void DefineLuaLib();
 

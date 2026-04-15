@@ -19,6 +19,8 @@ namespace RanakEngine::Math
 
 #pragma region MATHSETUP
 
+        MathTable.set_function("PI", &PI);
+
         // Add usertypes for Vector2, Vector3, and Vector4
         l_context->AddUserType<Vector2>("Vector2",
                                         sol::call_constructor,
