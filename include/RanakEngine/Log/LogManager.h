@@ -5,6 +5,7 @@
 #include <queue>
 #include <thread>
 #include <mutex>
+#include <atomic>
 #include <memory>
 #include <functional>
 #include <vector>
@@ -49,7 +50,7 @@ namespace RanakEngine::Log
         std::vector<LogCallback> m_listeners; ///< External listeners called on each log message
         std::mutex m_listenerMutex; ///< Protects m_listeners
 
-        bool m_running = false; ///< Whether the logging system is currently running
+        std::atomic<bool> m_running = false; ///< Whether the logging system is currently running
 
         /**
          * @brief Monitoring thread function.

@@ -20,7 +20,7 @@ namespace RanakEngine::Log
 
     Manager::~Manager()
     {
-        if (m_running)
+        if (m_watchThread.joinable())
         {
             m_running = false;
             m_watchThread.join();
@@ -135,7 +135,17 @@ namespace RanakEngine::Log
 
     void Manager::Stop()
     {
-        m_running = false;
+        // Clear listeners first so the monitor thread cannot invoke a callback
+        // pointing to an already-destroyed object (e.g. ConsolePanel).
+        {
+            std::lock_guard<std::mutex> l_lk(m_listenerMutex);
+            m_listeners.clear();
+        }
+
+        {
+            std::lock_guard<std::mutex> l_lk(m_threadMutex);
+            m_running = false;
+        }
 
         if (m_watchThread.joinable())
         {
