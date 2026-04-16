@@ -110,6 +110,7 @@ namespace RanakEngine::IO
     {
         m_screenSize = _size;
         m_aspectRatio = m_screenSize.x / m_screenSize.y;
+        SDL_SetWindowSize(m_sdlWindow.get(), m_screenSize.x, m_screenSize.y);
         glViewport(0, 0, m_screenSize.x, m_screenSize.y);
     }
 
