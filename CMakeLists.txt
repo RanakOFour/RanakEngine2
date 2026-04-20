@@ -33,6 +33,7 @@ file(GLOB_RECURSE RANAK_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/*.cp
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Log/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Math/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/Physics/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RanakEngine/UI/*.cpp"
     )
 
 file(GLOB_RECURSE RANAK_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/*.h"
@@ -42,6 +43,7 @@ file(GLOB_RECURSE RANAK_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/
     "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/Log/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/Math/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/Physics/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/RanakEngine/UI/*.h"
     )
 
 add_library(RanakEngine STATIC ${RANAK_HEADER} ${RANAK_SOURCE})

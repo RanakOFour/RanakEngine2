@@ -10,6 +10,7 @@
 #include "RanakEngine/Core.h"
 #include "RanakEngine/IO.h"
 #include "RanakEngine/Physics.h"
+#include "RanakEngine/UI.h"
 
 namespace RanakEngine
 {

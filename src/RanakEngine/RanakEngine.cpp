@@ -14,18 +14,22 @@ namespace RanakEngine
         l_toReturn.core = Core::Init(_debug);
         l_toReturn.physics = Physics::Init();
 
+        UI::Init(*l_toReturn.io);
+
         Math::DefineLuaLib();
         Asset::DefineLuaLib();
         Core::DefineLuaLib();
         IO::DefineLuaLib();
         Log::DefineLuaLib();
         Physics::DefineLuaLib();
+        UI::DefineLuaLib();
 
         return l_toReturn;
     };
 
     void Shutdown(EngineContents &_contents)
     {
+        UI::Stop();
         Physics::Stop();
 
         Log::Message("Stopping IO");

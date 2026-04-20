@@ -3,6 +3,7 @@
 #include "RanakEngine/Core/CoreManager.h"
 #include "RanakEngine/Log.h"
 
+#include <filesystem>
 #include <fstream> 
 #include <sstream>
 #include <memory>
@@ -18,16 +19,31 @@ namespace RanakEngine::Asset
         int l_dotPos = _filePath.find_last_of('.');
         m_name = _filePath.substr(l_nameStart + 1, l_dotPos - l_nameStart - 1);
 
-        // Open file
+        if (!std::filesystem::is_regular_file(_filePath))
+        {
+            Log::Warning("LuaFile: path is not a regular file: " + _filePath);
+            return;
+        }
+
         std::ifstream l_stream;
         l_stream.open(_filePath);
 
-        // Get size of file
-        l_stream.seekg(0,std::ios::end);
-        std::streampos l_fileLength = l_stream.tellg();
-        l_stream.seekg(0,std::ios::beg);
+        if (!l_stream.is_open())
+        {
+            Log::Warning("LuaFile: could not open file for reading: " + _filePath);
+            return;
+        }
 
-        // Read file into content vector
+        l_stream.seekg(0, std::ios::end);
+        std::streampos l_fileLength = l_stream.tellg();
+        l_stream.seekg(0, std::ios::beg);
+
+        if (l_fileLength <= 0)
+        {
+            Log::Warning("LuaFile: file is empty: " + _filePath);
+            return;
+        }
+
         m_contents.resize(l_fileLength);
         l_stream.read(&m_contents[0], l_fileLength);
 

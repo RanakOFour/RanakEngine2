@@ -1,5 +1,5 @@
-#ifndef RANAK_PHYSICS_NS_H
-#define RANAK_PHYSICS_NS_H
+#ifndef RANAKPHYSICS_H
+#define RANAKPHYSICS_H
 
 #include "RanakEngine/Physics/PhysicsManager.h"
 #include "RanakEngine/Physics/PhysicsBody.h"

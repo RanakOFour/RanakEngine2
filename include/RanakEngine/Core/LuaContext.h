@@ -4,6 +4,7 @@
 #include "RanakEngine/Asset/LuaFile.h"
 #include "RanakEngine/Core/CategoryFactory.h"
 #include "RanakEngine/Core/Rule.h"
+#include "RanakEngine/Log.h"
 
 #define SOL_ALL_SAFETIES_ON 1
 #include "sol/sol.hpp"
@@ -69,7 +70,33 @@ namespace RanakEngine::Core
         T RunScript(std::weak_ptr<Asset::LuaFile> _file)
         {
             auto l_file = _file.lock();
+            if (!l_file)
+            {
+                Log::Warning("RunScript: received expired file pointer.\n");
+                if constexpr (std::is_void<T>::value)
+                    return;
+                else
+                    return T{};
+            }
+
             std::string l_path = l_file->GetPath();
+            if (l_path.empty())
+            {
+                Log::Warning("RunScript: file has an empty path.");
+                if constexpr (std::is_void<T>::value)
+                    return;
+                else
+                    return T{};
+            }
+
+            if (l_file->GetCode().empty())
+            {
+                Log::Warning("RunScript: file is empty, cannot execute: " + l_path);
+                if constexpr (std::is_void<T>::value)
+                    return;
+                else
+                    return T{};
+            }
 
             if (m_loadedScripts.find(l_path) == m_loadedScripts.end())
             {
@@ -79,6 +106,7 @@ namespace RanakEngine::Core
             // LoadScript logs an error and returns without inserting on failure.
             if (m_loadedScripts.find(l_path) == m_loadedScripts.end())
             {
+                Log::Warning("RunScript: script failed to compile: " + l_path);
                 if constexpr (std::is_void<T>::value)
                     return;
                 else
@@ -90,25 +118,29 @@ namespace RanakEngine::Core
             if (!l_result.valid())
             {
                 sol::error l_err = l_result;
-                printf("Error running script \"%s\":\n%s\n", l_path.c_str(), l_err.what());
-                // Return a default value; do NOT call l_result.get<T>() on an
-                // invalid result — doing so throws a sol2 exception that escapes
-                // through the Lua/C++ boundary and breaks the entire call chain.
+                Log::Error("Error running script \"" + l_path + "\":\n" + std::string(l_err.what()));
                 if constexpr (std::is_void<T>::value)
                     return;
                 else
                     return T{};
             }
 
-            // Return on void
             if constexpr (std::is_void<T>::value)
             {
                 return;
             }
-
-            // Get result type of there is a result
-            T l_toReturn = l_result.get<T>();
-            return l_toReturn;
+            else
+            {
+                // Verify the result is convertible to the expected type.
+                sol::optional<T> l_opt = l_result.get<sol::optional<T>>();
+                if (!l_opt.has_value())
+                {
+                    Log::Error("RunScript: script \"" + l_path
+                               + "\" did not return the expected type.");
+                    return T{};
+                }
+                return l_opt.value();
+            }
         };
 
         sol::table CreateTable();

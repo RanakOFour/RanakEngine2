@@ -73,13 +73,33 @@ namespace RanakEngine::Core
     void LuaContext::LoadScript(std::weak_ptr<Asset::LuaFile> _file)
     {
         auto l_file = _file.lock();
+        if (!l_file)
+        {
+            Log::Warning("LoadScript: received expired file pointer.");
+            return;
+        }
+
         std::string l_path = l_file->GetPath();
+        if (l_path.empty())
+        {
+            Log::Warning("LoadScript: file has an empty path.");
+            return;
+        }
+
+        // Reject empty files — load_file would succeed but execution would
+        // return nil, which then causes a sol2 conversion error for typed
+        // RunScript<T>() calls.
+        if (l_file->GetCode().empty())
+        {
+            Log::Warning("LoadScript: file is empty, skipping: " + l_path);
+            return;
+        }
 
         sol::load_result l_loaded = m_state.load_file(l_path);
         if (!l_loaded.valid())
         {
             sol::error l_err = l_loaded;
-            Log::Message("Could not load script " + l_path + "!\n" + std::string(l_err.what()));
+            Log::Error("Could not load script " + l_path + "!\n" + std::string(l_err.what()));
             return;
         }
         
@@ -93,19 +113,56 @@ namespace RanakEngine::Core
 
     std::weak_ptr<Category> LuaContext::CreateCategory(const std::string _code)
     {
-        sol::protected_function_result l_result = m_state.script(_code);
-        Category l_category = l_result.get<Category>();
-        
-        return m_categoryFactory->RegisterCategory(l_category);
+        if (_code.empty())
+        {
+            Log::Warning("CreateCategory: received empty code string.");
+            return std::weak_ptr<Category>();
+        }
+
+        sol::protected_function_result l_result = m_state.safe_script(_code, sol::script_pass_on_error);
+        if (!l_result.valid())
+        {
+            sol::error l_err = l_result;
+            Log::Error("CreateCategory: script error:\n" + std::string(l_err.what()));
+            return std::weak_ptr<Category>();
+        }
+
+        sol::optional<Category> l_opt = l_result.get<sol::optional<Category>>();
+        if (!l_opt.has_value())
+        {
+            Log::Error("CreateCategory: script did not return a Category.");
+            return std::weak_ptr<Category>();
+        }
+
+        return m_categoryFactory->RegisterCategory(l_opt.value());
     }
 
 
     std::weak_ptr<Category> LuaContext::CreateCategory(std::weak_ptr<Asset::LuaFile> _file)
     {
-        Log::Message("Creating category from file " + _file.lock()->GetPath() + "...\n");
+        auto l_file = _file.lock();
+        if (!l_file)
+        {
+            Log::Warning("CreateCategory: received expired file pointer.");
+            return std::weak_ptr<Category>();
+        }
+
+        Log::Message("Creating category from file " + l_file->GetPath() + "...\n");
+
+        if (l_file->GetCode().empty())
+        {
+            Log::Warning("CreateCategory: file is empty: " + l_file->GetPath());
+            return std::weak_ptr<Category>();
+        }
+
         Category l_categoryTable = RunScript<Category>(_file);
-        // Derive the category name from the filename rather than relying on the Lua script to supply it.
-        l_categoryTable.m_name = _file.lock()->GetName();
+        if (l_categoryTable.GetName().empty() && l_file->GetName().empty())
+        {
+            Log::Warning("CreateCategory: script produced no usable category from: " + l_file->GetPath());
+            return std::weak_ptr<Category>();
+        }
+
+        l_categoryTable.m_name = l_file->GetName();
         l_categoryTable.SetOriginFile(_file);
         
         return m_categoryFactory->RegisterCategory(l_categoryTable);
@@ -123,10 +180,23 @@ namespace RanakEngine::Core
 
     Rule LuaContext::CreateRule(std::weak_ptr<Asset::LuaFile> _file)
     {
-        Log::Message("Creating rule from file " + _file.lock()->GetPath() + "...\n");
+        auto l_file = _file.lock();
+        if (!l_file)
+        {
+            Log::Warning("CreateRule: received expired file pointer.");
+            return Rule{};
+        }
+
+        Log::Message("Creating rule from file " + l_file->GetPath() + "...\n");
+
+        if (l_file->GetCode().empty())
+        {
+            Log::Warning("CreateRule: file is empty: " + l_file->GetPath());
+            return Rule{};
+        }
+
         Rule l_rule = RunScript<Rule>(_file);
-        // Derive the rule name from the filename, matching the same convention as categories.
-        l_rule.m_name = _file.lock()->GetName();
+        l_rule.m_name = l_file->GetName();
         l_rule.SetOriginFile(_file);
         return l_rule;
     }

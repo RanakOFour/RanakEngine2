@@ -1,0 +1,136 @@
+#ifndef RANAKENGINE_UI_UIRENDERER_H
+#define RANAKENGINE_UI_UIRENDERER_H
+
+/**
+ * @file UIRenderer.h
+ * @brief Pure-OpenGL screen-space UI renderer with text, rect, and image
+ *        drawing — independent of ImGui.
+ *
+ * Owns a quad VAO/VBO, a UI shader, and a bitmap font atlas baked from
+ * a TTF file via stb_truetype.  Exposes a Lua "UI" table so UI rules can
+ * draw UIText, UIButton, UIPanel, and UIImage entities.
+ *
+ * Usage:
+ *   UIRenderer renderer;
+ *   renderer.Init(ioManager);              // after GL context ready
+ *   renderer.RegisterLuaBindings(state);   // before rules are loaded
+ *   // … each frame, between glClear and swap:
+ *   renderer.BeginFrame(screenW, screenH);
+ *   // … Lua rules call UI.DrawRect / UI.DrawText / etc.
+ *   renderer.EndFrame();
+ */
+
+#include "RanakEngine/IO.h"
+
+#include <string>
+
+namespace RanakEngine::UI
+{
+
+/**
+ * @class UIRenderer
+ * @brief Screen-space UI drawing with OpenGL — no ImGui dependency.
+ */
+class UIRenderer
+{
+public:
+    UIRenderer();
+    ~UIRenderer();
+
+    /**
+     * @brief Initialises GL resources (quad mesh, UI shader, font atlas).
+     *
+     * Must be called after the OpenGL context is current.  When _fontData is
+     * nullptr the built-in embedded font (MapleMono) is used.
+     *
+     * @param _io           The IO manager (used each frame to read mouse state).
+     * @param _fontData     Raw TTF data, or nullptr for the embedded default.
+     * @param _fontDataSize Byte count of _fontData (ignored when nullptr).
+     * @param _fontSize     Pixel height used to bake the font atlas.
+     */
+    void Init(IO::Manager& _io,
+              const unsigned char* _fontData = nullptr,
+              unsigned int _fontDataSize = 0,
+              float _fontSize = 32.0f);
+
+    /** @brief Call at the start of each frame to set up screen-space projection. */
+    void BeginFrame(float _screenW, float _screenH);
+    /** @brief Call at the end of UI drawing to restore GL state. */
+    void EndFrame();
+
+    // ── Drawing primitives ───────────────────────────────────────────────────
+
+    void DrawRect(float _x, float _y, float _w, float _h,
+                  float _r, float _g, float _b, float _a);
+
+    void DrawRectOutline(float _x, float _y, float _w, float _h,
+                         float _r, float _g, float _b, float _a,
+                         float _thickness = 1.0f);
+
+    void DrawText(float _x, float _y,
+                  float _r, float _g, float _b, float _a,
+                  const std::string& _text, float _fontSize,
+                  bool _centered);
+
+    void DrawImage(unsigned int _texId, float _x, float _y, float _w, float _h,
+                   float _tR, float _tG, float _tB, float _tA);
+
+    // ── Hit testing ──────────────────────────────────────────────────────────
+
+    bool IsHovered(float _x, float _y, float _w, float _h) const;
+    bool IsClicked(float _x, float _y, float _w, float _h) const;
+
+    float GetScreenWidth()  const { return m_screenW; }
+    float GetScreenHeight() const { return m_screenH; }
+
+private:
+    /** @brief Draws a quad positioned/scaled by the given parameters. */
+    void DrawQuad(float _x, float _y, float _w, float _h,
+                  float _r, float _g, float _b, float _a,
+                  unsigned int _texId, bool _useTexture);
+
+    // ── GL resources ─────────────────────────────────────────────────────────
+    unsigned int m_quadVAO = 0;
+    unsigned int m_quadVBO = 0;
+    unsigned int m_shaderProgram = 0;
+
+    int m_locProjection = -1;
+    int m_locModel      = -1;
+    int m_locColor      = -1;
+    int m_locUseTexture = -1;
+    int m_locTexture    = -1;
+
+    // ── Font atlas ───────────────────────────────────────────────────────────
+    unsigned int m_fontAtlasTexId = 0;
+    float        m_bakedFontSize  = 32.0f;
+
+    static constexpr int k_firstChar = 32;
+    static constexpr int k_charCount = 96;
+    static constexpr int k_atlasW    = 512;
+    static constexpr int k_atlasH    = 512;
+
+    struct GlyphInfo
+    {
+        float x0, y0, x1, y1;
+        float s0, t0, s1, t1;
+        float xAdvance;
+    };
+    GlyphInfo m_glyphs[k_charCount]{};
+
+    // ── Frame state ──────────────────────────────────────────────────────────
+    float m_projMatrix[16]{};
+    float m_screenW = 0.0f;
+    float m_screenH = 0.0f;
+
+    float m_mouseX       = 0.0f;
+    float m_mouseY       = 0.0f;
+    bool  m_mouseDown    = false;
+    bool  m_mouseClicked = false;
+    bool  m_mousePrevDown = false;
+
+    IO::Manager* m_io = nullptr;
+};
+
+} // namespace RanakEngine::UI
+
+#endif
