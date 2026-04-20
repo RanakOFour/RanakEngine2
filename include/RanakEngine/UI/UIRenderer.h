@@ -6,9 +6,10 @@
  * @brief Pure-OpenGL screen-space UI renderer with text, rect, and image
  *        drawing — independent of ImGui.
  *
- * Owns a quad VAO/VBO, a UI shader, and a bitmap font atlas baked from
- * a TTF file via stb_truetype.  Exposes a Lua "UI" table so UI rules can
- * draw UIText, UIButton, UIPanel, and UIImage entities.
+ * Owns a quad VAO/VBO, a UI shader, and per-glyph textures loaded via
+ * FreeType (following the LearnOpenGL text-rendering approach).  Exposes a
+ * Lua "UI" table so UI rules can draw UIText, UIButton, UIPanel, and
+ * UIImage entities.
  *
  * Usage:
  *   UIRenderer renderer;
@@ -23,6 +24,8 @@
 #include "RanakEngine/IO.h"
 
 #include <string>
+#include <map>
+#include <vector>
 
 namespace RanakEngine::UI
 {
@@ -38,7 +41,7 @@ public:
     ~UIRenderer();
 
     /**
-     * @brief Initialises GL resources (quad mesh, UI shader, font atlas).
+     * @brief Initialises GL resources (quad mesh, UI shader, FreeType glyphs).
      *
      * Must be called after the OpenGL context is current.  When _fontData is
      * nullptr the built-in embedded font (MapleMono) is used.
@@ -46,7 +49,7 @@ public:
      * @param _io           The IO manager (used each frame to read mouse state).
      * @param _fontData     Raw TTF data, or nullptr for the embedded default.
      * @param _fontDataSize Byte count of _fontData (ignored when nullptr).
-     * @param _fontSize     Pixel height used to bake the font atlas.
+     * @param _fontSize     Pixel height used to rasterise glyphs.
      */
     void Init(IO::Manager& _io,
               const unsigned char* _fontData = nullptr,
@@ -57,6 +60,14 @@ public:
     void BeginFrame(float _screenW, float _screenH);
     /** @brief Call at the end of UI drawing to restore GL state. */
     void EndFrame();
+
+    /**
+     * @brief Execute all buffered draw commands.
+     *
+     * Call this AFTER ImGui_ImplOpenGL3_RenderDrawData() so game UI renders
+     * on top of editor panels. Clears the command buffer when done.
+     */
+    void Flush();
 
     // ── Drawing primitives ───────────────────────────────────────────────────
 
@@ -94,28 +105,50 @@ private:
     unsigned int m_quadVBO = 0;
     unsigned int m_shaderProgram = 0;
 
+    // Text-specific VAO/VBO (4-component vertices: x,y,u,v)
+    unsigned int m_textVAO = 0;
+    unsigned int m_textVBO = 0;
+    unsigned int m_textShaderProgram = 0;
+
     int m_locProjection = -1;
     int m_locModel      = -1;
     int m_locColor      = -1;
     int m_locUseTexture = -1;
     int m_locTexture    = -1;
 
-    // ── Font atlas ───────────────────────────────────────────────────────────
-    unsigned int m_fontAtlasTexId = 0;
-    float        m_bakedFontSize  = 32.0f;
+    // Text shader uniform locations
+    int m_locTextProjection = -1;
+    int m_locTextColor      = -1;
+    int m_locTextSampler    = -1;
 
-    static constexpr int k_firstChar = 32;
-    static constexpr int k_charCount = 96;
-    static constexpr int k_atlasW    = 512;
-    static constexpr int k_atlasH    = 512;
-
-    struct GlyphInfo
+    // ── FreeType character map (LearnOpenGL style) ───────────────────────────
+    struct Character
     {
-        float x0, y0, x1, y1;
-        float s0, t0, s1, t1;
-        float xAdvance;
+        unsigned int textureID; ///< GL texture handle for this glyph
+        int sizeX, sizeY;      ///< Size of glyph in pixels
+        int bearingX, bearingY; ///< Offset from baseline to left/top of glyph
+        unsigned int advance;   ///< Horizontal advance (in 1/64 pixels)
     };
-    GlyphInfo m_glyphs[k_charCount]{};
+    std::map<char, Character> m_characters;
+    float m_bakedFontSize = 32.0f;
+
+    // Deferred command buffer
+    // Draw calls issued by Lua rules are recorded here and executed in Flush()
+    // which is called AFTER ImGui renders so game UI appears on top of editor.
+    struct DrawCommand
+    {
+        enum class Type { Rect, RectOutline, Text, Image };
+        Type         type;
+        float        x = 0, y = 0, w = 0, h = 0;
+        float        r = 1, g = 1, b = 1, a = 1;
+        float        thickness = 1.0f;
+        std::string  text;
+        float        fontSize = 32.0f;
+        bool         centered = false;
+        unsigned int texId = 0;
+    };
+    std::vector<DrawCommand> m_commandBuffer;
+    bool m_buffering = true; ///< When true, draw calls are buffered; set false during Flush.
 
     // ── Frame state ──────────────────────────────────────────────────────────
     float m_projMatrix[16]{};

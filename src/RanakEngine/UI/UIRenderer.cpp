@@ -8,17 +8,17 @@
 #include <GLM/gtc/matrix_transform.hpp>
 #include <GLM/gtc/type_ptr.hpp>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 #include <vector>
 #include <cstdio>
 #include <cstring>
 
-#define STB_TRUETYPE_IMPLEMENTATION
-#include "box2d/samples/stb_truetype.h"
-
 namespace RanakEngine::UI
 {
 
-// ── Embedded shader sources ──────────────────────────────────────────────────
+// ── Embedded shader sources (rects / images) ────────────────────────────────
 
 static constexpr const char* k_vertexShaderSrc = R"glsl(
 #version 430
@@ -63,6 +63,39 @@ void main()
 }
 )glsl";
 
+// Dedicated text shaders (LearnOpenGL style)
+
+static constexpr const char* k_textVertexShaderSrc = R"glsl(
+#version 430
+
+layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
+out vec2 TexCoords;
+
+uniform mat4 projection;
+
+void main()
+{
+    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
+    TexCoords = vertex.zw;
+}
+)glsl";
+
+static constexpr const char* k_textFragmentShaderSrc = R"glsl(
+#version 430
+
+in vec2 TexCoords;
+out vec4 color;
+
+uniform sampler2D text;
+uniform vec4 textColor;
+
+void main()
+{
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
+    color = textColor * sampled;
+}
+)glsl";
+
 static GLuint CompileShader(GLenum _type, const std::string& _src)
 {
     GLuint l_id = glCreateShader(_type);
@@ -85,10 +118,17 @@ UIRenderer::UIRenderer() = default;
 
 UIRenderer::~UIRenderer()
 {
-    if (m_quadVAO)        glDeleteVertexArrays(1, &m_quadVAO);
-    if (m_quadVBO)        glDeleteBuffers(1, &m_quadVBO);
-    if (m_shaderProgram)  glDeleteProgram(m_shaderProgram);
-    if (m_fontAtlasTexId) glDeleteTextures(1, &m_fontAtlasTexId);
+    if (m_quadVAO)            glDeleteVertexArrays(1, &m_quadVAO);
+    if (m_quadVBO)            glDeleteBuffers(1, &m_quadVBO);
+    if (m_shaderProgram)      glDeleteProgram(m_shaderProgram);
+    if (m_textVAO)            glDeleteVertexArrays(1, &m_textVAO);
+    if (m_textVBO)            glDeleteBuffers(1, &m_textVBO);
+    if (m_textShaderProgram)  glDeleteProgram(m_textShaderProgram);
+
+    for (auto& [ch, info] : m_characters)
+    {
+        if (info.textureID) glDeleteTextures(1, &info.textureID);
+    }
 }
 
 void UIRenderer::Init(IO::Manager& _io,
@@ -98,6 +138,8 @@ void UIRenderer::Init(IO::Manager& _io,
 {
     m_io = &_io;
     m_bakedFontSize = _fontSize;
+
+    // Quad VAO/VBO
 
     float l_verts[] = {
         // x,    y,    z,    u,    v
@@ -123,6 +165,8 @@ void UIRenderer::Init(IO::Manager& _io,
 
     glBindVertexArray(0);
 
+    // Compile and link shaders
+
     GLuint l_vert = CompileShader(GL_VERTEX_SHADER,   k_vertexShaderSrc);
     GLuint l_frag = CompileShader(GL_FRAGMENT_SHADER, k_fragmentShaderSrc);
 
@@ -139,7 +183,7 @@ void UIRenderer::Init(IO::Manager& _io,
     {
         char l_log[512];
         glGetProgramInfoLog(m_shaderProgram, 512, nullptr, l_log);
-        Log::Message(std::string("UIRenderer: shader link error:\n") + l_log);
+        Log::Message(std::string("UIRenderer: rect shader link error:\n") + l_log);
     }
 
     glDeleteShader(l_vert);
@@ -151,9 +195,48 @@ void UIRenderer::Init(IO::Manager& _io,
     m_locUseTexture = glGetUniformLocation(m_shaderProgram, "u_UseTexture");
     m_locTexture    = glGetUniformLocation(m_shaderProgram, "u_Texture");
 
-    // Use provided font data, falling back to the embedded default.
+    // Text shader
+
+    GLuint l_textVert = CompileShader(GL_VERTEX_SHADER,   k_textVertexShaderSrc);
+    GLuint l_textFrag = CompileShader(GL_FRAGMENT_SHADER, k_textFragmentShaderSrc);
+
+    m_textShaderProgram = glCreateProgram();
+    glAttachShader(m_textShaderProgram, l_textVert);
+    glAttachShader(m_textShaderProgram, l_textFrag);
+    glLinkProgram(m_textShaderProgram);
+
+    l_ok = 0;
+    glGetProgramiv(m_textShaderProgram, GL_LINK_STATUS, &l_ok);
+    if (!l_ok)
+    {
+        char l_log[512];
+        glGetProgramInfoLog(m_textShaderProgram, 512, nullptr, l_log);
+        Log::Message(std::string("UIRenderer: text shader link error:\n") + l_log);
+    }
+
+    glDeleteShader(l_textVert);
+    glDeleteShader(l_textFrag);
+
+    m_locTextProjection = glGetUniformLocation(m_textShaderProgram, "projection");
+    m_locTextColor      = glGetUniformLocation(m_textShaderProgram, "textColor");
+    m_locTextSampler    = glGetUniformLocation(m_textShaderProgram, "text");
+
+    // Text VAO/VBO (6 verts × 4 floats each, updated per glyph)
+
+    glGenVertexArrays(1, &m_textVAO);
+    glGenBuffers(1, &m_textVBO);
+
+    glBindVertexArray(m_textVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_textVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    // Load glyphs with FreeType
     const unsigned char* l_fontDataPtr  = _fontData  ? _fontData  : k_defaultFontData;
-    unsigned int         l_fontDataSize = _fontData   ? _fontDataSize : k_defaultFontDataSize;
+    unsigned int         l_fontDataSize = _fontData  ? _fontDataSize : k_defaultFontDataSize;
 
     if (!l_fontDataPtr || l_fontDataSize == 0)
     {
@@ -161,45 +244,69 @@ void UIRenderer::Init(IO::Manager& _io,
         return;
     }
 
-    std::vector<unsigned char> l_bitmap(k_atlasW * k_atlasH, 0);
-    stbtt_bakedchar l_bakedChars[k_charCount];
-
-    int l_result = stbtt_BakeFontBitmap(l_fontDataPtr, 0, _fontSize,
-                                        l_bitmap.data(), k_atlasW, k_atlasH,
-                                        k_firstChar, k_charCount, l_bakedChars);
-    if (l_result <= 0)
+    FT_Library l_ft;
+    if (FT_Init_FreeType(&l_ft))
     {
-        Log::Message("UIRenderer: stbtt_BakeFontBitmap failed (result=" +
-                     std::to_string(l_result) + "). Atlas may be too small.");
+        Log::Error("UIRenderer: could not init FreeType library.");
+        return;
     }
 
-    for (int i = 0; i < k_charCount; ++i)
+    FT_Face l_face;
+    if (FT_New_Memory_Face(l_ft, l_fontDataPtr, l_fontDataSize, 0, &l_face))
     {
-        const stbtt_bakedchar& bc = l_bakedChars[i];
-        m_glyphs[i].x0 = bc.xoff;
-        m_glyphs[i].y0 = bc.yoff;
-        m_glyphs[i].x1 = bc.xoff + (bc.x1 - bc.x0);
-        m_glyphs[i].y1 = bc.yoff + (bc.y1 - bc.y0);
-        m_glyphs[i].s0 = bc.x0 / static_cast<float>(k_atlasW);
-        m_glyphs[i].t0 = bc.y0 / static_cast<float>(k_atlasH);
-        m_glyphs[i].s1 = bc.x1 / static_cast<float>(k_atlasW);
-        m_glyphs[i].t1 = bc.y1 / static_cast<float>(k_atlasH);
-        m_glyphs[i].xAdvance = bc.xadvance;
+        Log::Error("UIRenderer: failed to load font face from memory.");
+        FT_Done_FreeType(l_ft);
+        return;
     }
 
-    glGenTextures(1, &m_fontAtlasTexId);
-    glBindTexture(GL_TEXTURE_2D, m_fontAtlasTexId);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, k_atlasW, k_atlasH, 0,
-                 GL_RED, GL_UNSIGNED_BYTE, l_bitmap.data());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    GLint l_swizzle[] = { GL_ONE, GL_ONE, GL_ONE, GL_RED };
-    glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, l_swizzle);
+    FT_Set_Pixel_Sizes(l_face, 0, static_cast<FT_UInt>(_fontSize));
+
+    // Disable byte-alignment restriction (glyph bitmaps are not 4-byte aligned).
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    for (unsigned char c = 0; c < 128; ++c)
+    {
+        if (FT_Load_Char(l_face, c, FT_LOAD_RENDER))
+        {
+            Log::Message("UIRenderer: failed to load glyph '" +
+                         std::string(1, static_cast<char>(c)) + "'");
+            continue;
+        }
+
+        GLuint l_texId = 0;
+        glGenTextures(1, &l_texId);
+        glBindTexture(GL_TEXTURE_2D, l_texId);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
+                     l_face->glyph->bitmap.width,
+                     l_face->glyph->bitmap.rows,
+                     0, GL_RED, GL_UNSIGNED_BYTE,
+                     l_face->glyph->bitmap.buffer);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        Character l_ch = {
+            l_texId,
+            static_cast<int>(l_face->glyph->bitmap.width),
+            static_cast<int>(l_face->glyph->bitmap.rows),
+            l_face->glyph->bitmap_left,
+            l_face->glyph->bitmap_top,
+            static_cast<unsigned int>(l_face->glyph->advance.x)
+        };
+        m_characters.insert(std::pair<char, Character>(static_cast<char>(c), l_ch));
+    }
+
     glBindTexture(GL_TEXTURE_2D, 0);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-    printf("UIRenderer: initialised (fontSize: %.0f)\n", _fontSize);
+    FT_Done_Face(l_face);
+    FT_Done_FreeType(l_ft);
+
+    Log::Message("UIRenderer: initialised with FreeType (fontSize: " +
+                 std::to_string(static_cast<int>(_fontSize)) + "px, " +
+                 std::to_string(m_characters.size()) + " glyphs loaded)");
 }
 
 void UIRenderer::BeginFrame(float _screenW, float _screenH)
@@ -213,15 +320,12 @@ void UIRenderer::BeginFrame(float _screenW, float _screenH)
     glm::mat4 l_proj = glm::ortho(0.0f, _screenW, _screenH, 0.0f, -1.0f, 1.0f);
     std::memcpy(m_projMatrix, glm::value_ptr(l_proj), sizeof(m_projMatrix));
 
-    if (m_io)
-    {
-        const auto& l_mouse = m_io->GetMouseInfo();
-        m_mouseX        = l_mouse.position.x;
-        m_mouseY        = l_mouse.position.y;
-        m_mouseClicked  = l_mouse.LMBDown && !m_mousePrevDown;
-        m_mousePrevDown = l_mouse.LMBDown;
-        m_mouseDown     = l_mouse.LMBDown;
-    }
+    const auto& l_mouse = m_io->GetMouseInfo();
+    m_mouseX        = l_mouse.position.x;
+    m_mouseY        = l_mouse.position.y;
+    m_mouseClicked  = l_mouse.LMBDown && !m_mousePrevDown;
+    m_mousePrevDown = l_mouse.LMBDown;
+    m_mouseDown     = l_mouse.LMBDown;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -237,6 +341,11 @@ void UIRenderer::DrawQuad(float _x, float _y, float _w, float _h,
                           float _r, float _g, float _b, float _a,
                           unsigned int _texId, bool _useTexture)
 {
+    // Ensure correct state regardless of what 3D rendering rules may have changed.
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glm::mat4 l_model(1.0f);
     l_model = glm::translate(l_model, glm::vec3(_x, _y, 0.0f));
     l_model = glm::scale(l_model, glm::vec3(_w, _h, 1.0f));
@@ -268,6 +377,15 @@ void UIRenderer::DrawQuad(float _x, float _y, float _w, float _h,
 void UIRenderer::DrawRect(float _x, float _y, float _w, float _h,
                           float _r, float _g, float _b, float _a)
 {
+    if (m_buffering)
+    {
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Type::Rect;
+        cmd.x = _x; cmd.y = _y; cmd.w = _w; cmd.h = _h;
+        cmd.r = _r; cmd.g = _g; cmd.b = _b; cmd.a = _a;
+        m_commandBuffer.push_back(std::move(cmd));
+        return;
+    }
     DrawQuad(_x, _y, _w, _h, _r, _g, _b, _a, 0, false);
 }
 
@@ -275,6 +393,16 @@ void UIRenderer::DrawRectOutline(float _x, float _y, float _w, float _h,
                                  float _r, float _g, float _b, float _a,
                                  float _thickness)
 {
+    if (m_buffering)
+    {
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Type::RectOutline;
+        cmd.x = _x; cmd.y = _y; cmd.w = _w; cmd.h = _h;
+        cmd.r = _r; cmd.g = _g; cmd.b = _b; cmd.a = _a;
+        cmd.thickness = _thickness;
+        m_commandBuffer.push_back(std::move(cmd));
+        return;
+    }
     DrawRect(_x,                    _y,                    _w,          _thickness, _r, _g, _b, _a);
     DrawRect(_x,                    _y + _h - _thickness,  _w,          _thickness, _r, _g, _b, _a);
     DrawRect(_x,                    _y + _thickness,        _thickness,  _h - 2.0f * _thickness, _r, _g, _b, _a);
@@ -286,93 +414,157 @@ void UIRenderer::DrawText(float _x, float _y,
                           const std::string& _text, float _fontSize,
                           bool _centered)
 {
-    if (m_fontAtlasTexId == 0) return;
+    if (_text.empty()) return;
+    if (m_characters.empty()) return;
+
+    if (m_buffering)
+    {
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Type::Text;
+        cmd.x = _x; cmd.y = _y;
+        cmd.r = _r; cmd.g = _g; cmd.b = _b; cmd.a = _a;
+        cmd.text = _text;
+        cmd.fontSize = _fontSize;
+        cmd.centered = _centered;
+        m_commandBuffer.push_back(std::move(cmd));
+        return;
+    }
+
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     float l_scale = _fontSize / m_bakedFontSize;
 
+    // Measure advance for width calculation (only if centered)
     float l_totalWidth = 0.0f;
-    float l_maxHeight  = _fontSize;
     if (_centered)
     {
         for (char c : _text)
         {
-            int l_idx = static_cast<int>(c) - k_firstChar;
-            if (l_idx < 0 || l_idx >= k_charCount) l_idx = 0;
-            l_totalWidth += m_glyphs[l_idx].xAdvance * l_scale;
+            auto l_it = m_characters.find(c);
+            if (l_it == m_characters.end()) l_it = m_characters.find(' ');
+            if (l_it != m_characters.end())
+                l_totalWidth += (l_it->second.advance >> 6) * l_scale;
         }
     }
 
-    float l_cursorX  = _centered ? _x - l_totalWidth * 0.5f : _x;
-    float l_cursorY  = _centered ? _y - l_maxHeight  * 0.5f : _y;
-    float l_baseline = _fontSize;
+    float l_cursorX = _centered ? _x - l_totalWidth * 0.5f : _x;
+    float l_startY  = _centered ? _y - _fontSize * 0.5f    : _y;
+
+    // Activate text shader
+    glUseProgram(m_textShaderProgram);
+    glUniformMatrix4fv(m_locTextProjection, 1, GL_FALSE, m_projMatrix);
+    glUniform4f(m_locTextColor, _r, _g, _b, _a);
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(m_locTextSampler, 0);
+    glBindVertexArray(m_textVAO);
+
+    // Render each glyph
+    // Projection is Y-down (top-left = 0,0).
+    // bearingY is the distance from the baseline to the TOP of the glyph.
+    // In a Y-down system, ypos = baseline - bearingY.
+    // We treat l_startY as the top of the text line, so baseline = l_startY + fontSize.
+
+    float l_baseline = l_startY + _fontSize;
 
     for (char c : _text)
     {
-        int l_idx = static_cast<int>(c) - k_firstChar;
-        if (l_idx < 0 || l_idx >= k_charCount)
+        auto l_it = m_characters.find(c);
+        if (l_it == m_characters.end())
         {
-            l_cursorX += m_glyphs[0].xAdvance * l_scale;
+            // Skip unknown characters; advance by space width.
+            auto l_sp = m_characters.find(' ');
+            if (l_sp != m_characters.end())
+                l_cursorX += (l_sp->second.advance >> 6) * l_scale;
             continue;
         }
 
-        const GlyphInfo& g = m_glyphs[l_idx];
+        const Character& ch = l_it->second;
 
-        float l_glyphW = (g.x1 - g.x0) * l_scale;
-        float l_glyphH = (g.y1 - g.y0) * l_scale;
-        float l_glyphX = l_cursorX + g.x0 * l_scale;
-        float l_glyphY = l_cursorY + l_baseline + g.y0 * l_scale;
+        float l_xpos = l_cursorX + ch.bearingX * l_scale;
+        float l_ypos = l_baseline - ch.bearingY * l_scale; // top of glyph
+        float l_w    = ch.sizeX * l_scale;
+        float l_h    = ch.sizeY * l_scale;
 
-        float l_verts[] = {
-            l_glyphX,            l_glyphY,            0.0f, g.s0, g.t0,
-            l_glyphX + l_glyphW, l_glyphY,            0.0f, g.s1, g.t0,
-            l_glyphX + l_glyphW, l_glyphY + l_glyphH, 0.0f, g.s1, g.t1,
-            l_glyphX,            l_glyphY,            0.0f, g.s0, g.t0,
-            l_glyphX + l_glyphW, l_glyphY + l_glyphH, 0.0f, g.s1, g.t1,
-            l_glyphX,            l_glyphY + l_glyphH, 0.0f, g.s0, g.t1,
+        // 6 vertices, 4 floats each (x, y, u, v) — two triangles.
+        float l_verts[6][4] = {
+            { l_xpos,       l_ypos,       0.0f, 0.0f },
+            { l_xpos + l_w, l_ypos,       1.0f, 0.0f },
+            { l_xpos + l_w, l_ypos + l_h, 1.0f, 1.0f },
+
+            { l_xpos,       l_ypos,       0.0f, 0.0f },
+            { l_xpos + l_w, l_ypos + l_h, 1.0f, 1.0f },
+            { l_xpos,       l_ypos + l_h, 0.0f, 1.0f },
         };
 
-        glm::mat4 l_identity(1.0f);
-
-        glUseProgram(m_shaderProgram);
-        glUniformMatrix4fv(m_locProjection, 1, GL_FALSE, m_projMatrix);
-        glUniformMatrix4fv(m_locModel,      1, GL_FALSE, glm::value_ptr(l_identity));
-        glUniform4f(m_locColor, _r, _g, _b, _a);
-        glUniform1i(m_locUseTexture, 1);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m_fontAtlasTexId);
-        glUniform1i(m_locTexture, 0);
-
-        glBindVertexArray(m_quadVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_quadVBO);
+        glBindTexture(GL_TEXTURE_2D, ch.textureID);
+        glBindBuffer(GL_ARRAY_BUFFER, m_textVBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(l_verts), l_verts);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glUseProgram(0);
 
-        l_cursorX += g.xAdvance * l_scale;
+        l_cursorX += (ch.advance >> 6) * l_scale;
     }
 
-    // Restore the unit quad VBO.
-    float l_unitQuad[] = {
-        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-        1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-        0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-    };
-    glBindBuffer(GL_ARRAY_BUFFER, m_quadVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(l_unitQuad), l_unitQuad);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glUseProgram(0);
 }
 
 void UIRenderer::DrawImage(unsigned int _texId,
                            float _x, float _y, float _w, float _h,
                            float _tR, float _tG, float _tB, float _tA)
 {
+    if (m_buffering)
+    {
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Type::Image;
+        cmd.texId = _texId;
+        cmd.x = _x; cmd.y = _y; cmd.w = _w; cmd.h = _h;
+        cmd.r = _tR; cmd.g = _tG; cmd.b = _tB; cmd.a = _tA;
+        m_commandBuffer.push_back(std::move(cmd));
+        return;
+    }
     DrawQuad(_x, _y, _w, _h, _tR, _tG, _tB, _tA, _texId, true);
+}
+
+void UIRenderer::Flush()
+{
+    if (m_commandBuffer.empty()) return;
+
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    m_buffering = false;
+    for (const auto& cmd : m_commandBuffer)
+    {
+        switch (cmd.type)
+        {
+            case DrawCommand::Type::Rect:
+                DrawRect(cmd.x, cmd.y, cmd.w, cmd.h,
+                         cmd.r, cmd.g, cmd.b, cmd.a);
+                break;
+            case DrawCommand::Type::RectOutline:
+                DrawRectOutline(cmd.x, cmd.y, cmd.w, cmd.h,
+                                cmd.r, cmd.g, cmd.b, cmd.a, cmd.thickness);
+                break;
+            case DrawCommand::Type::Text:
+                DrawText(cmd.x, cmd.y,
+                         cmd.r, cmd.g, cmd.b, cmd.a,
+                         cmd.text, cmd.fontSize, cmd.centered);
+                break;
+            case DrawCommand::Type::Image:
+                DrawImage(cmd.texId, cmd.x, cmd.y, cmd.w, cmd.h,
+                          cmd.r, cmd.g, cmd.b, cmd.a);
+                break;
+        }
+    }
+    m_commandBuffer.clear();
+    m_buffering = true;
+
+    glEnable(GL_DEPTH_TEST);
 }
 
 bool UIRenderer::IsHovered(float _x, float _y, float _w, float _h) const

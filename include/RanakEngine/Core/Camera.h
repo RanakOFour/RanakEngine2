@@ -72,6 +72,7 @@ namespace RanakEngine::Core
                                                                                           )>(&Camera::Draw)),
 
                                         "ScreenToWorldPoint", &Camera::ScreenToWorldPoint,
+                                        "WorldToScreenPoint", &Camera::WorldToScreenPoint,
                                         "setPosition", &Camera::SetPosition,
                                         "getPosition", &Camera::GetPosition,
                                         "setRotation", &Camera::SetRotation,

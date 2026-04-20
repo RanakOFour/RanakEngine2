@@ -1,5 +1,5 @@
-#ifndef RANAKENGINE_UI_H
-#define RANAKENGINE_UI_H
+#ifndef RANAKUI_H
+#define RANAKUI_H
 
 #include "RanakEngine/UI/UIRenderer.h"
 #include <memory>

@@ -76,7 +76,12 @@ namespace RanakEngine::Core
             for(int l_entity: l_entities)
             {
                 sol::table l_entityData = _registry.GetEntityAttributes(l_entity);
-                m_updateFunction(this, l_entityData);
+                auto l_result = m_updateFunction(this, l_entityData);
+                if (!l_result.valid())
+                {
+                    sol::error l_err = l_result;
+                    Log::Error("Rule '" + m_name + "' Update error: " + l_err.what());
+                }
             }
         }
     }
@@ -97,7 +102,12 @@ namespace RanakEngine::Core
             for(int l_entity: l_entities)
             {
                 sol::table l_entityData = _registry.GetEntityAttributes(l_entity);
-                m_drawFunction(this, l_entityData);
+                auto l_result = m_drawFunction(this, l_entityData);
+                if (!l_result.valid())
+                {
+                    sol::error l_err = l_result;
+                    Log::Error("Rule '" + m_name + "' Draw error: " + l_err.what());
+                }
             }
         }
     }

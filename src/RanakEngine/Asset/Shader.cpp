@@ -167,7 +167,7 @@ namespace RanakEngine::Asset
             if(!success)
             {
                 glGetShaderInfoLog(compute, 1024, NULL, infoLog);
-                Log::Error("SHADER_COMPILATION_ERROR of type: Compute\n" + std::string(infoLog) + "\n -- --------------------------------------------------- -- ");
+                Log::Error("SHADER_COMPILATION_ERROR of type: Compute\n" + std::string(infoLog) + "\n --");
             }
 
             m_ID = glCreateProgram();
@@ -178,7 +178,7 @@ namespace RanakEngine::Asset
             if(!success)
             {
                 glGetProgramInfoLog(m_ID, 1024, NULL, infoLog);
-                Log::Error("PROGRAM_LINKING_ERROR of type: Program\n" + std::string(infoLog) + "\n -- --------------------------------------------------- -- ");
+                Log::Error("PROGRAM_LINKING_ERROR of type: Program\n" + std::string(infoLog) + "\n --");
             }
 
             glDeleteShader(compute);

@@ -344,7 +344,6 @@ namespace RanakEngine::Core
         {
             glm::vec2 l_ndcSpacePos = glm::vec2(l_clipSpacePos.x, l_clipSpacePos.y) / l_clipSpacePos.w;
             glm::vec2 l_windowSpacePos = (l_ndcSpacePos + 1.0f) * 0.5f * glm::vec2(l_screenSize);
-
             return Vector2(l_windowSpacePos);
         }
 
