@@ -5,6 +5,7 @@ project(RanakEngine)
 
 # Try to find system libraries first, fallback to external versions
 find_package(SDL3 QUIET)
+find_package(Freetype QUIET)
 find_library(GL_LIBRARIES GL QUIET)
 
 set(GLEW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/GLEW)
@@ -24,7 +25,10 @@ if(NOT SDL3_FOUND)
     set(SDL3_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/extern/SDL3)
 endif()
 
-find_package(Freetype REQUIRED)
+if(NOT FREETYPE_FOUND)
+    message(STATUS "Freetype not found in system, using extern/freetype")
+    set(FREETYPE_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/extern/freetype)
+endif()
 
 add_subdirectory(extern/box2d)
 
@@ -61,7 +65,7 @@ target_include_directories(RanakEngine PUBLIC
 
 # Link against system libraries if found, otherwise extern
 if(WIN32)
-    target_link_libraries(RanakEngine PRIVATE opengl32 glew32 Freetype::Freetype)
+    target_link_libraries(RanakEngine PRIVATE opengl32 glew32 freetype)
     target_link_libraries(RanakEngine PUBLIC box2d)
     if(SDL3_FOUND)
         target_link_libraries(RanakEngine PRIVATE SDL3::SDL3)

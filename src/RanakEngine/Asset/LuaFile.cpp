@@ -16,6 +16,10 @@ namespace RanakEngine::Asset
     , m_name()
     {
         int l_nameStart = _filePath.find_last_of('/');
+        if (l_nameStart == -1)
+        {
+            l_nameStart = _filePath.find_last_of('\\');
+        }
         int l_dotPos = _filePath.find_last_of('.');
         m_name = _filePath.substr(l_nameStart + 1, l_dotPos - l_nameStart - 1);
 

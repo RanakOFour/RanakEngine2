@@ -12,11 +12,16 @@ namespace RanakEngine::Core
     {
         auto l_context = LuaContext::Instance().lock();
 
-        for(std::string l_categoryName : m_categories)
+        for (std::string l_categoryName : m_categories)
         {
             auto l_category = l_context->GetCategory(l_categoryName).lock();
-            std::bitset<1024> l_signature = l_category->GetSignature();
-            m_signature |= l_signature;
+
+            if (l_category)
+            {
+                std::bitset<1024> l_signature = l_category->GetSignature();
+                m_signature |= l_signature;
+
+            }
         }
     }
 
