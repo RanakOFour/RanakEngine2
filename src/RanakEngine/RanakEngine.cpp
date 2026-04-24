@@ -9,10 +9,10 @@ namespace RanakEngine
 
         Log::Init();
 
-        l_toReturn.resources = Asset::Init();
         l_toReturn.io = IO::Init(_screenSize);
         l_toReturn.core = Core::Init(_debug);
         l_toReturn.physics = Physics::Init();
+        l_toReturn.resources = Asset::Init();
 
         UI::Init(*l_toReturn.io);
 

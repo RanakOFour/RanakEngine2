@@ -12,7 +12,9 @@ namespace RanakEngine::Asset
 {
     namespace
     {
-        std::shared_ptr<Asset::Manager> AssetManager; ///< Module-private singleton handle (set by Init()).
+        static std::shared_ptr<Asset::Manager> AssetManager; ///< Module-private singleton handle (set by Init()).
+        static std::shared_ptr<Asset::Shader> DefaultShader; ///< Default shader used for drawing entities without an explicit shader.
+        static std::shared_ptr<Asset::Model> DefaultModel;   ///< Default model used for drawing entities without an explicit model.
     }
 
     /**
@@ -30,8 +32,21 @@ namespace RanakEngine::Asset
     template<typename T>
     static std::weak_ptr<T> Load(std::string _path)
     {
-        return Asset::Manager::Instance().lock()->Load<T>(_path);
+        assert(AssetManager != nullptr && "Asset::Load() called before AssetManager was initialised! Did you forget to call Asset::Init()?");
+        return AssetManager->Load<T>(_path);
     };
+
+    static std::shared_ptr<Asset::Shader> GetDefaultShader()
+    {
+        assert(DefaultShader != nullptr && "DefaultShader was not initialised! Did you forget to call Asset::Init()?");
+        return DefaultShader;
+    }
+
+    static std::shared_ptr<Asset::Model> GetDefaultModel()
+    {
+        assert(DefaultModel != nullptr && "DefaultModel was not initialised! Did you forget to call Asset::Init()?");
+        return DefaultModel;
+    }
 
     /** @brief Registers asset-related Lua bindings with the active LuaContext. */
     void DefineLuaLib();

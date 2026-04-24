@@ -193,6 +193,109 @@ namespace RanakEngine::Asset
         }
     }
 
+    bool Shader::LoadFromString(std::string _compute)
+    {
+    }
+
+    bool Shader::LoadFromString(std::string _vert, std::string _frag)
+    {
+        char* l_code = (char*)_vert.c_str();
+
+        std::string l_debug = "Vertex shader code: " + _vert;
+        Log::Debug(l_debug);
+        
+        GLuint l_vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(l_vertexShader, 1, &l_code, NULL);
+
+        glCompileShader(l_vertexShader);
+
+        GLint success = 0;
+        glGetShaderiv(l_vertexShader, GL_COMPILE_STATUS, &success);
+        if (success != GL_TRUE)
+        {
+            char L_errorLog[1024];
+            glGetShaderInfoLog(l_vertexShader, 1024, nullptr, &L_errorLog[0]);
+
+            GLenum l_errorEnum = glGetError();
+            // GL_NO_ERROR is 0
+            
+            if(l_errorEnum != 0)
+            {
+                std::string l_errorString = "Could not compile vertex shader: Errornum: " + std::to_string(l_errorEnum) + ". " + std::string(L_errorLog);
+                Log::Error(l_errorString);
+
+                glDeleteVertexShaderEXT(l_vertexShader);
+                return false;
+            }
+        }
+        
+        l_code = (char*)_frag.c_str();
+
+        l_debug = "Fragment shader code: " + _frag;
+        Log::Debug(l_debug);
+
+        // Create a new fragment shader
+        GLuint l_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+        // Upload shader code to GPU
+        glShaderSource(l_fragmentShader, 1, &l_code, NULL);
+        // Compiler fragment shader
+        glCompileShader(l_fragmentShader);
+        // Get success val for shader compilation
+        glGetShaderiv(l_fragmentShader, GL_COMPILE_STATUS, &success);
+
+        if (success != GL_TRUE)
+        {
+            char L_errorLog[1024];
+            glGetShaderInfoLog(l_fragmentShader, 1024, nullptr, &L_errorLog[0]);
+
+            GLenum l_errorEnum = glGetError();
+            // GL_NO_ERROR is 0
+            if(l_errorEnum != 0)
+            {
+                std::string l_errorString = "Could not compile fragment shader: Errornum: " + std::to_string(l_errorEnum) + ". " + std::string(L_errorLog);
+                Log::Error(l_errorString);
+
+                glDeleteFragmentShaderATI(l_fragmentShader);
+                return false;
+            }
+        }
+
+        printf("Vertex frag created\n");
+
+        // Create new shader program and attach shader objects
+        m_ID = glCreateProgram();
+        glAttachShader(m_ID, l_vertexShader);
+        glAttachShader(m_ID, l_fragmentShader);
+
+        // Associated values in VBOs to variables in the shader code
+        glBindAttribLocation(m_ID, 0, "a_Position");
+        glBindAttribLocation(m_ID, 1, "a_PixelColor");
+
+        // Perform the link and check for failure
+        glLinkProgram(m_ID);
+        glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
+
+        if (success != GL_TRUE)
+        {
+            GLenum l_errorEnum = glGetError();
+            // GL_NO_ERROR is 0
+            if(l_errorEnum != 0)
+            {
+                Log::Error("Failed to compile shader program. Error code: " + std::to_string(l_errorEnum));
+                return false;
+            }
+        }
+
+        //printf("Shader program created\n");
+
+        // Detach and destroy the shader objects. These are no longer needed
+        // because we now have a complete shader program.
+        glDetachShader(m_ID, l_vertexShader);
+        glDeleteShader(l_vertexShader);
+        glDetachShader(m_ID, l_fragmentShader);
+        glDeleteShader(l_fragmentShader);
+    }
+
     void Shader::Use()
     {
         glUseProgram(m_ID);

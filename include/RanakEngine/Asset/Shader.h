@@ -40,6 +40,8 @@ namespace RanakEngine::Asset
         ShaderType m_shaderType;    ///< The type of shader program
 
         public:
+        Shader() : AssetFile("", AssetType::SHADER), m_ID(-1), m_shaderType(FragVert) {};
+
         /**
          * @brief Constructs a shader from a file.
          * 
@@ -51,6 +53,9 @@ namespace RanakEngine::Asset
          * @brief Destructs the Shader and releases OpenGL resources.
          */
         ~Shader();
+
+        bool LoadFromString(std::string _compute);
+        bool LoadFromString(std::string _vert, std::string _frag);
 
         /**
          * @brief Activates this shader for rendering.

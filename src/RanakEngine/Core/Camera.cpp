@@ -55,7 +55,7 @@ namespace RanakEngine::Core
                 // Instantiate value for ptr
                 if(l_modelPath == "")
                 {
-                    l_modelPath = DefaultModelPath;
+                    return;
                 }
 
                 auto l_modelWPtr = Asset::Load<Asset::Model>(l_modelPath);
@@ -89,11 +89,23 @@ namespace RanakEngine::Core
 
             l_model = (*l_modelPtr).lock();
         }
-        else
+
+        if(l_model == nullptr)
         {
-            // Check if path has changed
-            l_model = Asset::Load<Asset::Model>(DefaultModelPath).lock();
+            // Fall back to the unit-quad default model when the entity has a Texture
+            sol::optional<sol::table> l_texCheck = _entityData.traverse_raw_get<sol::optional<sol::table>>("Texture");
+            if(l_texCheck.has_value())
+            {
+                l_model = Asset::GetDefaultModel();
+            }
+            else
+            {
+                Log::Warning("Object cannot be drawn: model is null");
+                return;
+            }
         }
+
+        Log::Message("Drawing entity with model " + l_model->GetPath());
 
         sol::optional<sol::table> l_textureCatOpt = _entityData.traverse_raw_get<sol::optional<sol::table>>("Texture");
 
@@ -141,6 +153,14 @@ namespace RanakEngine::Core
             l_texture = l_texturePtr.value().lock(); 
         }
 
+        if(l_texture == nullptr)
+        {
+            Log::Warning("Object cannot be drawn: texture is null");
+            return;
+        }
+
+        Log::Message("Using texture " + l_texture->GetPath());
+
         sol::optional<sol::table> l_shaderCatOpt = _entityData.traverse_raw_get<sol::optional<sol::table>>("Shader");
 
         std::shared_ptr<Asset::Shader> l_shader;
@@ -157,7 +177,7 @@ namespace RanakEngine::Core
             {
                 if(l_shaderPath == "")
                 {
-                    l_shaderPath = DefaultShaderPath;
+                    return;
                 }
 
                 auto l_shaderWPtr = Asset::Load<Asset::Shader>(l_shaderPath);
@@ -191,11 +211,13 @@ namespace RanakEngine::Core
 
             l_shader = l_shaderPtr.value().lock();
         }
-        else
+
+        if(l_shader == nullptr)
         {
-            // Check if path has changed
-            l_shader = Asset::Load<Asset::Shader>(DefaultShaderPath).lock();
+            l_shader = Asset::GetDefaultShader();
         }
+
+        Log::Message("Using shader " + l_shader->GetPath());
         
         l_shader->Use();
         

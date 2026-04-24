@@ -111,6 +111,8 @@ namespace RanakEngine::Asset
                 
                 m_resourceMap[_path] = std::static_pointer_cast<AssetFile>(l_newAsset);
             }
+
+            Log::Message("Loaded asset: " + _path);
             
             return std::static_pointer_cast<T>(m_resourceMap[_path]);
         };

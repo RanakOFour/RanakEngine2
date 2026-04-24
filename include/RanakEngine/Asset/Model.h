@@ -68,6 +68,7 @@ namespace RanakEngine::Asset
       std::vector<std::string>& _output);
 
     public:
+    Model() : AssetFile("", AssetType::MODEL), m_vaoId(-1), m_vboId(-1), m_dirty(false) {};
     /**
      * @brief Constructs a Model by loading from an OBJ file.
      * @param _path Path to the OBJ file.
@@ -84,6 +85,40 @@ namespace RanakEngine::Asset
      * @brief Destructor - cleans up OpenGL resources.
      */
     virtual ~Model();
+
+    bool LoadFromArray(const float* _data, size_t _floatCount)
+    {
+        // Each vertex is 8 floats: pos.xyz, uv.xy, normal.xyz
+        // Each face is 3 vertices = 24 floats.
+        if (_floatCount == 0 || (_floatCount % 24) != 0)
+            return false;
+
+        m_faces.clear();
+
+        const size_t l_vertexStride = 8;
+        const size_t l_faceStride   = l_vertexStride * 3;
+        const size_t l_faceCount    = _floatCount / l_faceStride;
+
+        for (size_t fi = 0; fi < l_faceCount; ++fi)
+        {
+            const float* f = _data + fi * l_faceStride;
+            Face face;
+            face.a.position = glm::vec3(f[0],  f[1],  f[2]);
+            face.a.texcoord = glm::vec2(f[3],  f[4]);
+            face.a.normal   = glm::vec3(f[5],  f[6],  f[7]);
+            face.b.position = glm::vec3(f[8],  f[9],  f[10]);
+            face.b.texcoord = glm::vec2(f[11], f[12]);
+            face.b.normal   = glm::vec3(f[13], f[14], f[15]);
+            face.c.position = glm::vec3(f[16], f[17], f[18]);
+            face.c.texcoord = glm::vec2(f[19], f[20]);
+            face.c.normal   = glm::vec3(f[21], f[22], f[23]);
+            face.CalculateNormal();
+            m_faces.push_back(face);
+        }
+
+        m_dirty = true;
+        return true;
+    }
 
     /**
      * @brief Gets the list of faces in the model.

@@ -58,9 +58,6 @@ namespace RanakEngine::Core
         glm::mat4 m_projection; ///< Cached projection matrix.
         glm::mat4 m_view;       ///< Cached view matrix.
 
-        inline static std::string DefaultModelPath = "./resources/Models/FlatTexture.obj";
-        inline static std::string DefaultShaderPath = "./resources/Shaders/default/frag.fs;./resources/Shaders/default/vert.vs";
-
         static void DefineUsertype(sol::state& _state)
         {
             _state.new_usertype<Camera>("Camera",

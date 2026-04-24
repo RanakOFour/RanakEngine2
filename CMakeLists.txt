@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_COMPILER "/usr/bin/clang")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftime-trace=timetrace.json")
 
-project(RanakEngine)
+project(RanakEngine VERSION 0.5
+                     LANGUAGES CXX)
 
 # Try to find system libraries first, fallback to external versions
 find_package(SDL3 QUIET)

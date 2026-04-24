@@ -35,9 +35,9 @@ namespace RanakEngine::Log
         {
 // Wait for Manager to be initialised
 #if WIN32
-            Sleep(100);
+            Sleep(10);
 #else
-            usleep(10);
+            usleep(1);
 #endif
             l_Logger = m_self.lock().get();
         }
@@ -51,7 +51,6 @@ namespace RanakEngine::Log
             l_core = Core::Manager::Instance().lock();
             if (!l_Logger->m_messageQueue.empty())
             {
-
                 l_Logger->m_threadMutex.lock();
 
                 l_currentMessage = l_Logger->m_messageQueue.front();
@@ -92,9 +91,9 @@ namespace RanakEngine::Log
             }
 
 #if WIN32
-            Sleep(100);
+            Sleep(10);
 #else
-            usleep(10);
+            usleep(1);
 #endif
         }
     }
