@@ -195,6 +195,7 @@ namespace RanakEngine::Asset
 
     bool Shader::LoadFromString(std::string _compute)
     {
+        return false;
     }
 
     bool Shader::LoadFromString(std::string _vert, std::string _frag)
@@ -286,14 +287,17 @@ namespace RanakEngine::Asset
             }
         }
 
-        //printf("Shader program created\n");
+        printf("Shader program created\n");
 
         // Detach and destroy the shader objects. These are no longer needed
         // because we now have a complete shader program.
         glDetachShader(m_ID, l_vertexShader);
-        glDeleteShader(l_vertexShader);
         glDetachShader(m_ID, l_fragmentShader);
+
+        glDeleteShader(l_vertexShader);
         glDeleteShader(l_fragmentShader);
+        
+        return true;
     }
 
     void Shader::Use()

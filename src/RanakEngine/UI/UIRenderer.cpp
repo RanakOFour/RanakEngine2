@@ -1,6 +1,7 @@
 #include "RanakEngine/UI/UIRenderer.h"
 #include "RanakEngine/UI/DefaultFont.h"
 
+#include "RanakEngine/IO.h"
 #include "RanakEngine/Log.h"
 
 #include <GL/glew.h>
@@ -18,10 +19,7 @@
 namespace RanakEngine::UI
 {
 
-// ── Embedded shader sources (rects / images) ────────────────────────────────
-
-static constexpr const char* k_vertexShaderSrc = R"glsl(
-#version 430
+static constexpr const char* k_vertexShaderSrc = R"glsl(#version 430
 
 in vec3 a_Position;
 in vec2 a_PixelColor;
@@ -38,8 +36,7 @@ void main()
 }
 )glsl";
 
-static constexpr const char* k_fragmentShaderSrc = R"glsl(
-#version 430
+static constexpr const char* k_fragmentShaderSrc = R"glsl(#version 430
 
 in vec2 v_texCoord;
 
@@ -63,10 +60,7 @@ void main()
 }
 )glsl";
 
-// Dedicated text shaders (LearnOpenGL style)
-
-static constexpr const char* k_textVertexShaderSrc = R"glsl(
-#version 430
+static constexpr const char* k_textVertexShaderSrc = R"glsl(#version 430
 
 layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
 out vec2 TexCoords;
@@ -80,8 +74,7 @@ void main()
 }
 )glsl";
 
-static constexpr const char* k_textFragmentShaderSrc = R"glsl(
-#version 430
+static constexpr const char* k_textFragmentShaderSrc = R"glsl(#version 430
 
 in vec2 TexCoords;
 out vec4 color;
@@ -114,7 +107,10 @@ static GLuint CompileShader(GLenum _type, const std::string& _src)
     return l_id;
 }
 
-UIRenderer::UIRenderer() = default;
+UIRenderer::UIRenderer()
+{
+    m_IOwptr = IO::Manager::Instance();
+}
 
 UIRenderer::~UIRenderer()
 {
@@ -127,16 +123,19 @@ UIRenderer::~UIRenderer()
 
     for (auto& [ch, info] : m_characters)
     {
-        if (info.textureID) glDeleteTextures(1, &info.textureID);
+        if (info.textureID)
+        {
+            glDeleteTextures(1, &info.textureID);
+        }
     }
 }
 
-void UIRenderer::Init(IO::Manager& _io,
+void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
                       const unsigned char* _fontData,
                       unsigned int _fontDataSize,
                       float _fontSize)
 {
-    m_io = &_io;
+    m_IOwptr = _io;
     m_bakedFontSize = _fontSize;
 
     // Quad VAO/VBO
@@ -189,11 +188,11 @@ void UIRenderer::Init(IO::Manager& _io,
     glDeleteShader(l_vert);
     glDeleteShader(l_frag);
 
-    m_locProjection = glGetUniformLocation(m_shaderProgram, "u_Projection");
-    m_locModel      = glGetUniformLocation(m_shaderProgram, "u_Model");
     m_locColor      = glGetUniformLocation(m_shaderProgram, "u_Color");
-    m_locUseTexture = glGetUniformLocation(m_shaderProgram, "u_UseTexture");
+    m_locModel      = glGetUniformLocation(m_shaderProgram, "u_Model");
+    m_locProjection = glGetUniformLocation(m_shaderProgram, "u_Projection");
     m_locTexture    = glGetUniformLocation(m_shaderProgram, "u_Texture");
+    m_locUseTexture = glGetUniformLocation(m_shaderProgram, "u_UseTexture");
 
     // Text shader
 
@@ -218,8 +217,8 @@ void UIRenderer::Init(IO::Manager& _io,
     glDeleteShader(l_textFrag);
 
     m_locTextProjection = glGetUniformLocation(m_textShaderProgram, "projection");
-    m_locTextColor      = glGetUniformLocation(m_textShaderProgram, "textColor");
     m_locTextSampler    = glGetUniformLocation(m_textShaderProgram, "text");
+    m_locTextColor      = glGetUniformLocation(m_textShaderProgram, "textColor");
 
     // Text VAO/VBO (6 verts × 4 floats each, updated per glyph)
 
@@ -280,7 +279,8 @@ void UIRenderer::Init(IO::Manager& _io,
                      l_face->glyph->bitmap.width,
                      l_face->glyph->bitmap.rows,
                      0, GL_RED, GL_UNSIGNED_BYTE,
-                     l_face->glyph->bitmap.buffer);
+                     l_face->glyph->bitmap.buffer
+                    );
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -289,17 +289,18 @@ void UIRenderer::Init(IO::Manager& _io,
 
         Character l_ch = {
             l_texId,
-            static_cast<int>(l_face->glyph->bitmap.width),
-            static_cast<int>(l_face->glyph->bitmap.rows),
+            l_face->glyph->bitmap.width,
+            l_face->glyph->bitmap.rows,
             l_face->glyph->bitmap_left,
             l_face->glyph->bitmap_top,
             static_cast<unsigned int>(l_face->glyph->advance.x)
         };
-        m_characters.insert(std::pair<char, Character>(static_cast<char>(c), l_ch));
+
+        m_characters.insert(std::pair<char, Character>(c, l_ch));
     }
 
     glBindTexture(GL_TEXTURE_2D, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     FT_Done_Face(l_face);
     FT_Done_FreeType(l_ft);
@@ -317,24 +318,20 @@ void UIRenderer::BeginFrame(float _screenW, float _screenH)
     m_screenW = _screenW;
     m_screenH = _screenH;
 
-    glm::mat4 l_proj = glm::ortho(0.0f, _screenW, _screenH, 0.0f, -1.0f, 1.0f);
-    std::memcpy(m_projMatrix, glm::value_ptr(l_proj), sizeof(m_projMatrix));
+    m_projMatrix = glm::ortho(0.0f, m_screenW, m_screenH, 0.0f);
 
-    const auto& l_mouse = m_io->GetMouseInfo();
-    m_mouseX        = l_mouse.position.x;
-    m_mouseY        = l_mouse.position.y;
-    m_mouseClicked  = l_mouse.LMBDown && !m_mousePrevDown;
-    m_mousePrevDown = l_mouse.LMBDown;
-    m_mouseDown     = l_mouse.LMBDown;
+    if (auto io = m_IOwptr.lock())
+    {
+        const auto& l_mouse = io->GetMouseInfo();
+        m_mouseX        = l_mouse.position.x;
+        m_mouseY        = l_mouse.position.y;
+        m_mouseClicked  = l_mouse.LMBDown && !m_mousePrevDown;
+        m_mousePrevDown = l_mouse.LMBDown;
+        m_mouseDown     = l_mouse.LMBDown;
+    }
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
-}
-
-void UIRenderer::EndFrame()
-{
-    glEnable(GL_DEPTH_TEST);
 }
 
 void UIRenderer::DrawQuad(float _x, float _y, float _w, float _h,
@@ -352,7 +349,7 @@ void UIRenderer::DrawQuad(float _x, float _y, float _w, float _h,
 
     glUseProgram(m_shaderProgram);
 
-    glUniformMatrix4fv(m_locProjection, 1, GL_FALSE, m_projMatrix);
+    glUniformMatrix4fv(m_locProjection, 1, GL_FALSE, glm::value_ptr(m_projMatrix));
     glUniformMatrix4fv(m_locModel,      1, GL_FALSE, glm::value_ptr(l_model));
     glUniform4f(m_locColor, _r, _g, _b, _a);
     glUniform1i(m_locUseTexture, _useTexture ? 1 : 0);
@@ -449,24 +446,22 @@ void UIRenderer::DrawText(float _x, float _y,
         }
     }
 
-    float l_cursorX = _centered ? _x - l_totalWidth * 0.5f : _x;
-    float l_startY  = _centered ? _y - _fontSize * 0.5f    : _y;
+    float l_cursorX = _centered ? 
+                                  _x - l_totalWidth * 0.5f 
+                                : _x;
+
+    float l_startY  = _centered ? 
+                                  _y - _fontSize * 0.5f
+                                : _y;
 
     // Activate text shader
     glUseProgram(m_textShaderProgram);
-    glUniformMatrix4fv(m_locTextProjection, 1, GL_FALSE, m_projMatrix);
+    glUniformMatrix4fv(m_locTextProjection, 1, GL_FALSE, glm::value_ptr(m_projMatrix));
     glUniform4f(m_locTextColor, _r, _g, _b, _a);
     glActiveTexture(GL_TEXTURE0);
-    glUniform1i(m_locTextSampler, 0);
     glBindVertexArray(m_textVAO);
 
     // Render each glyph
-    // Projection is Y-down (top-left = 0,0).
-    // bearingY is the distance from the baseline to the TOP of the glyph.
-    // In a Y-down system, ypos = baseline - bearingY.
-    // We treat l_startY as the top of the text line, so baseline = l_startY + fontSize.
-
-    float l_baseline = l_startY + _fontSize;
 
     for (char c : _text)
     {
@@ -476,26 +471,30 @@ void UIRenderer::DrawText(float _x, float _y,
             // Skip unknown characters; advance by space width.
             auto l_sp = m_characters.find(' ');
             if (l_sp != m_characters.end())
+            {
                 l_cursorX += (l_sp->second.advance >> 6) * l_scale;
+            }
             continue;
         }
 
         const Character& ch = l_it->second;
 
-        float l_xpos = l_cursorX + ch.bearingX * l_scale;
-        float l_ypos = l_baseline - ch.bearingY * l_scale; // top of glyph
+        float l_xpos = _x + ch.bearingX * l_scale;
+        float l_ypos = _y + (ch.sizeY - ch.bearingY) * l_scale;
         float l_w    = ch.sizeX * l_scale;
         float l_h    = ch.sizeY * l_scale;
 
         // 6 vertices, 4 floats each (x, y, u, v) — two triangles.
+        // Y-up projection: l_ypos is visual top, l_ypos - l_h is visual bottom.
+        // v=0 maps to top of glyph bitmap, v=1 to bottom.
         float l_verts[6][4] = {
-            { l_xpos,       l_ypos,       0.0f, 0.0f },
-            { l_xpos + l_w, l_ypos,       1.0f, 0.0f },
-            { l_xpos + l_w, l_ypos + l_h, 1.0f, 1.0f },
+            { l_xpos,       l_ypos - l_h, 0.0f, 0.0f },
+            { l_xpos,       l_ypos,       0.0f, 1.0f },
+            { l_xpos + l_w, l_ypos,       1.0f, 1.0f },
 
-            { l_xpos,       l_ypos,       0.0f, 0.0f },
-            { l_xpos + l_w, l_ypos + l_h, 1.0f, 1.0f },
-            { l_xpos,       l_ypos + l_h, 0.0f, 1.0f },
+            { l_xpos,       l_ypos - l_h, 0.0f, 0.0f },
+            { l_xpos + l_w, l_ypos,       1.0f, 1.0f },
+            { l_xpos + l_w, l_ypos - l_h,       1.0f, 0.0f },
         };
 
         glBindTexture(GL_TEXTURE_2D, ch.textureID);
@@ -504,7 +503,7 @@ void UIRenderer::DrawText(float _x, float _y,
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        l_cursorX += (ch.advance >> 6) * l_scale;
+        _x += (ch.advance >> 6) * l_scale;
     }
 
     glBindVertexArray(0);

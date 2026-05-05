@@ -1,4 +1,5 @@
 #include "RanakEngine/UI.h"
+#include "RanakEngine/UI/DefaultFont.h"
 
 #include "RanakEngine/Core/LuaContext.h"
 
@@ -13,11 +14,24 @@ namespace RanakEngine::UI
         static std::shared_ptr<UIRenderer> s_renderer = nullptr;
     };
 
-    void Init(IO::Manager& _io, const unsigned char* _fontData,
+    const unsigned char* DefaultFontData()
+    {
+        return k_defaultFontData;
+    }
+
+    unsigned int DefaultFontDataSize()
+    {
+        return k_defaultFontDataSize;
+    }
+
+    void Init(std::weak_ptr<IO::Manager> _io, const unsigned char* _fontData,
               unsigned int _fontDataSize, float _fontSize)
     {
         s_renderer = std::make_shared<UIRenderer>();
-        s_renderer->Init(_io, _fontData, _fontDataSize, _fontSize);
+        if (auto io = _io.lock())
+        {
+            s_renderer->Init(io, _fontData, _fontDataSize, _fontSize);
+        }
     }
 
     void DefineLuaLib()

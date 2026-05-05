@@ -16,7 +16,7 @@ namespace RanakEngine::UI
      * @param _fontDataSize Byte count of _fontData (ignored when nullptr).
      * @param _fontSize     Pixel height used to bake the font atlas.
      */
-    void Init(IO::Manager& _io,
+    void Init(std::weak_ptr<IO::Manager> _io,
               const unsigned char* _fontData = nullptr,
               unsigned int _fontDataSize = 0,
               float _fontSize = 32.0f);
@@ -26,6 +26,9 @@ namespace RanakEngine::UI
 
     /** @brief Releases the Lua table and destroys the UIRenderer. */
     void Stop();
+
+    const unsigned char* DefaultFontData(); ///< Embedded default font data (TTF format).
+    unsigned int DefaultFontDataSize(); ///< Byte count of DefaultFontData.
 
     /** @brief Returns a pointer to the active UIRenderer, or nullptr if not initialised. */
     std::weak_ptr<UIRenderer> GetRenderer();

@@ -50,62 +50,30 @@ namespace RanakEngine::Core
             sol::optional<std::weak_ptr<Asset::Model>> l_modelPtr = _entityData.traverse_raw_get<sol::optional<std::weak_ptr<Asset::Model>>>("Model", "asset");
             std::string l_modelPath = _entityData.traverse_raw_get<std::string>("Model", "modelPath");
 
-            if(!l_modelPtr.has_value())
+            if(l_modelPath != "")
             {
-                // Instantiate value for ptr
-                if(l_modelPath == "")
-                {
-                    return;
-                }
-
                 auto l_modelWPtr = Asset::Load<Asset::Model>(l_modelPath);
 
-                if(l_modelWPtr.lock() == nullptr)
+                Log::Message("Entity has model path: " + l_modelPath);
+                
+                if(l_modelWPtr.lock() != nullptr)
                 {
-                    Log::Warning("Object cannot be drawn: invalid model path" + l_modelPath);
-                    return;
-                }
-
-                _entityData["Model"]["asset"] = l_modelWPtr;
-                l_modelPtr = _entityData.traverse_raw_get<std::weak_ptr<Asset::Model>>("Model", "asset");
-            }
-            else
-            {
-                // Check if path has changed
-                if(l_modelPath != "")
-                {
-                    auto l_modelWPtr = Asset::Load<Asset::Model>(l_modelPath);
-
-                    if(l_modelWPtr.lock() == nullptr)
-                    {
-                        Log::Warning("Object cannot be drawn: invalid model path" + l_modelPath);
-                        return;
-                    }
-
                     _entityData["Model"]["asset"] = l_modelWPtr;
                     l_modelPtr = _entityData.traverse_raw_get<std::weak_ptr<Asset::Model>>("Model", "asset");
+                    l_model = l_modelPtr.value().lock();
                 }
             }
-
-            l_model = (*l_modelPtr).lock();
         }
 
         if(l_model == nullptr)
         {
-            // Fall back to the unit-quad default model when the entity has a Texture
-            sol::optional<sol::table> l_texCheck = _entityData.traverse_raw_get<sol::optional<sol::table>>("Texture");
-            if(l_texCheck.has_value())
-            {
-                l_model = Asset::GetDefaultModel();
-            }
-            else
-            {
-                Log::Warning("Object cannot be drawn: model is null");
-                return;
-            }
+            l_model = Asset::GetDefaultModel();
+            Log::Message("Entity is using default model");
         }
-
-        Log::Message("Drawing entity with model " + l_model->GetPath());
+        else
+        {
+            Log::Message("Using model " + l_model->GetPath());
+        }
 
         sol::optional<sol::table> l_textureCatOpt = _entityData.traverse_raw_get<sol::optional<sol::table>>("Texture");
 
@@ -115,51 +83,28 @@ namespace RanakEngine::Core
         {
             sol::optional<std::weak_ptr<Asset::Texture>> l_texturePtr = _entityData.traverse_raw_get<sol::optional<std::weak_ptr<Asset::Texture>>>("Texture", "asset");
             std::string l_texturePath = _entityData.traverse_raw_get<std::string>("Texture", "texturePath");
-                
-            if(!l_texturePtr.has_value())
+
+            if(l_texturePath != "")
             {
-                if(l_texturePath != "")
+                auto l_textureWPtr = Asset::Load<Asset::Texture>(l_texturePath);
+
+                if(l_textureWPtr.lock() != nullptr)
                 {
-                    auto l_textureWPtr = Asset::Load<Asset::Texture>(l_texturePath);
-
-                    if(l_textureWPtr.lock() == nullptr)
-                    {
-                        Log::Warning("Object cannot be drawn: invalid texture path");
-                        return;
-                    }
-
                     _entityData["Texture"]["asset"] = l_textureWPtr;
                     l_texturePtr = _entityData.traverse_raw_get<std::weak_ptr<Asset::Texture>>("Texture", "asset");
+                    l_texture = l_texturePtr.value().lock();
                 }
             }
-            else
-            {
-                // Check if path has changed
-                if(l_texturePath != "")
-                {
-                    auto l_textureWPtr = Asset::Load<Asset::Texture>(l_texturePath);
-
-                    if(l_textureWPtr.lock() == nullptr)
-                    {
-                        Log::Warning("Object cannot be drawn: invalid texture path");
-                        return;
-                    }
-
-                    _entityData["Texture"]["asset"] = l_textureWPtr;
-                    l_texturePtr = _entityData.traverse_raw_get<std::weak_ptr<Asset::Texture>>("Texture", "asset");
-                }
-            }
-            
-            l_texture = l_texturePtr.value().lock(); 
         }
 
         if(l_texture == nullptr)
         {
-            Log::Warning("Object cannot be drawn: texture is null");
-            return;
+            Log::Message("Entity does not have texture asset");
         }
-
-        Log::Message("Using texture " + l_texture->GetPath());
+        else
+        {
+            Log::Message("Using texture " + l_texture->GetPath());
+        }
 
         sol::optional<sol::table> l_shaderCatOpt = _entityData.traverse_raw_get<sol::optional<sol::table>>("Shader");
 
@@ -170,55 +115,40 @@ namespace RanakEngine::Core
             sol::optional<std::weak_ptr<Asset::Shader>> l_shaderPtr = _entityData.traverse_raw_get<sol::optional<std::weak_ptr<Asset::Shader>>>("Shader", "asset");
             std::string l_vertPath = _entityData.traverse_raw_get<std::string>("Shader", "vertshaderPath");
             std::string l_fragPath = _entityData.traverse_raw_get<std::string>("Shader", "fragshaderPath");
-            
-            std::string l_shaderPath = l_vertPath + ";" + l_fragPath;
-                
-            if(!l_shaderPtr.has_value())
-            {
-                if(l_shaderPath == "")
-                {
-                    return;
-                }
 
+            if(l_vertPath != "" && l_fragPath != "")
+            {
+                Log::Message("Entity has shader paths: " + l_vertPath + ", " + l_fragPath);
+                
+                std::string l_shaderPath = l_vertPath + ";" + l_fragPath;
+                
                 auto l_shaderWPtr = Asset::Load<Asset::Shader>(l_shaderPath);
 
-                if(l_shaderWPtr.lock() == nullptr)
+                if(l_shaderWPtr.lock() != nullptr)
                 {
-                    Log::Warning("Object cannot be drawn: invalid shader path");
-                    return;
-                }
-
-                _entityData["Shader"]["asset"] = l_shaderWPtr;
-                l_shaderPtr = _entityData.traverse_raw_get<std::weak_ptr<Asset::Shader>>("Shader", "asset");
-            }
-            else
-            {
-                // Check if path has changed
-                if(l_shaderPath != "")
-                {
-                    auto l_shaderWPtr = Asset::Load<Asset::Shader>(l_shaderPath);
-
-                    if(l_shaderWPtr.lock() == nullptr)
-                    {
-                        Log::Warning("Object cannot be drawn: invalid shader path");
-                        return;
-                    }
+                    Log::Message("Entity has shader asset");
 
                     _entityData["Shader"]["asset"] = l_shaderWPtr;
                     l_shaderPtr = _entityData.traverse_raw_get<std::weak_ptr<Asset::Shader>>("Shader", "asset");
+                    l_shader = l_shaderPtr.value().lock();
+                }
+                else
+                {
+                    Log::Message("Entity does not have shader asset");
                 }
             }
-
-            l_shader = l_shaderPtr.value().lock();
         }
 
         if(l_shader == nullptr)
         {
             l_shader = Asset::GetDefaultShader();
+            Log::Message("Entity is using default shader");
+        }
+        else
+        {
+            Log::Message("Using shader " + l_shader->GetPath());
         }
 
-        Log::Message("Using shader " + l_shader->GetPath());
-        
         l_shader->Use();
         
         glBindVertexArray(l_model->GetVAO());
