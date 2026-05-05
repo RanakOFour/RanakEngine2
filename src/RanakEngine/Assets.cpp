@@ -98,23 +98,23 @@ namespace RanakEngine::Asset
             "    o_fragColor = tex;\n"
             "}\n";
 
-        std::filesystem::path l_tempDir = std::filesystem::temp_directory_path() / "GameDevIntro" / "Assets";
+        std::filesystem::path l_tempDir = GetTempDir();
 
         std::filesystem::path l_defaultVertShaderPath = l_tempDir / "Shaders" / "REDefaultVertShader.vs";
         std::filesystem::path l_defaultFragShaderPath = l_tempDir / "Shaders" / "REDefaultFragShader.fs";
 
-        if(!std::filesystem::exists(l_defaultVertShaderPath.parent_path()))
+        if(!std::filesystem::exists(l_defaultVertShaderPath))
         {
             std::filesystem::create_directories(l_defaultVertShaderPath.parent_path());
+
+            std::ofstream l_fileWriter(l_defaultVertShaderPath);
+            l_fileWriter << c_defaultVertShaderData;
+            l_fileWriter.close();
+
+            l_fileWriter.open(l_defaultFragShaderPath);
+            l_fileWriter << c_defaultFragShaderData;
+            l_fileWriter.close();
         }
-
-        std::ofstream l_fileWriter(l_defaultVertShaderPath);
-        l_fileWriter << c_defaultVertShaderData;
-        l_fileWriter.close();
-
-        l_fileWriter.open(l_defaultFragShaderPath);
-        l_fileWriter << c_defaultFragShaderData;
-        l_fileWriter.close();
 
         DefaultShader = std::make_shared<Asset::Shader>(l_defaultFragShaderPath.string() + ";" + l_defaultVertShaderPath.string());
 
@@ -137,11 +137,10 @@ namespace RanakEngine::Asset
         if(!std::filesystem::exists(l_defaultModelPath))
         {
             std::filesystem::create_directories(l_defaultModelPath.parent_path());
+            std::ofstream l_fileWriter(l_defaultModelPath);
+            l_fileWriter << s_quadData;
+            l_fileWriter.close();
         }
-
-        l_fileWriter.open(l_defaultModelPath);
-        l_fileWriter << s_quadData;
-        l_fileWriter.close();
 
         DefaultModel = std::make_shared<Asset::Model>(l_defaultModelPath.string());
 

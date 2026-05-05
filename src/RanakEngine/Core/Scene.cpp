@@ -110,6 +110,18 @@ namespace RanakEngine::Core
         m_sceneTable.raw_get<sol::table>("Rules").raw_set(_rule.GetName(), sol::lua_nil);
     }
 
+    std::shared_ptr<Rule> Scene::GetRule(const std::string& _name)
+    {
+        for (const auto& rule : m_rules)
+        {
+            if (rule->GetName() == _name)
+            {
+                return rule;
+            }
+        }
+        return nullptr;
+    }
+
     void Scene::Init()
     {
         auto l_contextPtr = m_luaContext.lock();

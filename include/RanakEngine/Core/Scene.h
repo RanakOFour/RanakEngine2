@@ -136,6 +136,8 @@ namespace Core
          */
         void RemoveRule(Rule& _rule);
 
+        std::shared_ptr<Rule> GetRule(const std::string& _name);
+
         /** @brief Calls Init on all rules — typically once after scene setup. */
         void Init();
         /**
