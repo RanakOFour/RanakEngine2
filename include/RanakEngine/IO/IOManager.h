@@ -6,8 +6,10 @@
 #include "RanakEngine/Math/Vector2.h"
 #include "RanakEngine/IO/KBInfo.h"
 #include "RanakEngine/IO/MouseInfo.h"
+#include "SDL3/SDL_dialog.h"
+#include "SDL3/SDL_events.h"
 
-#include "SDL3/SDL.h"
+//#include "SDL3/SDL.h"
 
 namespace RanakEngine::Core
 {

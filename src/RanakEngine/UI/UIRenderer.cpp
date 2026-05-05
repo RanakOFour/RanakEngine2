@@ -1,7 +1,6 @@
 #include "RanakEngine/UI/UIRenderer.h"
 #include "RanakEngine/UI/DefaultFont.h"
 
-#include "RanakEngine/IO.h"
 #include "RanakEngine/Log.h"
 
 #include <GL/glew.h>
@@ -13,8 +12,6 @@
 #include FT_FREETYPE_H
 
 #include <vector>
-#include <cstdio>
-#include <cstring>
 
 namespace RanakEngine::UI
 {
@@ -289,11 +286,11 @@ void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
 
         Character l_ch = {
             l_texId,
-            l_face->glyph->bitmap.width,
-            l_face->glyph->bitmap.rows,
-            l_face->glyph->bitmap_left,
-            l_face->glyph->bitmap_top,
-            static_cast<unsigned int>(l_face->glyph->advance.x)
+            (int)l_face->glyph->bitmap.width,
+            (int)l_face->glyph->bitmap.rows,
+            (int)l_face->glyph->bitmap_left,
+            (int)l_face->glyph->bitmap_top,
+            (unsigned int)l_face->glyph->advance.x
         };
 
         m_characters.insert(std::pair<char, Character>(c, l_ch));
