@@ -55,15 +55,16 @@ struct Vector2
 
     float operator[](int _idx)
     {
-        assert(_idx < 2);
-        
         switch(_idx)
         {
         case 0:
             return x;
         case 1:
             return y;
-        } 
+        default:
+            assert(false && "Index out of bounds");
+            return 0.0f;
+        }
     };
 
     /**

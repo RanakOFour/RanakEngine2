@@ -67,8 +67,6 @@ struct Vector3
 
     float operator[](int _idx)
     {
-        assert(_idx < 3);
-
         switch(_idx)
         {
         case 0:
@@ -77,6 +75,9 @@ struct Vector3
             return y;
         case 2:
             return z;
+        default:
+            assert(false && "Index out of bounds");
+            return 0.0f;
         } 
     };
 

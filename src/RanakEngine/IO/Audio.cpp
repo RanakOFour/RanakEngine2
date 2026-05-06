@@ -2,8 +2,8 @@
 #include "RanakEngine/Asset/Audio.h"
 #include "RanakEngine/Log.h"
 
-#include "SDL3/SDL.h"
 #include "SDL3/SDL_audio.h"
+#include "SDL3/SDL_init.h"
 
 namespace RanakEngine::IO
 {
@@ -11,11 +11,7 @@ namespace RanakEngine::IO
     : m_audioDevice(0)
     , m_activeStreams()
     {
-        if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
-        {
-            Log::Error("Failed to initialize SDL Audio: " + std::string(SDL_GetError()));
-        }
-        else
+        if (SDL_InitSubSystem(SDL_INIT_AUDIO))
         {
             // Open default audio device
             m_audioDevice = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
@@ -28,6 +24,10 @@ namespace RanakEngine::IO
                 SDL_ResumeAudioDevice(m_audioDevice);
                 Log::Debug("Audio device initialized");
             }
+        }
+        else
+        {
+            Log::Error("Failed to initialize SDL Audio: " + std::string(SDL_GetError()));
         }
     }
 
@@ -81,9 +81,9 @@ namespace RanakEngine::IO
         }
         
         // Add audio data to stream
-        if (SDL_PutAudioStreamData(l_stream, 
+        if (!SDL_PutAudioStreamData(l_stream, 
             l_audio->GetBuffer(), 
-            l_audio->GetBufferSize()) < 0)
+            l_audio->GetBufferSize()))
         {
             Log::Error("Failed to queue audio data");
             SDL_DestroyAudioStream(l_stream);
@@ -91,7 +91,7 @@ namespace RanakEngine::IO
         }
         
         // Bind stream to device and play
-        if (SDL_BindAudioStream(m_audioDevice, l_stream) < 0)
+        if (!SDL_BindAudioStream(m_audioDevice, l_stream))
         {
             Log::Error("Failed to bind audio stream");
             SDL_DestroyAudioStream(l_stream);

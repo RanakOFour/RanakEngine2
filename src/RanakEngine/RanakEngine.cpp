@@ -1,16 +1,15 @@
 #include "RanakEngine/RanakEngine.h"
-#include "RanakEngine/Physics.h"
 
 namespace RanakEngine
 {
-    EngineContents Initialise(bool _debug, Vector2 _screenSize)
+    EngineContents Initialise(bool _debug, Vector2 _screenSize, std::string _appName)
     {
         EngineContents l_toReturn;
 
         Log::Init();
 
         l_toReturn.io = IO::Init(_screenSize);
-        l_toReturn.core = Core::Init(_debug);
+        l_toReturn.core = Core::Init(_debug, _appName);
         l_toReturn.physics = Physics::Init();
         l_toReturn.resources = Asset::Init();
 

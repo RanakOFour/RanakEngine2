@@ -6,15 +6,16 @@
 #include "RanakEngine/Physics/PhysicsManager.h"
 #include "RanakEngine/Log.h"
 
-#include "SDL3/SDL.h"
+#include "SDL3/SDL_timer.h"
 
 namespace RanakEngine::Core
 {
-    Core::Manager::Manager(bool _debug)
+    Core::Manager::Manager(bool _debug, std::string _appName)
     : m_running(false)
     , m_debug(_debug)
     , m_deltaTime(0.0f)
     , m_targetFPS(60.0f)
+    , m_appName(_appName)
     {
         m_ioManager = IO::Manager::Instance();
         m_luaContext = LuaContext::Init();
@@ -28,12 +29,12 @@ namespace RanakEngine::Core
         m_luaContext.reset();
     }
 
-    std::shared_ptr<Core::Manager> Core::Manager::Init(bool _debug)
+    std::shared_ptr<Core::Manager> Core::Manager::Init(bool _debug, std::string _appName)
     {
         if (m_self.lock() == nullptr)
         {
             std::shared_ptr<Core::Manager> l_toReturn;
-            Core::Manager *l_manager = new Core::Manager(_debug);
+            Core::Manager *l_manager = new Core::Manager(_debug, _appName);
             l_toReturn.reset(l_manager);
 
             l_toReturn->m_ioManager.lock()->SetCore(l_toReturn);
@@ -118,6 +119,11 @@ namespace RanakEngine::Core
     bool Core::Manager::IsDebug()
     {
         return m_debug;
+    }
+
+    std::string Core::Manager::GetAppName()
+    {
+        return m_appName;
     }
 
     Vector3 Core::Manager::ScreenToWorldPoint(Vector2 _screenPos)

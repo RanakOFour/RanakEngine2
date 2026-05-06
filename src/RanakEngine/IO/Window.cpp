@@ -42,9 +42,9 @@ namespace RanakEngine::IO
     Window::Window(Vector2 _screenSize, std::string _title)
     : m_clearColour(0.0f, 0.0f, 0.2f, 1.0f)
     , m_screenSize(_screenSize)
-    , m_aspectRatio(_screenSize.x / m_screenSize.y)
+    , m_aspectRatio(_screenSize.x / _screenSize.y)
     {
-        if(SDL_Init(SDL_INIT_VIDEO) < 0)
+        if(!SDL_Init(SDL_INIT_VIDEO))
         {
             Log::Error("Cannot initialise SDL");
         }

@@ -36,6 +36,9 @@
 
 #include <sol/config.hpp>
 
+#define SOL_COMPILER_GCC 0
+#define SOL_COMPILER_CLANG 1
+
 #define SOL_VERSION_MAJOR 3
 #define SOL_VERSION_MINOR 2
 #define SOL_VERSION_PATCH 3
@@ -110,7 +113,7 @@
 #endif
 
 #if defined(SOL_COMPILER_GCC)
-	#if defined(SOL_COMPILER_GCC != 0)
+	#if SOL_COMPILER_GCC != 0
 		#define SOL_COMPILER_GCC_I_ SOL_ON
 	#else
 		#define SOL_COMPILER_GCC_I_ SOL_OFF
@@ -122,7 +125,7 @@
 #endif
 
 #if defined(SOL_COMPILER_CLANG)
-	#if defined(SOL_COMPILER_CLANG != 0)
+	#if SOL_COMPILER_CLANG != 0
 		#define SOL_COMPILER_CLANG_I_ SOL_ON
 	#else
 		#define SOL_COMPILER_CLANG_I_ SOL_OFF
@@ -3555,7 +3558,6 @@ COMPAT53_API void luaL_requiref(lua_State *L, const char *modname,
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <errno.h>
 #include <stdio.h>
 
 /* don't compile it again if it already is included via compat53.h */
@@ -8923,7 +8925,6 @@ extern "C" {
 #include <ctype.h>
 }
 #endif // MinGW is on some stuff
-#include <locale>
 
 namespace sol { namespace detail {
 	inline constexpr std::array<string_view, 9> removals { { "{anonymous}",
@@ -13155,10 +13156,11 @@ namespace sol {
 			static constexpr int lead_shifted_bits = 10;
 			static constexpr char32_t replacement = 0xFFFD;
 
-			static char32_t combine_surrogates(char16_t lead, char16_t trail) {
-				auto hi = lead - first_lead_surrogate;
-				auto lo = trail - first_trail_surrogate;
-				return normalizing_value + ((hi << lead_shifted_bits) | lo);
+			static char32_t combine_surrogates(char16_t lead, char16_t trail)
+			{
+				char32_t hi = (char32_t)lead - first_lead_surrogate;
+				char32_t lo = (char32_t)trail - first_trail_surrogate;
+				return char32_t(normalizing_value + ((hi << lead_shifted_bits) | lo));
 			}
 		};
 

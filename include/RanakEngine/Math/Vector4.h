@@ -157,8 +157,6 @@ struct Vector4
 
     float operator[](int _idx)
     {
-        assert(_idx < 4);
-        
         switch(_idx)
         {
         case 0:
@@ -169,6 +167,9 @@ struct Vector4
             return z;
         case 3:
             return w;
+        default:
+            assert(false && "Index out of bounds");
+            return 0.0f;
         } 
     };
 };

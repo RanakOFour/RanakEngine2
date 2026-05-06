@@ -32,7 +32,7 @@ namespace RanakEngine::Core
 
         // Field(default, opts) — wraps a default value with optional editor metadata.
         // CloneTable extracts only the default when creating per-entity data.
-        m_state.set_function("Field", [this](sol::object _default, sol::optional<sol::table> _opts) -> sol::table {
+        m_state.set_function("Field", [this](sol::object _default, sol::optional<sol::table> _opts) {
             sol::table l_field = m_state.create_table();
             l_field["__isField"] = true;
             l_field["default"]   = _default;

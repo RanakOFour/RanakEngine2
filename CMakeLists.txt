@@ -1,8 +1,19 @@
+include(ProcessorCount)
 cmake_minimum_required(VERSION 3.20)
+
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_GENERATOR Ninja)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(CMAKE_C_COMPILER "/usr/bin/clang")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 
 project(RanakEngine VERSION 0.5
                      LANGUAGES CXX)
+
+ProcessorCount(CoreNum)
+set(CMAKE_BUILD_PARALLEL_LEVEL ${CoreNum})
+message("[${CMAKE_PROJECT_NAME}] Detected core count: ${CoreNum}")
 
 # Try to find system libraries first, fallback to external versions
 find_package(SDL3 QUIET)

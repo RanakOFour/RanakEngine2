@@ -2,6 +2,7 @@
 
 #include "RanakEngine/Core/LuaContext.h"
 #include "sol/sol.hpp"
+#include <string>
 
 namespace RanakEngine::Core
 {
@@ -9,6 +10,12 @@ namespace RanakEngine::Core
     {
         static std::shared_ptr<Core::Manager> CoreManager;
         static sol::table CoreTable;
+    }
+
+    std::string GetAppName()
+    {
+        assert(CoreManager != nullptr && "CoreManager is not initialised! Did you forget to call Core::Init()?");
+        return CoreManager->GetAppName();
     }
 
     void DefineLuaLib()
@@ -25,12 +32,14 @@ namespace RanakEngine::Core
         std::shared_ptr<Scene> l_scene = CoreManager->GetScene().lock();
         CoreTable.set("CurrentScene", l_scene);
 
+        CoreTable.set("AppName", CoreManager->GetAppName());
+
         l_context->SetGlobal("Core", CoreTable);
     }
 
-    std::shared_ptr<Core::Manager> Init(bool _isDebug)
+    std::shared_ptr<Core::Manager> Init(bool _isDebug, std::string _appName)
     {
-        CoreManager = Core::Manager::Init(_isDebug);
+        CoreManager = Core::Manager::Init(_isDebug, _appName);
         return CoreManager;
     }
 

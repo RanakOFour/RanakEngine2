@@ -35,6 +35,7 @@ namespace RanakEngine::Asset
     std::shared_ptr<Asset::Model> GetDefaultModel();
 
     std::filesystem::path GetTempDir();
+    std::filesystem::path GetDataDir();
 
     /** @brief Registers asset-related Lua bindings with the active LuaContext. */
     void DefineLuaLib();

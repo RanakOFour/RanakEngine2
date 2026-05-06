@@ -1,6 +1,6 @@
 #include "RanakEngine/Assets.h"
 
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/Core.h"
 #include "sol/sol.hpp"
 
 namespace RanakEngine::Asset
@@ -66,6 +66,35 @@ namespace RanakEngine::Asset
     {
         return std::filesystem::temp_directory_path() / "GameDevIntro";
     };
+
+    std::filesystem::path GetDataDir()
+    {
+        std::filesystem::path l_base;
+    #if _WIN32
+        PWSTR l_appdata;
+        if (SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_CREATE, NULL, &l_appdata) == S_OK) {
+            char l_pathAsString[MAX_PATH];
+            wcstombs(l_pathAsString, l_appdata, MAX_PATH);
+            printf("Appdata path: %s", l_pathAsString);
+            l_base = std::filesystem::path(l_pathAsString);
+        }
+        else {
+            fprintf(stderr, "Could not find appdata path!\n");
+        }
+    #else
+        const char* l_xdgRaw  = std::getenv("XDG_DATA_HOME");
+        const char* l_homeRaw = std::getenv("HOME");
+        const std::string l_xdg  = l_xdgRaw  ? l_xdgRaw  : "";
+        const std::string l_home = l_homeRaw ? l_homeRaw : "";
+        if (!l_xdg.empty())
+            l_base = std::filesystem::path(l_xdg);
+        else if (!l_home.empty())
+            l_base = std::filesystem::path(l_home) / ".local" / "share";
+        else
+            l_base = std::filesystem::path(".");
+    #endif
+        return (l_base / Core::GetAppName());
+    }
 
     std::shared_ptr<Asset::Manager> Init()
     {

@@ -65,7 +65,9 @@ namespace RanakEngine::Core
         float m_deltaTime = 0.0f;   ///< Time elapsed since the previous frame (seconds).
         float m_targetFPS = 60.0f;  ///< Desired frames-per-second used for frame capping.
 
-        Manager(bool _debug);
+        std::string m_appName = "RanakEngineApp"; ///< Application name used for window title and asset paths.
+
+        Manager(bool _debug, std::string _appName);
 
     public:
         ~Manager();
@@ -73,9 +75,10 @@ namespace RanakEngine::Core
         /**
          * @brief Creates the singleton Core::Manager and all dependent subsystems.
          * @param _debug When true enables verbose engine logging.
+         * @param _appName Name of the application.
          * @return Shared pointer to the newly created manager.
          */
-        static std::shared_ptr<Core::Manager> Init(bool _debug);
+        static std::shared_ptr<Core::Manager> Init(bool _debug, std::string _appName);
         /** @brief Returns a weak pointer to the singleton instance. */
         static std::weak_ptr<Core::Manager> Instance();
 
@@ -97,6 +100,8 @@ namespace RanakEngine::Core
 
         /** @brief Returns true when the engine was initialised with debug=true. */
         bool IsDebug();
+
+        std::string GetAppName();
 
         /**
          * @brief Converts a screen-space pixel position to a world-space 3-D point.
