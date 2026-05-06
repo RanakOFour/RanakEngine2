@@ -34,6 +34,9 @@ namespace RanakEngine::Asset
     
     std::shared_ptr<Asset::Model> GetDefaultModel();
 
+    void CreateIfNotExists(const std::string& _path, const char* _data);
+    void CreateIfNotExists(const std::string& _path, const char* _data, const unsigned int _size);
+
     std::filesystem::path GetTempDir();
     std::filesystem::path GetDataDir();
 

@@ -1,6 +1,7 @@
 #include "RanakEngine/Assets.h"
 
 #include "RanakEngine/Core.h"
+#include "RanakEngine/Log.h"
 #include "sol/sol.hpp"
 
 namespace RanakEngine::Asset
@@ -24,6 +25,25 @@ namespace RanakEngine::Asset
         assert(DefaultModel != nullptr && "DefaultModel was not initialised! Did you forget to call Asset::Init()?");
         return DefaultModel;
     };
+
+    void CreateIfNotExists(const std::string &_path, const char *_data)
+    {
+        CreateIfNotExists(_path, _data, strlen(_data));
+    }
+
+    void CreateIfNotExists(const std::string& _path, const char* _data, const unsigned int _size)
+    {
+        Log::Message("Checking for file " + _path);
+        std::filesystem::path l_path(_path);
+        if (!std::filesystem::exists(l_path))
+        {
+            Log::Message("Creating file...");
+            std::filesystem::create_directories(l_path.parent_path());
+            std::ofstream l_file(l_path, std::ios::binary);
+            l_file.write(_data, _size);
+            l_file.close();
+        }
+    }
 
     void DefineLuaLib()
     {
@@ -132,18 +152,15 @@ namespace RanakEngine::Asset
         std::filesystem::path l_defaultVertShaderPath = l_tempDir / "Shaders" / "REDefaultVertShader.vs";
         std::filesystem::path l_defaultFragShaderPath = l_tempDir / "Shaders" / "REDefaultFragShader.fs";
 
-        if(!std::filesystem::exists(l_defaultVertShaderPath))
-        {
-            std::filesystem::create_directories(l_defaultVertShaderPath.parent_path());
+        CreateIfNotExists( 
+                          l_defaultVertShaderPath.string(), 
+                          c_defaultVertShaderData.c_str()
+                         );
 
-            std::ofstream l_fileWriter(l_defaultVertShaderPath);
-            l_fileWriter << c_defaultVertShaderData;
-            l_fileWriter.close();
-
-            l_fileWriter.open(l_defaultFragShaderPath);
-            l_fileWriter << c_defaultFragShaderData;
-            l_fileWriter.close();
-        }
+        CreateIfNotExists(
+                          l_defaultFragShaderPath.string(), 
+                          c_defaultFragShaderData.c_str()
+                         );
 
         DefaultShader = std::make_shared<Asset::Shader>(l_defaultFragShaderPath.string() + ";" + l_defaultVertShaderPath.string());
 
@@ -163,13 +180,7 @@ namespace RanakEngine::Asset
 
         std::filesystem::path l_defaultModelPath = l_tempDir / "Models" / "REDefaultModel.obj";
 
-        if(!std::filesystem::exists(l_defaultModelPath))
-        {
-            std::filesystem::create_directories(l_defaultModelPath.parent_path());
-            std::ofstream l_fileWriter(l_defaultModelPath);
-            l_fileWriter << s_quadData;
-            l_fileWriter.close();
-        }
+        CreateIfNotExists(l_defaultModelPath.string(), s_quadData.c_str());
 
         DefaultModel = std::make_shared<Asset::Model>(l_defaultModelPath.string());
 
