@@ -5,11 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_GENERATOR Ninja)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_C_COMPILER "/usr/bin/clang")
-set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-
-project(RanakEngine VERSION 0.5
-                     LANGUAGES CXX)
+project(RanakEngine VERSION 0.5 LANGUAGES CXX)
 
 ProcessorCount(CoreNum)
 set(CMAKE_BUILD_PARALLEL_LEVEL ${CoreNum})
