@@ -187,7 +187,7 @@ namespace RanakEngine::Core
             return Rule{};
         }
 
-        Log::Message("Creating rule from file " + l_file->GetPath() + "...\n");
+        //Log::Message("Creating rule from file " + l_file->GetPath() + "...\n");
 
         if (l_file->GetCode().empty())
         {

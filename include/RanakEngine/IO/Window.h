@@ -58,6 +58,9 @@ namespace RanakEngine::IO
         /** @brief Returns the current window size in pixels. */
         Vector2 GetScreenSize();
 
+        void SetScreenPosition(Vector2 _position);
+        Vector2 GetScreenPosition();
+
         /** @brief Sets the background clear colour. @param _colour RGBA colour (0.0–1.0). */
         void SetClearColour(Vector4 _colour);
         /** @brief Returns the current background clear colour. */

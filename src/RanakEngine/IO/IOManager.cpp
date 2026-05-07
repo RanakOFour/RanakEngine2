@@ -263,6 +263,16 @@ namespace RanakEngine::IO
         return m_window->GetScreenSize();
     }
 
+    void IO::Manager::SetScreenPosition(Vector2 _position)
+    {
+        m_window->SetScreenPosition(_position);
+    }
+
+    Vector2 IO::Manager::GetScreenPosition()
+    {
+        return m_window->GetScreenPosition();
+    }
+
     void IO::Manager::SetClearColour(Vector4 _colour)
     {
         m_window->SetClearColour(_colour);

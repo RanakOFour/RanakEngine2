@@ -119,6 +119,18 @@ namespace RanakEngine::IO
         return m_screenSize;
     }
 
+    void Window::SetScreenPosition(Vector2 _position)
+    {
+        SDL_SetWindowPosition(m_sdlWindow.get(), _position.x, _position.y);
+    }
+
+    Vector2 Window::GetScreenPosition()
+    {
+        int x, y;
+        SDL_GetWindowPosition(m_sdlWindow.get(), &x, &y);
+        return Vector2(x, y);
+    }
+
     void Window::SetClearColour(Vector4 _colour)
     {
         m_clearColour = _colour;

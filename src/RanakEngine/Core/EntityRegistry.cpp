@@ -163,13 +163,10 @@ namespace RanakEngine::Core
         }
 
         l_category->RemoveMember(_id);
+
         // Remove from entity's combined table
-        m_dataTable.traverse_raw_get<sol::table>(
-                       "Entities",
-                       _id,
-                       "attributes",
-                       l_category->GetName())
-            .abandon();
+        m_dataTable.traverse_raw_get<sol::table>("Entities", _id, "attributes")
+            .set(l_category->GetName(), sol::nil);
 
         // Update entity signature
         m_entityBitset[_id] ^= _signature;
