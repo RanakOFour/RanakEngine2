@@ -13,6 +13,10 @@
 
 #include <vector>
 
+#if WIN32
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace RanakEngine::UI
 {
 
@@ -145,14 +149,17 @@ void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
 
     // Quad VAO/VBO
 
+    // Quad: two triangles, wound CW in local (Y-up) coords so that
+    // they become CCW after the Y-down ortho projection flips Y.
+    // (glFrontFace defaults to CCW.)
     float l_verts[] = {
         // x,    y,    z,    u,    v
         0.0f, 0.0f, 0.0f,  0.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,  1.0f, 1.0f,
         1.0f, 0.0f, 0.0f,  1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f,  1.0f, 1.0f,
         0.0f, 0.0f, 0.0f,  0.0f, 0.0f,
-        1.0f, 1.0f, 0.0f,  1.0f, 1.0f,
         0.0f, 1.0f, 0.0f,  0.0f, 1.0f,
+        1.0f, 1.0f, 0.0f,  1.0f, 1.0f,
     };
 
     glGenVertexArrays(1, &m_quadVAO);
@@ -169,14 +176,15 @@ void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
 
     glBindVertexArray(0);
 
-    // Circle VAO/VBO — triangle fan for filled circle (radius=1, centred at origin)
+    // Circle VAO/VBO — triangle fan for filled circle (radius=1, centred at origin).
+    // Perimeter wound CW locally so it becomes CCW after the Y-down ortho flip.
     {
-        const int k_segments = 64;
+        constexpr int k_segments = 64;
         std::vector<float> l_circleVerts;
         l_circleVerts.reserve((k_segments + 2) * 5);
         // centre vertex
         l_circleVerts.insert(l_circleVerts.end(), {0.0f, 0.0f, 0.0f, 0.5f, 0.5f});
-        for (int i = 0; i <= k_segments; ++i)
+        for (int i = k_segments; i >= 0; --i)
         {
             float l_angle = (float)i / (float)k_segments * 2.0f * M_PI;
             float l_x = std::cos(l_angle);
@@ -231,9 +239,9 @@ void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
         (void)_name;
     };
 
-    genLineLoop("circle",       0.0f,          2.0f * M_PI,  m_circleLineVAO,  m_circleLineVBO,  m_circleLineVertCount);
-    genLineLoop("semiTop",      0.0f,          M_PI,         m_semiCircleTopLineVAO, m_semiCircleTopLineVBO, m_semiCircleTopLineVertCount);
-    genLineLoop("semiBot",      M_PI,          2.0f * M_PI,  m_semiCircleBotLineVAO, m_semiCircleBotLineVBO, m_semiCircleBotLineVertCount);
+    genLineLoop("circle",  0.0f, 2.0f * M_PI,  m_circleLineVAO,  m_circleLineVBO,  m_circleLineVertCount);
+    genLineLoop("semiTop", 0.0f, M_PI,         m_semiCircleTopLineVAO, m_semiCircleTopLineVBO, m_semiCircleTopLineVertCount);
+    genLineLoop("semiBot", M_PI, 2.0f * M_PI,  m_semiCircleBotLineVAO, m_semiCircleBotLineVBO, m_semiCircleBotLineVertCount);
 
     // Compile and link shaders
 
@@ -411,7 +419,6 @@ void UIRenderer::DrawQuad(float _x, float _y, float _w, float _h,
 {
     // Ensure correct state regardless of what 3D rendering rules may have changed.
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -614,7 +621,6 @@ void UIRenderer::DrawCircle(float _x, float _y, float _radius,
         return;
     }
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -649,7 +655,6 @@ void UIRenderer::DrawCircleOutline(float _x, float _y, float _radius,
         return;
     }
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -752,7 +757,6 @@ void UIRenderer::DrawSemiCircleTopOutline(float _x, float _y, float _radius,
         return;
     }
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -797,7 +801,6 @@ void UIRenderer::DrawSemiCircleBotOutline(float _x, float _y, float _radius,
         return;
     }
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -826,7 +829,6 @@ void UIRenderer::Flush()
     if (m_commandBuffer.empty()) return;
 
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
