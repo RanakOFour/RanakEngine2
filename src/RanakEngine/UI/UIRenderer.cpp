@@ -13,7 +13,7 @@
 
 #include <vector>
 
-#if WIN32
+#if _WIN32
 #define M_PI 3.14159265358979323846
 #endif
 
@@ -148,18 +148,14 @@ void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
     m_bakedFontSize = _fontSize;
 
     // Quad VAO/VBO
-
-    // Quad: two triangles, wound CW in local (Y-up) coords so that
-    // they become CCW after the Y-down ortho projection flips Y.
-    // (glFrontFace defaults to CCW.)
     float l_verts[] = {
         // x,    y,    z,    u,    v
-        0.0f, 0.0f, 0.0f,  0.0f, 0.0f,
-        1.0f, 1.0f, 0.0f,  1.0f, 1.0f,
-        1.0f, 0.0f, 0.0f,  1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f,  0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,  0.0f, 1.0f,
-        1.0f, 1.0f, 0.0f,  1.0f, 1.0f,
+        0.0f, 0.0f, 0.0f,  0.0f, 1.0f,
+        0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,  1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,  0.0f, 1.0f,
+        1.0f, 1.0f, 0.0f,  1.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,  1.0f, 1.0f,
     };
 
     glGenVertexArrays(1, &m_quadVAO);
@@ -177,7 +173,6 @@ void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
     glBindVertexArray(0);
 
     // Circle VAO/VBO — triangle fan for filled circle (radius=1, centred at origin).
-    // Perimeter wound CW locally so it becomes CCW after the Y-down ortho flip.
     {
         constexpr int k_segments = 64;
         std::vector<float> l_circleVerts;
@@ -210,8 +205,6 @@ void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
     }
 
     // Circle line-loop VAOs — perimeter-only for glLineWidth-thick outlines.
-    // Uses GL_LINE_LOOP so _thickness → glLineWidth gives the caller direct
-    // control over the visual width of the outline.
     auto genLineLoop = [&](const char* _name, float _angle0, float _angle1,
                            GLuint& _vao, GLuint& _vbo, GLuint& _count)
     {
