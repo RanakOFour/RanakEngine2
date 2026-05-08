@@ -115,12 +115,12 @@ UIRenderer::~UIRenderer()
     if (m_quadVBO)            glDeleteBuffers(1, &m_quadVBO);
     if (m_circleVAO)          glDeleteVertexArrays(1, &m_circleVAO);
     if (m_circleVBO)          glDeleteBuffers(1, &m_circleVBO);
-    if (m_circleOutlineVAO)   glDeleteVertexArrays(1, &m_circleOutlineVAO);
-    if (m_circleOutlineVBO)   glDeleteBuffers(1, &m_circleOutlineVBO);
-    if (m_semiCircleTopVAO)   glDeleteVertexArrays(1, &m_semiCircleTopVAO);
-    if (m_semiCircleTopVBO)   glDeleteBuffers(1, &m_semiCircleTopVBO);
-    if (m_semiCircleBotVAO)   glDeleteVertexArrays(1, &m_semiCircleBotVAO);
-    if (m_semiCircleBotVBO)   glDeleteBuffers(1, &m_semiCircleBotVBO);
+    if (m_circleLineVAO)      glDeleteVertexArrays(1, &m_circleLineVAO);
+    if (m_circleLineVBO)      glDeleteBuffers(1, &m_circleLineVBO);
+    if (m_semiCircleTopLineVAO) glDeleteVertexArrays(1, &m_semiCircleTopLineVAO);
+    if (m_semiCircleTopLineVBO) glDeleteBuffers(1, &m_semiCircleTopLineVBO);
+    if (m_semiCircleBotLineVAO) glDeleteVertexArrays(1, &m_semiCircleBotLineVAO);
+    if (m_semiCircleBotLineVBO) glDeleteBuffers(1, &m_semiCircleBotLineVBO);
     if (m_shaderProgram)      glDeleteProgram(m_shaderProgram);
     if (m_textVAO)            glDeleteVertexArrays(1, &m_textVAO);
     if (m_textVBO)            glDeleteBuffers(1, &m_textVBO);
@@ -171,7 +171,7 @@ void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
 
     // Circle VAO/VBO — triangle fan for filled circle (radius=1, centred at origin)
     {
-        constexpr int k_segments = 64;
+        const int k_segments = 64;
         std::vector<float> l_circleVerts;
         l_circleVerts.reserve((k_segments + 2) * 5);
         // centre vertex
@@ -201,97 +201,39 @@ void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
         glBindVertexArray(0);
     }
 
-    // Circle outline VAO/VBO — triangle strip ring (outer + inner radii, 2 vertices per segment)
+    // Circle line-loop VAOs — perimeter-only for glLineWidth-thick outlines.
+    // Uses GL_LINE_LOOP so _thickness → glLineWidth gives the caller direct
+    // control over the visual width of the outline.
+    auto genLineLoop = [&](const char* _name, float _angle0, float _angle1,
+                           GLuint& _vao, GLuint& _vbo, GLuint& _count)
     {
         constexpr int k_segs = 64;
-        constexpr float k_rOuter = 1.0f;
-        constexpr float k_rInner = 0.6f;   // wider gap: 0.4 × scale instead of 0.15
-        std::vector<float> l_ringVerts;
-        l_ringVerts.reserve((k_segs + 1) * 2 * 5);
+        std::vector<float> l_verts;
+        l_verts.reserve((k_segs + 1) * 5);
         for (int i = 0; i <= k_segs; ++i)
         {
-            float l_a = (float)i / (float)k_segs * 2.0f * M_PI;
-            float l_cx = std::cos(l_a), l_sy = std::sin(l_a);
-            // outer
-            l_ringVerts.insert(l_ringVerts.end(), {k_rOuter * l_cx, k_rOuter * l_sy, 0.0f, 0.5f, 0.5f});
-            // inner
-            l_ringVerts.insert(l_ringVerts.end(), {k_rInner * l_cx, k_rInner * l_sy, 0.0f, 0.5f, 0.5f});
+            float l_a = _angle0 + (float)i / (float)k_segs * (_angle1 - _angle0);
+            l_verts.insert(l_verts.end(), {std::cos(l_a), std::sin(l_a), 0.0f, 0.5f, 0.5f});
         }
-        m_circleOutlineVertCount = (unsigned int)l_ringVerts.size() / 5;
+        _count = (GLuint)l_verts.size() / 5;
 
-        glGenVertexArrays(1, &m_circleOutlineVAO);
-        glGenBuffers(1, &m_circleOutlineVBO);
-
-        glBindVertexArray(m_circleOutlineVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_circleOutlineVBO);
-        glBufferData(GL_ARRAY_BUFFER, l_ringVerts.size() * sizeof(float),
-                     l_ringVerts.data(), GL_STATIC_DRAW);
+        glGenVertexArrays(1, &_vao);
+        glGenBuffers(1, &_vbo);
+        glBindVertexArray(_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+        glBufferData(GL_ARRAY_BUFFER, l_verts.size() * sizeof(float),
+                     l_verts.data(), GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
         glBindVertexArray(0);
-    }
+        (void)_name;
+    };
 
-    // Semi-circle top half outline (ring strip, angle 0 to PI)
-    {
-        constexpr int k_segs = 64;
-        constexpr float k_rOuter = 1.0f;
-        constexpr float k_rInner = 0.6f;   // wider gap for visible ring
-        std::vector<float> l_ringVerts;
-        l_ringVerts.reserve((k_segs + 1) * 2 * 5);
-        for (int i = 0; i <= k_segs; ++i)
-        {
-            float l_a = (float)i / (float)k_segs * M_PI;  // 0 to PI (top half)
-            float l_cx = std::cos(l_a), l_sy = std::sin(l_a);
-            // outer
-            l_ringVerts.insert(l_ringVerts.end(), {k_rOuter * l_cx, k_rOuter * l_sy, 0.0f, 0.5f, 0.5f});
-            // inner
-            l_ringVerts.insert(l_ringVerts.end(), {k_rInner * l_cx, k_rInner * l_sy, 0.0f, 0.5f, 0.5f});
-        }
-        m_semiCircleTopVertCount = (unsigned int)l_ringVerts.size() / 5;
-
-        glGenVertexArrays(1, &m_semiCircleTopVAO);
-        glGenBuffers(1, &m_semiCircleTopVBO);
-        glBindVertexArray(m_semiCircleTopVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_semiCircleTopVBO);
-        glBufferData(GL_ARRAY_BUFFER, l_ringVerts.size() * sizeof(float),
-                     l_ringVerts.data(), GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-        glBindVertexArray(0);
-    }
-
-    // Semi-circle bottom half outline (ring strip, angle PI to 2*PI)
-    {
-        constexpr int k_segs = 64;
-        constexpr float k_rOuter = 1.0f;
-        constexpr float k_rInner = 0.6f;   // wider gap for visible ring
-        std::vector<float> l_ringVerts;
-        l_ringVerts.reserve((k_segs + 1) * 2 * 5);
-        for (int i = 0; i <= k_segs; ++i)
-        {
-            float l_a = M_PI + (float)i / (float)k_segs * M_PI;  // PI to 2*PI (bottom half)
-            float l_cx = std::cos(l_a), l_sy = std::sin(l_a);
-            l_ringVerts.insert(l_ringVerts.end(), {k_rOuter * l_cx, k_rOuter * l_sy, 0.0f, 0.5f, 0.5f});
-            l_ringVerts.insert(l_ringVerts.end(), {k_rInner * l_cx, k_rInner * l_sy, 0.0f, 0.5f, 0.5f});
-        }
-        m_semiCircleBotVertCount = (unsigned int)l_ringVerts.size() / 5;
-
-        glGenVertexArrays(1, &m_semiCircleBotVAO);
-        glGenBuffers(1, &m_semiCircleBotVBO);
-        glBindVertexArray(m_semiCircleBotVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_semiCircleBotVBO);
-        glBufferData(GL_ARRAY_BUFFER, l_ringVerts.size() * sizeof(float),
-                     l_ringVerts.data(), GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-        glBindVertexArray(0);
-    }
+    genLineLoop("circle",       0.0f,          2.0f * M_PI,  m_circleLineVAO,  m_circleLineVBO,  m_circleLineVertCount);
+    genLineLoop("semiTop",      0.0f,          M_PI,         m_semiCircleTopLineVAO, m_semiCircleTopLineVBO, m_semiCircleTopLineVertCount);
+    genLineLoop("semiBot",      M_PI,          2.0f * M_PI,  m_semiCircleBotLineVAO, m_semiCircleBotLineVBO, m_semiCircleBotLineVertCount);
 
     // Compile and link shaders
 
@@ -711,20 +653,13 @@ void UIRenderer::DrawCircleOutline(float _x, float _y, float _radius,
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Ring mesh: outer=1.0, inner=0.6, gap=0.4, midline=0.8.
-    // Scale so the ring's midline sits at _radius from the centre, and
-    // ensure the visual gap meets the requested _thickness.
     float l_t = _thickness;
     if (l_t < 0.5f) l_t = 0.5f;
-
-    float l_scale = _radius / 0.8f;
-    float l_gap = 0.4f * l_scale;
-    if (l_gap < l_t)
-        l_scale = l_t / 0.4f;
+    glLineWidth(l_t);
 
     glm::mat4 l_model(1.0f);
     l_model = glm::translate(l_model, glm::vec3(_x, _y, 0.0f));
-    l_model = glm::scale(l_model, glm::vec3(l_scale, l_scale, 1.0f));
+    l_model = glm::scale(l_model, glm::vec3(_radius, _radius, 1.0f));
 
     glUseProgram(m_shaderProgram);
     glUniformMatrix4fv(m_locProjection, 1, GL_FALSE, glm::value_ptr(m_projMatrix));
@@ -732,10 +667,12 @@ void UIRenderer::DrawCircleOutline(float _x, float _y, float _radius,
     glUniform4f(m_locColor, _r, _g, _b, _a);
     glUniform1i(m_locUseTexture, 0);
 
-    glBindVertexArray(m_circleOutlineVAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, m_circleOutlineVertCount);
+    glBindVertexArray(m_circleLineVAO);
+    glDrawArrays(GL_LINE_LOOP, 0, m_circleLineVertCount);
     glBindVertexArray(0);
     glUseProgram(0);
+
+    glLineWidth(1.0f);
 }
 
 void UIRenderer::DrawCapsule(float _x, float _y, float _w, float _h,
@@ -819,6 +756,8 @@ void UIRenderer::DrawSemiCircleTopOutline(float _x, float _y, float _radius,
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    glLineWidth(_thickness < 0.5f ? 0.5f : _thickness);
+
     glm::mat4 l_model(1.0f);
     l_model = glm::translate(l_model, glm::vec3(_x, _y, 0.0f));
     l_model = glm::scale(l_model, glm::vec3(_radius, _radius, 1.0f));
@@ -829,10 +768,12 @@ void UIRenderer::DrawSemiCircleTopOutline(float _x, float _y, float _radius,
     glUniform4f(m_locColor, _r, _g, _b, _a);
     glUniform1i(m_locUseTexture, 0);
 
-    glBindVertexArray(m_semiCircleTopVAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, m_semiCircleTopVertCount);
+    glBindVertexArray(m_semiCircleTopLineVAO);
+    glDrawArrays(GL_LINE_LOOP, 0, m_semiCircleTopLineVertCount);
     glBindVertexArray(0);
     glUseProgram(0);
+
+    glLineWidth(1.0f);
 }
 
 void UIRenderer::DrawSemiCircleBot(float _x, float _y, float _radius,
@@ -860,6 +801,8 @@ void UIRenderer::DrawSemiCircleBotOutline(float _x, float _y, float _radius,
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    glLineWidth(_thickness < 0.5f ? 0.5f : _thickness);
+
     glm::mat4 l_model(1.0f);
     l_model = glm::translate(l_model, glm::vec3(_x, _y, 0.0f));
     l_model = glm::scale(l_model, glm::vec3(_radius, _radius, 1.0f));
@@ -870,10 +813,12 @@ void UIRenderer::DrawSemiCircleBotOutline(float _x, float _y, float _radius,
     glUniform4f(m_locColor, _r, _g, _b, _a);
     glUniform1i(m_locUseTexture, 0);
 
-    glBindVertexArray(m_semiCircleBotVAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, m_semiCircleBotVertCount);
+    glBindVertexArray(m_semiCircleBotLineVAO);
+    glDrawArrays(GL_LINE_LOOP, 0, m_semiCircleBotLineVertCount);
     glBindVertexArray(0);
     glUseProgram(0);
+
+    glLineWidth(1.0f);
 }
 
 void UIRenderer::Flush()

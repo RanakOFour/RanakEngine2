@@ -44,20 +44,22 @@ class UIRenderer
                   float _r, float _g, float _b, float _a,
                   unsigned int _texId, bool _useTexture);
 
+    // TODO: Make a wrapper for these things, maybe utilising Model or Texture?
+    // Either way, this is incredibly ugly
     GLuint m_quadVAO = 0;
     GLuint m_quadVBO = 0;
     GLuint m_circleVAO = 0;
     GLuint m_circleVBO = 0;
     GLuint m_circleVertCount = 0;
-    GLuint m_circleOutlineVAO = 0;
-    GLuint m_circleOutlineVBO = 0;
-    GLuint m_circleOutlineVertCount = 0;
-    GLuint m_semiCircleTopVAO = 0;
-    GLuint m_semiCircleTopVBO = 0;
-    GLuint m_semiCircleTopVertCount = 0;
-    GLuint m_semiCircleBotVAO = 0;
-    GLuint m_semiCircleBotVBO = 0;
-    GLuint m_semiCircleBotVertCount = 0;
+    GLuint m_circleLineVAO = 0;
+    GLuint m_circleLineVBO = 0;
+    GLuint m_circleLineVertCount = 0;
+    GLuint m_semiCircleTopLineVAO = 0;
+    GLuint m_semiCircleTopLineVBO = 0;
+    GLuint m_semiCircleTopLineVertCount = 0;
+    GLuint m_semiCircleBotLineVAO = 0;
+    GLuint m_semiCircleBotLineVBO = 0;
+    GLuint m_semiCircleBotLineVertCount = 0;
     GLuint m_shaderProgram = 0;
 
     // Text-specific VAO/VBO (4-component vertices: x,y,u,v)
