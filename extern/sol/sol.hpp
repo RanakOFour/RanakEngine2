@@ -36,9 +36,6 @@
 
 #include <sol/config.hpp>
 
-#define SOL_COMPILER_GCC 0
-#define SOL_COMPILER_CLANG 1
-
 #define SOL_VERSION_MAJOR 3
 #define SOL_VERSION_MINOR 2
 #define SOL_VERSION_PATCH 3

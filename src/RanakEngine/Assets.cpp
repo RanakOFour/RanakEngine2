@@ -4,6 +4,11 @@
 #include "RanakEngine/Log.h"
 #include "sol/sol.hpp"
 
+#if _WIN32
+    #include <windows.h>
+#include <shlobj.h>
+#endif
+
 namespace RanakEngine::Asset
 {
     namespace
