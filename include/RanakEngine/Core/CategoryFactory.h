@@ -7,8 +7,6 @@
 #include <bitset>
 #include <vector>
 
-#include "sol/sol.hpp"
-
 namespace RanakEngine
 {
 namespace Asset

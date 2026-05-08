@@ -66,6 +66,9 @@ namespace RanakEngine::IO
         /** @brief Returns the current background clear colour. */
         Vector4 GetClearColour();
 
+        void MaximiseWindow();
+        bool IsWindowMaximised();
+
         /** @brief Returns a raw pointer to the underlying SDL_Window. */
         SDL_Window*      GetSDLWindow()  const { return m_sdlWindow.get(); }
         /** @brief Returns the SDL_GLContext associated with this window. */

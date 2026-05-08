@@ -3,8 +3,6 @@
 #include "RanakEngine/Core/Category.h"
 #include "RanakEngine/Core/LuaContext.h"
 
-#include "RanakEngine/Asset/LuaFile.h"
-
 #include "RanakEngine/Log.h"
 
 namespace RanakEngine::Core

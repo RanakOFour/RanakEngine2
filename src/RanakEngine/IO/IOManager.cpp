@@ -253,34 +253,44 @@ namespace RanakEngine::IO
         m_window->Swap();
     }
 
-    void IO::Manager::SetScreenSize(Vector2 _size)
+    void IO::Manager::SetCurrentWindowSize(Vector2 _size)
     {
         m_window->SetScreenSize(_size);
     }
 
-    Vector2 IO::Manager::GetScreenSize()
+    Vector2 IO::Manager::GetCurrentWindowSize()
     {
         return m_window->GetScreenSize();
     }
 
-    void IO::Manager::SetScreenPosition(Vector2 _position)
+    void IO::Manager::SetCurrentWindowPosition(Vector2 _position)
     {
         m_window->SetScreenPosition(_position);
     }
 
-    Vector2 IO::Manager::GetScreenPosition()
+    Vector2 IO::Manager::GetCurrentWindowPosition()
     {
         return m_window->GetScreenPosition();
     }
 
-    void IO::Manager::SetClearColour(Vector4 _colour)
+    void IO::Manager::SetCurrentClearColour(Vector4 _colour)
     {
         m_window->SetClearColour(_colour);
     }
 
-    Vector4 IO::Manager::GetClearColour()
+    Vector4 IO::Manager::GetCurrentClearColour()
     {
         return m_window->GetClearColour();
+    }
+
+    void IO::Manager::MaximiseCurrentWindow()
+    {
+        m_window->MaximiseWindow();
+    }
+
+    bool IO::Manager::IsCurrentWindowMaximised()
+    {
+        return m_window->IsWindowMaximised();
     }
 
     std::weak_ptr<Window> IO::Manager::GetWindow()

@@ -107,17 +107,22 @@ namespace RanakEngine::IO
         bool WindowFocused();
 
         /** @brief Updates the window and OpenGL viewport to the new size. @param _size New size in pixels. */
-        void SetScreenSize(Vector2 _size);
+        void SetCurrentWindowSize(Vector2 _size);
         /** @brief Returns the current window size in pixels. */
-        Vector2 GetScreenSize();
+        Vector2 GetCurrentWindowSize();
 
-        void SetScreenPosition(Vector2 _position);
-        Vector2 GetScreenPosition();
+        /** @brief Sets the window position in pixels. @param _position New position in pixels. */
+        void SetCurrentWindowPosition(Vector2 _position);
+        /** @brief Returns the current window position in pixels. */
+        Vector2 GetCurrentWindowPosition();
 
         /** @brief Sets the OpenGL clear colour used at the start of each frame. @param _colour RGBA colour. */
-        void SetClearColour(Vector4 _colour);
+        void SetCurrentClearColour(Vector4 _colour);
         /** @brief Returns the current clear colour. */
-        Vector4 GetClearColour();
+        Vector4 GetCurrentClearColour();
+
+        void MaximiseCurrentWindow();
+        bool IsCurrentWindowMaximised();
 
         /**
          * @brief Clears the framebuffer and renders all entities in _sceneToDraw.

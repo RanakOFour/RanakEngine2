@@ -140,4 +140,15 @@ namespace RanakEngine::IO
     {
         return m_clearColour;
     }
+
+    void Window::MaximiseWindow()
+    {
+        SDL_MaximizeWindow(m_sdlWindow.get());
+    }
+
+    bool Window::IsWindowMaximised()
+    {
+        Uint32 l_flags = SDL_GetWindowFlags(m_sdlWindow.get());
+        return (l_flags & SDL_WINDOW_MAXIMIZED) != 0;
+    }
 }

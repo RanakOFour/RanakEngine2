@@ -39,15 +39,15 @@ namespace RanakEngine::IO
         IOTable.set_function("SaveFileDialog", []()
                              { return IOManager->SaveFileDialog(); });
 
-        IOTable.set_function("SetScreenSize", [](Vector2 _size)
-                             { IOManager->SetScreenSize(_size); });
-        IOTable.set_function("GetScreenSize", []()
-                             { return IOManager->GetScreenSize(); });
+        IOTable.set_function("SetCurrentWindowSize", [](Vector2 _size)
+                             { IOManager->SetCurrentWindowSize(_size); });
+        IOTable.set_function("GetCurrentWindowSize", []()
+                             { return IOManager->GetCurrentWindowSize(); });
 
-        IOTable.set_function("SetClearColour", [](Vector4 _colour)
-                             { IOManager->SetClearColour(_colour); });
-        IOTable.set_function("GetClearColour", []()
-                             { return IOManager->GetClearColour(); });
+        IOTable.set_function("SetCurrentClearColour", [](Vector4 _colour)
+                             { IOManager->SetCurrentClearColour(_colour); });
+        IOTable.set_function("GetCurrentClearColour", []()
+                             { return IOManager->GetCurrentClearColour(); });
 
         IOTable.set_function("PlayAudio", [](std::weak_ptr<Asset::Audio> _audio, bool _repeat)
                              { IOManager->GetAudio().lock()->Play(_audio, _repeat); });
