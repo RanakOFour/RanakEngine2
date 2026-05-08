@@ -148,6 +148,11 @@ struct Vector2
     {
         return Vector2(-x, -y);
     };
+
+    bool operator==(const Vector2& _other) const
+    {
+        return x == _other.x && y == _other.y;
+    };
 };
 
 /// @brief Adds a scalar to each component of a vector.

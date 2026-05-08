@@ -155,6 +155,11 @@ struct Vector4
         return Vector4(-x, -y, -z, -w);
     };
 
+    bool operator==(const Vector4& _other) const
+    {
+        return x == _other.x && y == _other.y && z == _other.z && w == _other.w;
+    };
+
     float operator[](int _idx)
     {
         switch(_idx)

@@ -61,6 +61,26 @@ namespace RanakEngine::UI
                float tR, float tG, float tB, float tA)
             { if (s_renderer) s_renderer->DrawImage(texId, x, y, w, h, tR, tG, tB, tA); });
 
+        UITable.set_function("DrawCircle",
+            [](float x, float y, float radius,
+               float r, float g, float b, float a)
+            { if (s_renderer) s_renderer->DrawCircle(x, y, radius, r, g, b, a); });
+
+        UITable.set_function("DrawCircleOutline",
+            [](float x, float y, float radius,
+               float r, float g, float b, float a, float t)
+            { if (s_renderer) s_renderer->DrawCircleOutline(x, y, radius, r, g, b, a, t); });
+
+        UITable.set_function("DrawCapsule",
+            [](float x, float y, float w, float h,
+               float r, float g, float b, float a)
+            { if (s_renderer) s_renderer->DrawCapsule(x, y, w, h, r, g, b, a); });
+
+        UITable.set_function("DrawCapsuleOutline",
+            [](float x, float y, float w, float h,
+               float r, float g, float b, float a, float t)
+            { if (s_renderer) s_renderer->DrawCapsuleOutline(x, y, w, h, r, g, b, a, t); });
+
         UITable.set_function("IsHovered",
             [](float x, float y, float w, float h) -> bool
             { return s_renderer ? s_renderer->IsHovered(x, y, w, h) : false; });

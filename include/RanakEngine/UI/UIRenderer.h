@@ -44,14 +44,26 @@ class UIRenderer
                   float _r, float _g, float _b, float _a,
                   unsigned int _texId, bool _useTexture);
 
-    unsigned int m_quadVAO = 0;
-    unsigned int m_quadVBO = 0;
-    unsigned int m_shaderProgram = 0;
+    GLuint m_quadVAO = 0;
+    GLuint m_quadVBO = 0;
+    GLuint m_circleVAO = 0;
+    GLuint m_circleVBO = 0;
+    GLuint m_circleVertCount = 0;
+    GLuint m_circleOutlineVAO = 0;
+    GLuint m_circleOutlineVBO = 0;
+    GLuint m_circleOutlineVertCount = 0;
+    GLuint m_semiCircleTopVAO = 0;
+    GLuint m_semiCircleTopVBO = 0;
+    GLuint m_semiCircleTopVertCount = 0;
+    GLuint m_semiCircleBotVAO = 0;
+    GLuint m_semiCircleBotVBO = 0;
+    GLuint m_semiCircleBotVertCount = 0;
+    GLuint m_shaderProgram = 0;
 
     // Text-specific VAO/VBO (4-component vertices: x,y,u,v)
-    unsigned int m_textVAO = 0;
-    unsigned int m_textVBO = 0;
-    unsigned int m_textShaderProgram = 0;
+    GLuint m_textVAO = 0;
+    GLuint m_textVBO = 0;
+    GLuint m_textShaderProgram = 0;
 
     int m_locProjection = -1;
     int m_locModel      = -1;
@@ -79,7 +91,15 @@ class UIRenderer
     // which is called AFTER ImGui renders so game UI appears on top of editor.
     struct DrawCommand
     {
-        enum class Type { Rect, RectOutline, Text, Image };
+        enum class Type { 
+                          Rect, RectOutline, 
+                          Text, Image,
+                          Circle, CircleOutline,
+                          Capsule, CapsuleOutline,
+                          SemiCircleTop, SemiCircleTopOutline,
+                          SemiCircleBot, SemiCircleBotOutline
+                        };
+
         Type         type;
         float        x = 0, y = 0, w = 0, h = 0;
         float        r = 1, g = 1, b = 1, a = 1;
@@ -149,6 +169,34 @@ class UIRenderer
 
     void DrawImage(unsigned int _texId, float _x, float _y, float _w, float _h,
                    float _tR, float _tG, float _tB, float _tA);
+
+    void DrawCircle(float _x, float _y, float _radius,
+                    float _r, float _g, float _b, float _a);
+
+    void DrawCircleOutline(float _x, float _y, float _radius,
+                           float _r, float _g, float _b, float _a,
+                           float _thickness = 1.0f);
+
+    void DrawCapsule(float _x, float _y, float _w, float _h,
+                     float _r, float _g, float _b, float _a);
+
+    void DrawCapsuleOutline(float _x, float _y, float _w, float _h,
+                            float _r, float _g, float _b, float _a,
+                            float _thickness = 1.0f);
+
+    void DrawSemiCircleTop(float _x, float _y, float _radius,
+                           float _r, float _g, float _b, float _a);
+
+    void DrawSemiCircleTopOutline(float _x, float _y, float _radius,
+                                  float _r, float _g, float _b, float _a,
+                                  float _thickness = 1.0f);
+
+    void DrawSemiCircleBot(float _x, float _y, float _radius,
+                           float _r, float _g, float _b, float _a);
+
+    void DrawSemiCircleBotOutline(float _x, float _y, float _radius,
+                                  float _r, float _g, float _b, float _a,
+                                  float _thickness = 1.0f);
 
     bool IsHovered(float _x, float _y, float _w, float _h) const;
     bool IsClicked(float _x, float _y, float _w, float _h) const;

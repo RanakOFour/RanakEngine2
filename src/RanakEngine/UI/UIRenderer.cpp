@@ -113,6 +113,14 @@ UIRenderer::~UIRenderer()
 {
     if (m_quadVAO)            glDeleteVertexArrays(1, &m_quadVAO);
     if (m_quadVBO)            glDeleteBuffers(1, &m_quadVBO);
+    if (m_circleVAO)          glDeleteVertexArrays(1, &m_circleVAO);
+    if (m_circleVBO)          glDeleteBuffers(1, &m_circleVBO);
+    if (m_circleOutlineVAO)   glDeleteVertexArrays(1, &m_circleOutlineVAO);
+    if (m_circleOutlineVBO)   glDeleteBuffers(1, &m_circleOutlineVBO);
+    if (m_semiCircleTopVAO)   glDeleteVertexArrays(1, &m_semiCircleTopVAO);
+    if (m_semiCircleTopVBO)   glDeleteBuffers(1, &m_semiCircleTopVBO);
+    if (m_semiCircleBotVAO)   glDeleteVertexArrays(1, &m_semiCircleBotVAO);
+    if (m_semiCircleBotVBO)   glDeleteBuffers(1, &m_semiCircleBotVBO);
     if (m_shaderProgram)      glDeleteProgram(m_shaderProgram);
     if (m_textVAO)            glDeleteVertexArrays(1, &m_textVAO);
     if (m_textVBO)            glDeleteBuffers(1, &m_textVBO);
@@ -160,6 +168,130 @@ void UIRenderer::Init(std::weak_ptr<IO::Manager> _io,
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
     glBindVertexArray(0);
+
+    // Circle VAO/VBO — triangle fan for filled circle (radius=1, centred at origin)
+    {
+        constexpr int k_segments = 64;
+        std::vector<float> l_circleVerts;
+        l_circleVerts.reserve((k_segments + 2) * 5);
+        // centre vertex
+        l_circleVerts.insert(l_circleVerts.end(), {0.0f, 0.0f, 0.0f, 0.5f, 0.5f});
+        for (int i = 0; i <= k_segments; ++i)
+        {
+            float l_angle = (float)i / (float)k_segments * 2.0f * M_PI;
+            float l_x = std::cos(l_angle);
+            float l_y = std::sin(l_angle);
+            float l_u = l_x * 0.5f + 0.5f;
+            float l_v = l_y * 0.5f + 0.5f;
+            l_circleVerts.insert(l_circleVerts.end(), {l_x, l_y, 0.0f, l_u, l_v});
+        }
+        m_circleVertCount = (unsigned int)l_circleVerts.size() / 5;
+
+        glGenVertexArrays(1, &m_circleVAO);
+        glGenBuffers(1, &m_circleVBO);
+
+        glBindVertexArray(m_circleVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_circleVBO);
+        glBufferData(GL_ARRAY_BUFFER, l_circleVerts.size() * sizeof(float),
+                     l_circleVerts.data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glBindVertexArray(0);
+    }
+
+    // Circle outline VAO/VBO — triangle strip ring (outer + inner radii, 2 vertices per segment)
+    {
+        constexpr int k_segs = 64;
+        constexpr float k_rOuter = 1.0f;
+        constexpr float k_rInner = 0.6f;   // wider gap: 0.4 × scale instead of 0.15
+        std::vector<float> l_ringVerts;
+        l_ringVerts.reserve((k_segs + 1) * 2 * 5);
+        for (int i = 0; i <= k_segs; ++i)
+        {
+            float l_a = (float)i / (float)k_segs * 2.0f * M_PI;
+            float l_cx = std::cos(l_a), l_sy = std::sin(l_a);
+            // outer
+            l_ringVerts.insert(l_ringVerts.end(), {k_rOuter * l_cx, k_rOuter * l_sy, 0.0f, 0.5f, 0.5f});
+            // inner
+            l_ringVerts.insert(l_ringVerts.end(), {k_rInner * l_cx, k_rInner * l_sy, 0.0f, 0.5f, 0.5f});
+        }
+        m_circleOutlineVertCount = (unsigned int)l_ringVerts.size() / 5;
+
+        glGenVertexArrays(1, &m_circleOutlineVAO);
+        glGenBuffers(1, &m_circleOutlineVBO);
+
+        glBindVertexArray(m_circleOutlineVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_circleOutlineVBO);
+        glBufferData(GL_ARRAY_BUFFER, l_ringVerts.size() * sizeof(float),
+                     l_ringVerts.data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glBindVertexArray(0);
+    }
+
+    // Semi-circle top half outline (ring strip, angle 0 to PI)
+    {
+        constexpr int k_segs = 64;
+        constexpr float k_rOuter = 1.0f;
+        constexpr float k_rInner = 0.6f;   // wider gap for visible ring
+        std::vector<float> l_ringVerts;
+        l_ringVerts.reserve((k_segs + 1) * 2 * 5);
+        for (int i = 0; i <= k_segs; ++i)
+        {
+            float l_a = (float)i / (float)k_segs * M_PI;  // 0 to PI (top half)
+            float l_cx = std::cos(l_a), l_sy = std::sin(l_a);
+            // outer
+            l_ringVerts.insert(l_ringVerts.end(), {k_rOuter * l_cx, k_rOuter * l_sy, 0.0f, 0.5f, 0.5f});
+            // inner
+            l_ringVerts.insert(l_ringVerts.end(), {k_rInner * l_cx, k_rInner * l_sy, 0.0f, 0.5f, 0.5f});
+        }
+        m_semiCircleTopVertCount = (unsigned int)l_ringVerts.size() / 5;
+
+        glGenVertexArrays(1, &m_semiCircleTopVAO);
+        glGenBuffers(1, &m_semiCircleTopVBO);
+        glBindVertexArray(m_semiCircleTopVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_semiCircleTopVBO);
+        glBufferData(GL_ARRAY_BUFFER, l_ringVerts.size() * sizeof(float),
+                     l_ringVerts.data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glBindVertexArray(0);
+    }
+
+    // Semi-circle bottom half outline (ring strip, angle PI to 2*PI)
+    {
+        constexpr int k_segs = 64;
+        constexpr float k_rOuter = 1.0f;
+        constexpr float k_rInner = 0.6f;   // wider gap for visible ring
+        std::vector<float> l_ringVerts;
+        l_ringVerts.reserve((k_segs + 1) * 2 * 5);
+        for (int i = 0; i <= k_segs; ++i)
+        {
+            float l_a = M_PI + (float)i / (float)k_segs * M_PI;  // PI to 2*PI (bottom half)
+            float l_cx = std::cos(l_a), l_sy = std::sin(l_a);
+            l_ringVerts.insert(l_ringVerts.end(), {k_rOuter * l_cx, k_rOuter * l_sy, 0.0f, 0.5f, 0.5f});
+            l_ringVerts.insert(l_ringVerts.end(), {k_rInner * l_cx, k_rInner * l_sy, 0.0f, 0.5f, 0.5f});
+        }
+        m_semiCircleBotVertCount = (unsigned int)l_ringVerts.size() / 5;
+
+        glGenVertexArrays(1, &m_semiCircleBotVAO);
+        glGenBuffers(1, &m_semiCircleBotVBO);
+        glBindVertexArray(m_semiCircleBotVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_semiCircleBotVBO);
+        glBufferData(GL_ARRAY_BUFFER, l_ringVerts.size() * sizeof(float),
+                     l_ringVerts.data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glBindVertexArray(0);
+    }
 
     // Compile and link shaders
 
@@ -337,6 +469,7 @@ void UIRenderer::DrawQuad(float _x, float _y, float _w, float _h,
 {
     // Ensure correct state regardless of what 3D rendering rules may have changed.
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -525,35 +658,286 @@ void UIRenderer::DrawImage(unsigned int _texId,
     DrawQuad(_x, _y, _w, _h, _tR, _tG, _tB, _tA, _texId, true);
 }
 
+void UIRenderer::DrawCircle(float _x, float _y, float _radius,
+                            float _r, float _g, float _b, float _a)
+{
+    if (m_buffering)
+    {
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Type::Circle;
+        cmd.x = _x; cmd.y = _y;
+        cmd.w = _radius;  // w = radius for circles
+        cmd.r = _r; cmd.g = _g; cmd.b = _b; cmd.a = _a;
+        m_commandBuffer.push_back(std::move(cmd));
+        return;
+    }
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glm::mat4 l_model(1.0f);
+    l_model = glm::translate(l_model, glm::vec3(_x, _y, 0.0f));
+    l_model = glm::scale(l_model, glm::vec3(_radius, _radius, 1.0f));
+
+    glUseProgram(m_shaderProgram);
+    glUniformMatrix4fv(m_locProjection, 1, GL_FALSE, glm::value_ptr(m_projMatrix));
+    glUniformMatrix4fv(m_locModel,      1, GL_FALSE, glm::value_ptr(l_model));
+    glUniform4f(m_locColor, _r, _g, _b, _a);
+    glUniform1i(m_locUseTexture, 0);
+
+    glBindVertexArray(m_circleVAO);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, m_circleVertCount);
+    glBindVertexArray(0);
+    glUseProgram(0);
+}
+
+void UIRenderer::DrawCircleOutline(float _x, float _y, float _radius,
+                                   float _r, float _g, float _b, float _a,
+                                   float _thickness)
+{
+    if (m_buffering)
+    {
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Type::CircleOutline;
+        cmd.x = _x; cmd.y = _y;
+        cmd.w = _radius; cmd.thickness = _thickness;
+        cmd.r = _r; cmd.g = _g; cmd.b = _b; cmd.a = _a;
+        m_commandBuffer.push_back(std::move(cmd));
+        return;
+    }
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Ring mesh: outer=1.0, inner=0.6, gap=0.4, midline=0.8.
+    // Scale so the ring's midline sits at _radius from the centre, and
+    // ensure the visual gap meets the requested _thickness.
+    float l_t = _thickness;
+    if (l_t < 0.5f) l_t = 0.5f;
+
+    float l_scale = _radius / 0.8f;
+    float l_gap = 0.4f * l_scale;
+    if (l_gap < l_t)
+        l_scale = l_t / 0.4f;
+
+    glm::mat4 l_model(1.0f);
+    l_model = glm::translate(l_model, glm::vec3(_x, _y, 0.0f));
+    l_model = glm::scale(l_model, glm::vec3(l_scale, l_scale, 1.0f));
+
+    glUseProgram(m_shaderProgram);
+    glUniformMatrix4fv(m_locProjection, 1, GL_FALSE, glm::value_ptr(m_projMatrix));
+    glUniformMatrix4fv(m_locModel,      1, GL_FALSE, glm::value_ptr(l_model));
+    glUniform4f(m_locColor, _r, _g, _b, _a);
+    glUniform1i(m_locUseTexture, 0);
+
+    glBindVertexArray(m_circleOutlineVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, m_circleOutlineVertCount);
+    glBindVertexArray(0);
+    glUseProgram(0);
+}
+
+void UIRenderer::DrawCapsule(float _x, float _y, float _w, float _h,
+                             float _r, float _g, float _b, float _a)
+{
+    if (m_buffering)
+    {
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Type::Capsule;
+        cmd.x = _x; cmd.y = _y; cmd.w = _w; cmd.h = _h;
+        cmd.r = _r; cmd.g = _g; cmd.b = _b; cmd.a = _a;
+        m_commandBuffer.push_back(std::move(cmd));
+        return;
+    }
+    // Capsule = centre rectangle + two half-circle endcaps
+    float l_r = _w * 0.5f;  // radius = half-width
+    float l_bodyH = _h - _w; // height minus endcaps
+    if (l_bodyH < 0.0f) l_bodyH = 0.0f;
+
+    DrawRect(_x, _y + l_r, _w, l_bodyH, _r, _g, _b, _a);
+    DrawCircle(_x + l_r, _y + l_r, l_r, _r, _g, _b, _a);
+    DrawCircle(_x + l_r, _y + l_r + l_bodyH, l_r, _r, _g, _b, _a);
+}
+
+void UIRenderer::DrawCapsuleOutline(float _x, float _y, float _w, float _h,
+                                    float _r, float _g, float _b, float _a,
+                                    float _thickness)
+{
+    if (m_buffering)
+    {
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Type::CapsuleOutline;
+        cmd.x = _x; cmd.y = _y; cmd.w = _w; cmd.h = _h;
+        cmd.r = _r; cmd.g = _g; cmd.b = _b; cmd.a = _a;
+        cmd.thickness = _thickness;
+        m_commandBuffer.push_back(std::move(cmd));
+        return;
+    }
+    float l_r = _w * 0.5f;
+    float l_bodyH = _h - _w;
+    if (l_bodyH < 0.0f) l_bodyH = 0.0f;
+
+    float l_topY    = _y + l_r;
+    float l_bottomY = _y + l_r + l_bodyH;
+
+    // Rectangular body outline
+    DrawRectOutline(_x, l_topY, _w, l_bodyH, _r, _g, _b, _a, _thickness);
+    // Half-circle endcaps. The Y-down orthographic projection flips the
+    // circle geometry: the "top" half-ring (angles 0→π, Y-up) renders as
+    // the bottom half on screen, and vice versa. So we swap them here so
+    // the visible arcs sit on the correct ends of the capsule.
+    DrawSemiCircleBotOutline(_x + l_r, l_topY,    l_r, _r, _g, _b, _a, _thickness);
+    DrawSemiCircleTopOutline(_x + l_r, l_bottomY, l_r, _r, _g, _b, _a, _thickness);
+}
+
+void UIRenderer::DrawSemiCircleTop(float _x, float _y, float _radius,
+                                   float _r, float _g, float _b, float _a)
+{
+    // Filled semi-circle uses same triangle fan but only top half.
+    // For simplicity, draw a full filled circle — the capsule's centre rect
+    // will cover the bottom half.
+    DrawCircle(_x, _y, _radius, _r, _g, _b, _a);
+}
+
+void UIRenderer::DrawSemiCircleTopOutline(float _x, float _y, float _radius,
+                                          float _r, float _g, float _b, float _a,
+                                          float _thickness)
+{
+    if (m_buffering)
+    {
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Type::SemiCircleTopOutline;
+        cmd.x = _x; cmd.y = _y; cmd.w = _radius;
+        cmd.r = _r; cmd.g = _g; cmd.b = _b; cmd.a = _a;
+        cmd.thickness = _thickness;
+        m_commandBuffer.push_back(std::move(cmd));
+        return;
+    }
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glm::mat4 l_model(1.0f);
+    l_model = glm::translate(l_model, glm::vec3(_x, _y, 0.0f));
+    l_model = glm::scale(l_model, glm::vec3(_radius, _radius, 1.0f));
+
+    glUseProgram(m_shaderProgram);
+    glUniformMatrix4fv(m_locProjection, 1, GL_FALSE, glm::value_ptr(m_projMatrix));
+    glUniformMatrix4fv(m_locModel,      1, GL_FALSE, glm::value_ptr(l_model));
+    glUniform4f(m_locColor, _r, _g, _b, _a);
+    glUniform1i(m_locUseTexture, 0);
+
+    glBindVertexArray(m_semiCircleTopVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, m_semiCircleTopVertCount);
+    glBindVertexArray(0);
+    glUseProgram(0);
+}
+
+void UIRenderer::DrawSemiCircleBot(float _x, float _y, float _radius,
+                                   float _r, float _g, float _b, float _a)
+{
+    DrawCircle(_x, _y, _radius, _r, _g, _b, _a);
+}
+
+void UIRenderer::DrawSemiCircleBotOutline(float _x, float _y, float _radius,
+                                          float _r, float _g, float _b, float _a,
+                                          float _thickness)
+{
+    if (m_buffering)
+    {
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Type::SemiCircleBotOutline;
+        cmd.x = _x; cmd.y = _y; cmd.w = _radius;
+        cmd.r = _r; cmd.g = _g; cmd.b = _b; cmd.a = _a;
+        cmd.thickness = _thickness;
+        m_commandBuffer.push_back(std::move(cmd));
+        return;
+    }
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glm::mat4 l_model(1.0f);
+    l_model = glm::translate(l_model, glm::vec3(_x, _y, 0.0f));
+    l_model = glm::scale(l_model, glm::vec3(_radius, _radius, 1.0f));
+
+    glUseProgram(m_shaderProgram);
+    glUniformMatrix4fv(m_locProjection, 1, GL_FALSE, glm::value_ptr(m_projMatrix));
+    glUniformMatrix4fv(m_locModel,      1, GL_FALSE, glm::value_ptr(l_model));
+    glUniform4f(m_locColor, _r, _g, _b, _a);
+    glUniform1i(m_locUseTexture, 0);
+
+    glBindVertexArray(m_semiCircleBotVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, m_semiCircleBotVertCount);
+    glBindVertexArray(0);
+    glUseProgram(0);
+}
+
 void UIRenderer::Flush()
 {
     if (m_commandBuffer.empty()) return;
 
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     m_buffering = false;
-    for (const auto& cmd : m_commandBuffer)
+    for (const auto& l_cmd : m_commandBuffer)
     {
-        switch (cmd.type)
+        switch (l_cmd.type)
         {
             case DrawCommand::Type::Rect:
-                DrawRect(cmd.x, cmd.y, cmd.w, cmd.h,
-                         cmd.r, cmd.g, cmd.b, cmd.a);
+                DrawRect(l_cmd.x, l_cmd.y, l_cmd.w, l_cmd.h,
+                         l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a);
                 break;
             case DrawCommand::Type::RectOutline:
-                DrawRectOutline(cmd.x, cmd.y, cmd.w, cmd.h,
-                                cmd.r, cmd.g, cmd.b, cmd.a, cmd.thickness);
+                DrawRectOutline(l_cmd.x, l_cmd.y, l_cmd.w, l_cmd.h,
+                                l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a, l_cmd.thickness);
                 break;
             case DrawCommand::Type::Text:
-                DrawText(cmd.x, cmd.y,
-                         cmd.r, cmd.g, cmd.b, cmd.a,
-                         cmd.text, cmd.fontSize, cmd.centered);
+                DrawText(l_cmd.x, l_cmd.y,
+                         l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a,
+                         l_cmd.text, l_cmd.fontSize, l_cmd.centered);
                 break;
             case DrawCommand::Type::Image:
-                DrawImage(cmd.texId, cmd.x, cmd.y, cmd.w, cmd.h,
-                          cmd.r, cmd.g, cmd.b, cmd.a);
+                DrawImage(l_cmd.texId, l_cmd.x, l_cmd.y, l_cmd.w, l_cmd.h,
+                          l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a);
+                break;
+            case DrawCommand::Type::Circle:
+                DrawCircle(l_cmd.x, l_cmd.y, l_cmd.w,
+                           l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a);
+                break;
+            case DrawCommand::Type::CircleOutline:
+                DrawCircleOutline(l_cmd.x, l_cmd.y, l_cmd.w,
+                                  l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a, l_cmd.thickness);
+                break;
+            case DrawCommand::Type::Capsule:
+                DrawCapsule(l_cmd.x, l_cmd.y, l_cmd.w, l_cmd.h,
+                            l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a);
+                break;
+            case DrawCommand::Type::CapsuleOutline:
+                DrawCapsuleOutline(l_cmd.x, l_cmd.y, l_cmd.w, l_cmd.h,
+                                   l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a, l_cmd.thickness);
+                break;
+            case DrawCommand::Type::SemiCircleTopOutline:
+                DrawSemiCircleTopOutline(l_cmd.x, l_cmd.y, l_cmd.w,
+                                         l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a, l_cmd.thickness);
+                break;
+            case DrawCommand::Type::SemiCircleBotOutline:
+                DrawSemiCircleBotOutline(l_cmd.x, l_cmd.y, l_cmd.w,
+                                         l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a, l_cmd.thickness);
+                break;
+            case DrawCommand::Type::SemiCircleTop:
+                DrawSemiCircleTop(l_cmd.x, l_cmd.y, l_cmd.w,
+                                  l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a);
+                break;
+            case DrawCommand::Type::SemiCircleBot:
+                DrawSemiCircleBot(l_cmd.x, l_cmd.y, l_cmd.w,
+                                  l_cmd.r, l_cmd.g, l_cmd.b, l_cmd.a);
                 break;
         }
     }

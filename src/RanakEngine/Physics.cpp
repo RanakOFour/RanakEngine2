@@ -66,6 +66,49 @@ namespace RanakEngine::Physics
             return Physics::Body(l_manager->CreateBody(&l_def));
         });
 
+        // Overload with extended parameters: gravityScale, linearDamping, angularDamping,
+        // fixedRotation, linearVelocity, angularVelocity.
+        PhysicsTable.set_function("CreateBody", [](Vector2 _position, float _rotation, std::string _typeStr,
+                                                     sol::object _extras) -> Physics::Body
+        {
+            auto l_manager = Physics::Manager::Get().lock();
+            if (!l_manager)
+            {
+                throw std::runtime_error("PhysicsManager not initialized");
+            }
+
+            b2BodyDef l_def = b2DefaultBodyDef();
+            l_def.position = {_position.x, _position.y};
+            l_def.rotation = b2MakeRot(Math::DegToRad(_rotation));
+
+            if (_typeStr == "static")
+                l_def.type = b2_staticBody;
+            else if (_typeStr == "kinematic")
+                l_def.type = b2_kinematicBody;
+            else
+                l_def.type = b2_dynamicBody;
+
+            if (_extras.valid() && _extras.get_type() == sol::type::table)
+            {
+                sol::table l_t = _extras.as<sol::table>();
+                l_def.gravityScale         = l_t.get_or("gravityScale",     l_def.gravityScale);
+                l_def.linearDamping        = l_t.get_or("linearDamping",    l_def.linearDamping);
+                l_def.angularDamping       = l_t.get_or("angularDamping",   l_def.angularDamping);
+                l_def.motionLocks.angularZ = l_t.get_or("fixedRotation",   l_def.motionLocks.angularZ);
+                l_def.enableSleep          = l_t.get_or("enableSleep",      l_def.enableSleep);
+                l_def.isAwake              = l_t.get_or("isAwake",          l_def.isAwake);
+                l_def.isBullet             = l_t.get_or("isBullet",         l_def.isBullet);
+
+                Vector2 l_linVel(0.0f);
+                l_linVel = l_t.get_or("linearVelocity", l_linVel);
+
+                l_def.linearVelocity = {l_linVel.x, l_linVel.y};
+                l_def.angularVelocity = l_t.get_or("angularVelocity", 0.0f);
+            }
+
+            return Physics::Body(l_manager->CreateBody(&l_def));
+        });
+
         // Physics.AddBoxShape(body: Body, halfW, halfH, density, friction, restitution)
         PhysicsTable.set_function("AddBoxShape", [](Physics::Body& _body, float _halfW, float _halfH,
                                                      float _density, float _friction, float _restitution)

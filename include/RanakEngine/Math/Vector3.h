@@ -157,6 +157,11 @@ struct Vector3
     {
         return Vector3(-x, -y, -z);
     };
+
+    bool operator==(const Vector3& _other) const
+    {
+        return x == _other.x && y == _other.y && z == _other.z;
+    };
 };
 
 /// @brief Adds a scalar to each component of a vector.

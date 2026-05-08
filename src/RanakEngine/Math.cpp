@@ -22,6 +22,9 @@ namespace RanakEngine::Math
         MathTable.set_function("PI", &PI);
         MathTable.set_function("DegToRad", &DegToRad);
         MathTable.set_function("RadToDeg", &RadToDeg);
+        MathTable.set_function("Max",  [](float a, float b) { return std::max(a, b); });
+        MathTable.set_function("Min",  [](float a, float b) { return std::min(a, b); });
+        MathTable.set_function("Abs",  [](float a)          { return std::abs(a); });
 
         // Add usertypes for Vector2, Vector3, and Vector4
         l_context->AddUserType<Vector2>("Vector2",
@@ -37,7 +40,17 @@ namespace RanakEngine::Math
                                         // Americanised spellings just because
                                         "Normalize", &Vector2::Normalise,
                                         "Normalized", &Vector2::Normalised,
-                                        "ToString", &Vector2::ToString);
+                                        "ToString", &Vector2::ToString,
+                                        sol::meta_function::addition,       [](const Vector2& a, const Vector2& b) { return a + b; },
+                                        sol::meta_function::subtraction,    [](const Vector2& a, const Vector2& b) { return a - b; },
+                                        sol::meta_function::multiplication, sol::overload(
+                                            [](const Vector2& v, float s) { return v * s; },
+                                            [](float s, const Vector2& v) { return v * s; }
+                                        ),
+                                        sol::meta_function::division,       [](const Vector2& v, float s) { return v / s; },
+                                        sol::meta_function::unary_minus,    [](const Vector2& v) { return Vector2(-v.x, -v.y); },
+                                        sol::meta_function::equal_to,       [](const Vector2& a, const Vector2& b) { return a == b; }
+                                        );
 
         l_context->AddUserType<Vector3>("Vector3",
                                         sol::call_constructor,
@@ -53,7 +66,17 @@ namespace RanakEngine::Math
                                         // Americanised spellings just because
                                         "Normalize", &Vector3::Normalise,
                                         "Normalized", &Vector3::Normalised,
-                                        "ToString", &Vector3::ToString);
+                                        "ToString", &Vector3::ToString,
+                                        sol::meta_function::addition,       [](const Vector3& a, const Vector3& b) { return a + b; },
+                                        sol::meta_function::subtraction,    [](const Vector3& a, const Vector3& b) { return a - b; },
+                                        sol::meta_function::multiplication, sol::overload(
+                                            [](const Vector3& v, float s) { return v * s; },
+                                            [](float s, const Vector3& v) { return v * s; }
+                                        ),
+                                        sol::meta_function::division,       [](const Vector3& v, float s) { return v / s; },
+                                        sol::meta_function::unary_minus,    [](const Vector3& v) { return Vector3(-v.x, -v.y, -v.z); },
+                                        sol::meta_function::equal_to,       [](const Vector3& a, const Vector3& b) { return a == b; }
+                                        );
 
         l_context->AddUserType<Vector4>("Vector4",
                                         sol::call_constructor,
@@ -70,7 +93,17 @@ namespace RanakEngine::Math
                                         // Americanised spellings just because
                                         "Normalize", &Vector4::Normalise,
                                         "Normalized", &Vector4::Normalised,
-                                        "ToString", &Vector4::ToString);
+                                        "ToString", &Vector4::ToString,
+                                        sol::meta_function::addition,       [](const Vector4& a, const Vector4& b) { return a + b; },
+                                        sol::meta_function::subtraction,    [](const Vector4& a, const Vector4& b) { return a - b; },
+                                        sol::meta_function::multiplication, sol::overload(
+                                            [](const Vector4& v, float s) { return v * s; },
+                                            [](float s, const Vector4& v) { return v * s; }
+                                        ),
+                                        sol::meta_function::division,       [](const Vector4& v, float s) { return v / s; },
+                                        sol::meta_function::unary_minus,    [](const Vector4& v) { return Vector4(-v.x, -v.y, -v.z, -v.w); },
+                                        sol::meta_function::equal_to,       [](const Vector4& a, const Vector4& b) { return a == b; }
+                                        );
 
         // Functions for vector operations
         MathTable.set_function("DotProduct", [](Vector2 &_a, Vector2 &_b)
