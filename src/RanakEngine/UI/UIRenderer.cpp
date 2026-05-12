@@ -394,7 +394,6 @@ void UIRenderer::BeginFrame(Vector2 _screenSize)
 
     // Pixel-space, Y-down for both shapes and text: (0,0) top-left, (screenW,screenH) bottom-right.
     m_projMatrix     = glm::ortho(0.0f, _screenSize.x, _screenSize.y, 0.0f, -1.0f, 1.0f);
-    m_textProjMatrix = m_projMatrix;
 
     if (auto io = m_IOwptr.lock())
     {
@@ -415,13 +414,23 @@ void UIRenderer::DrawQuad(Vector2 _pos, Vector2 _size, Vector4 _color,
                           unsigned int _texId, bool _useTexture)
 {
     // Ensure correct state regardless of what 3D rendering rules may have changed.
+    // GL_CULL_FACE must be disabled: the quad model's triangles are wound CCW in
+    // model space (Y-up OBJ convention), and the Y-flipping ortho projection
+    // inverts that to CW in window space — back-face culling would discard them.
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    Log::Message("Drawing quad with Pos: " + _pos.ToString() + " and Size: " + _size.ToString());
+
+    // Default quad model spans (-1,-1)..(1,1), so translate to the rect's
+    // centre and scale by half-size so the geometry lands at _pos..(_pos+_size).
     glm::mat4 l_model(1.0f);
-    l_model = glm::translate(l_model, glm::vec3(_pos.x, _pos.y, 0.0f));
-    l_model = glm::scale(l_model, glm::vec3(_size.x, _size.y, 1.0f));
+    l_model = glm::translate(l_model, glm::vec3(_pos.x + _size.x * 0.5f,
+                                                _pos.y + _size.y * 0.5f,
+                                                0.0f));
+    l_model = glm::scale(l_model, glm::vec3(_size.x * 0.5f, _size.y * 0.5f, 1.0f));
 
     glUseProgram(m_shaderProgram);
 
@@ -432,6 +441,7 @@ void UIRenderer::DrawQuad(Vector2 _pos, Vector2 _size, Vector4 _color,
 
     if (_useTexture)
     {
+        Log::Message("Using texture");
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, _texId);
         glUniform1i(m_locTexture, 0);
@@ -439,37 +449,47 @@ void UIRenderer::DrawQuad(Vector2 _pos, Vector2 _size, Vector4 _color,
 
     if(auto l_quadModelPtr = m_quadModel.lock())
     {
+        Log::Message("Using quad model");
         glBindVertexArray(l_quadModelPtr->GetVAO());
         glDrawArrays(GL_TRIANGLES, 0, l_quadModelPtr->GetVertexCount());
         glBindVertexArray(0);
     }
 
     if (_useTexture)
+    {
         glBindTexture(GL_TEXTURE_2D, 0);
+    }
 
     glUseProgram(0);
+
+    Log::Message("Quad drawn");
 }
 
-void UIRenderer::DrawRect(Vector2 _pos, Vector2 _size, Vector4 _color)
+void UIRenderer::DrawRect(Vector2 _pos, Vector2 _size, Vector4 _colour)
 {
     if (m_buffering)
     {
         DrawCommand cmd;
         cmd.type = DrawCommand::Type::Rect;
-        cmd.pos = _pos; cmd.size = _size; cmd.color = _color;
+        cmd.pos = _pos; cmd.size = _size; cmd.colour = _colour;
         m_commandBuffer.push_back(std::move(cmd));
         return;
     }
-    DrawQuad(_pos, _size, _color, 0, false);
+    Log::Message("Drawing rect with NDC Pos: " + _pos.ToString() + " and Size: " + _size.ToString());
+    // _pos is NDC centre (-1..1, Y-up). Convert to pixel-space top-left for DrawQuad.
+    float l_cx = (_pos.x + 1.0f) * 0.5f * m_screenW;
+    float l_cy = (1.0f - _pos.y) * 0.5f * m_screenH;
+    Vector2 l_topLeft(l_cx - _size.x * 0.5f, l_cy - _size.y * 0.5f);
+    DrawQuad(l_topLeft, _size, _colour, 0, false);
 }
 
-void UIRenderer::DrawRectOutline(Vector2 _pos, Vector2 _size, Vector4 _color, float _thickness)
+void UIRenderer::DrawRectOutline(Vector2 _pos, Vector2 _size, Vector4 _colour, float _thickness)
 {
     if (m_buffering)
     {
         DrawCommand cmd;
         cmd.type = DrawCommand::Type::RectOutline;
-        cmd.pos = _pos; cmd.size = _size; cmd.color = _color;
+        cmd.pos = _pos; cmd.size = _size; cmd.colour = _colour;
         cmd.thickness = _thickness;
         m_commandBuffer.push_back(std::move(cmd));
         return;
@@ -490,7 +510,7 @@ void UIRenderer::DrawRectOutline(Vector2 _pos, Vector2 _size, Vector4 _color, fl
     glUseProgram(m_shaderProgram);
     glUniformMatrix4fv(m_locProjection, 1, GL_FALSE, glm::value_ptr(m_projMatrix));
     glUniformMatrix4fv(m_locModel,      1, GL_FALSE, glm::value_ptr(l_model));
-    glUniform4f(m_locColor, _color.x, _color.y, _color.z, _color.w);
+    glUniform4f(m_locColor, _colour.x, _colour.y, _colour.z, _colour.w);
     glUniform1i(m_locUseTexture, 0);
 
     glBindVertexArray(m_rectLineVAO);
@@ -531,7 +551,7 @@ void UIRenderer::DrawText(Vector2 _pos, Vector4 _color,
         DrawCommand cmd;
         cmd.type = DrawCommand::Type::Text;
         cmd.pos = _pos;
-        cmd.color = _color;
+        cmd.colour = _color;
         cmd.text = _text;
         cmd.fontSize = _fontSize;
         cmd.centered = _centered;
@@ -547,8 +567,12 @@ void UIRenderer::DrawText(Vector2 _pos, Vector4 _color,
 
     float l_scale = _fontSize / m_bakedFontSize;
 
-    // Measure advance for width calculation (only if centered)
-    float l_totalWidth = 0.0f;
+    // Measure width and ascender/descender extents of the actual glyphs in the
+    // string so vertical centring lines up with the visible ink, not just the
+    // nominal font size (which over-allocates space above the cap-height).
+    float l_totalWidth  = 0.0f;
+    float l_maxBearingY = 0.0f;  // tallest ascender extent above baseline
+    float l_maxDescent  = 0.0f;  // deepest descender extent below baseline
     if (_centered)
     {
         for (char c : _text)
@@ -557,23 +581,31 @@ void UIRenderer::DrawText(Vector2 _pos, Vector4 _color,
             if (l_it == m_characters.end()) l_it = m_characters.find(' ');
             if (l_it != m_characters.end())
             {
-                l_totalWidth += (l_it->second.advance >> 6) * l_scale;
-        
+                const Character& l_ch = l_it->second;
+                l_totalWidth += (l_ch.advance >> 6) * l_scale;
+                float l_bY = l_ch.bearingY * l_scale;
+                float l_dY = (l_ch.sizeY - l_ch.bearingY) * l_scale;
+                if (l_bY > l_maxBearingY) l_maxBearingY = l_bY;
+                if (l_dY > l_maxDescent)  l_maxDescent  = l_dY;
             }
         }
     }
 
     // _pos is NDC: (-1,-1) bottom-left, (1,1) top-right. Convert to pixel-space
-    // Y-down to match m_textProjMatrix (now shared with shapes: ortho(0, w, h, 0)).
     float l_xPix = (_pos.x + 1.0f) * 0.5f * m_screenW;
     float l_yPix = (1.0f - _pos.y) * 0.5f * m_screenH;
 
     float l_cursorX = _centered ? l_xPix - l_totalWidth * 0.5f : l_xPix;
-    float l_startY  = l_yPix - (_fontSize * 0.5f);
+    // In Y-down pixel space, place the baseline below the requested centre by
+    // half the asymmetry between ascender and descender extents. That makes
+    // the ink span (visual top → visual bottom) straddle l_yPix evenly.
+    float l_startY  = _centered
+                      ? l_yPix + (l_maxBearingY - l_maxDescent) * 0.5f
+                      : l_yPix - (_fontSize * 0.5f);
 
     // Activate text shader (uses pixel-space projection).
     glUseProgram(m_textShaderProgram);
-    glUniformMatrix4fv(m_locTextProjection, 1, GL_FALSE, glm::value_ptr(m_textProjMatrix));
+    glUniformMatrix4fv(m_locTextProjection, 1, GL_FALSE, glm::value_ptr(m_projMatrix));
     glUniform4f(m_locTextColor, _color.x, _color.y, _color.z, _color.w);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(m_textVAO);
@@ -637,7 +669,7 @@ void UIRenderer::DrawImage(unsigned int _texId,
         DrawCommand cmd;
         cmd.type = DrawCommand::Type::Image;
         cmd.texId = _texId;
-        cmd.pos = _pos; cmd.size = _size; cmd.color = _color;
+        cmd.pos = _pos; cmd.size = _size; cmd.colour = _color;
         m_commandBuffer.push_back(std::move(cmd));
         return;
     }
@@ -652,7 +684,7 @@ void UIRenderer::DrawCircle(Vector2 _pos, float _radius, Vector4 _color)
         cmd.type = DrawCommand::Type::Circle;
         cmd.pos = _pos;
         cmd.size = {_radius, _radius};  // size.x = size.y = radius for circles
-        cmd.color = _color;
+        cmd.colour = _color;
         m_commandBuffer.push_back(std::move(cmd));
         return;
     }
@@ -684,7 +716,7 @@ void UIRenderer::DrawCircleOutline(Vector2 _pos, float _radius, Vector4 _color, 
         cmd.type = DrawCommand::Type::CircleOutline;
         cmd.pos = _pos;
         cmd.size = {_radius, _radius};
-        cmd.color = _color;
+        cmd.colour = _color;
         cmd.thickness = _thickness;
         m_commandBuffer.push_back(std::move(cmd));
         return;
@@ -721,7 +753,7 @@ void UIRenderer::DrawCapsule(Vector2 _pos, Vector2 _size, Vector4 _color)
     {
         DrawCommand cmd;
         cmd.type = DrawCommand::Type::Capsule;
-        cmd.pos = _pos; cmd.size = _size; cmd.color = _color;
+        cmd.pos = _pos; cmd.size = _size; cmd.colour = _color;
         m_commandBuffer.push_back(std::move(cmd));
         return;
     }
@@ -741,7 +773,7 @@ void UIRenderer::DrawCapsuleOutline(Vector2 _pos, Vector2 _size, Vector4 _color,
     {
         DrawCommand cmd;
         cmd.type = DrawCommand::Type::CapsuleOutline;
-        cmd.pos = _pos; cmd.size = _size; cmd.color = _color;
+        cmd.pos = _pos; cmd.size = _size; cmd.colour = _color;
         cmd.thickness = _thickness;
         m_commandBuffer.push_back(std::move(cmd));
         return;
@@ -775,7 +807,7 @@ void UIRenderer::DrawSemiCircleTopOutline(Vector2 _pos, float _radius, Vector4 _
     {
         DrawCommand cmd;
         cmd.type = DrawCommand::Type::SemiCircleTopOutline;
-        cmd.pos = _pos; cmd.size = {_radius, _radius}; cmd.color = _color;
+        cmd.pos = _pos; cmd.size = {_radius, _radius}; cmd.colour = _color;
         cmd.thickness = _thickness;
         m_commandBuffer.push_back(std::move(cmd));
         return;
@@ -815,7 +847,7 @@ void UIRenderer::DrawSemiCircleBotOutline(Vector2 _pos, float _radius, Vector4 _
     {
         DrawCommand cmd;
         cmd.type = DrawCommand::Type::SemiCircleBotOutline;
-        cmd.pos = _pos; cmd.size = {_radius, _radius}; cmd.color = _color;
+        cmd.pos = _pos; cmd.size = {_radius, _radius}; cmd.colour = _color;
         cmd.thickness = _thickness;
         m_commandBuffer.push_back(std::move(cmd));
         return;
@@ -858,41 +890,41 @@ void UIRenderer::Flush()
         switch (l_cmd.type)
         {
             case DrawCommand::Type::Rect:
-                DrawRect(l_cmd.pos, l_cmd.size, l_cmd.color);
+                DrawRect(l_cmd.pos, l_cmd.size, l_cmd.colour);
                 break;
             case DrawCommand::Type::RectOutline:
-                DrawRectOutline(l_cmd.pos, l_cmd.size, l_cmd.color, l_cmd.thickness);
+                DrawRectOutline(l_cmd.pos, l_cmd.size, l_cmd.colour, l_cmd.thickness);
                 break;
             case DrawCommand::Type::Text:
-                DrawText(l_cmd.pos, l_cmd.color,
+                DrawText(l_cmd.pos, l_cmd.colour,
                          l_cmd.text, l_cmd.fontSize, l_cmd.centered);
                 break;
             case DrawCommand::Type::Image:
-                DrawImage(l_cmd.texId, l_cmd.pos, l_cmd.size, l_cmd.color);
+                DrawImage(l_cmd.texId, l_cmd.pos, l_cmd.size, l_cmd.colour);
                 break;
             case DrawCommand::Type::Circle:
-                DrawCircle(l_cmd.pos, l_cmd.size.x, l_cmd.color);
+                DrawCircle(l_cmd.pos, l_cmd.size.x, l_cmd.colour);
                 break;
             case DrawCommand::Type::CircleOutline:
-                DrawCircleOutline(l_cmd.pos, l_cmd.size.x, l_cmd.color, l_cmd.thickness);
+                DrawCircleOutline(l_cmd.pos, l_cmd.size.x, l_cmd.colour, l_cmd.thickness);
                 break;
             case DrawCommand::Type::Capsule:
-                DrawCapsule(l_cmd.pos, l_cmd.size, l_cmd.color);
+                DrawCapsule(l_cmd.pos, l_cmd.size, l_cmd.colour);
                 break;
             case DrawCommand::Type::CapsuleOutline:
-                DrawCapsuleOutline(l_cmd.pos, l_cmd.size, l_cmd.color, l_cmd.thickness);
+                DrawCapsuleOutline(l_cmd.pos, l_cmd.size, l_cmd.colour, l_cmd.thickness);
                 break;
             case DrawCommand::Type::SemiCircleTopOutline:
-                DrawSemiCircleTopOutline(l_cmd.pos, l_cmd.size.x, l_cmd.color, l_cmd.thickness);
+                DrawSemiCircleTopOutline(l_cmd.pos, l_cmd.size.x, l_cmd.colour, l_cmd.thickness);
                 break;
             case DrawCommand::Type::SemiCircleBotOutline:
-                DrawSemiCircleBotOutline(l_cmd.pos, l_cmd.size.x, l_cmd.color, l_cmd.thickness);
+                DrawSemiCircleBotOutline(l_cmd.pos, l_cmd.size.x, l_cmd.colour, l_cmd.thickness);
                 break;
             case DrawCommand::Type::SemiCircleTop:
-                DrawSemiCircleTop(l_cmd.pos, l_cmd.size.x, l_cmd.color);
+                DrawSemiCircleTop(l_cmd.pos, l_cmd.size.x, l_cmd.colour);
                 break;
             case DrawCommand::Type::SemiCircleBot:
-                DrawSemiCircleBot(l_cmd.pos, l_cmd.size.x, l_cmd.color);
+                DrawSemiCircleBot(l_cmd.pos, l_cmd.size.x, l_cmd.colour);
                 break;
         }
     }

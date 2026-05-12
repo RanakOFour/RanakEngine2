@@ -114,7 +114,7 @@ class UIRenderer
         Type         type;
         Vector2      pos = {0, 0};
         Vector2      size = {0, 0};
-        Vector4      color = {1, 1, 1, 1};
+        Vector4      colour = {1, 1, 1, 1};
         float        thickness = 1.0f;
         std::string  text;
         float        fontSize = 32.0f;
