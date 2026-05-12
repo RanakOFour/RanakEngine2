@@ -3,13 +3,19 @@
 
 /**
  * @file UIRenderer.h
- * @brief Pure-OpenGL screen-space UI renderer with text, rect, and image
+ * @brief Pure-OpenGL UI renderer with text, rect, circle, and image
  *        drawing — independent of ImGui.
  *
- * Owns a quad VAO/VBO, a UI shader, and per-glyph textures loaded via
- * FreeType (following the LearnOpenGL text-rendering approach).  Exposes a
- * Lua "UI" table so UI rules can draw UIText, UIButton, UIPanel, and
- * UIImage entities.
+ * Owns a quad VAO/VBO, circle VAOs, UI shaders, and per-glyph textures
+ * loaded via FreeType.  Exposes a Lua "UI" table so UI rules can draw
+ * UIText, UIButton, UIPanel, and UIImage entities.
+ *
+ * **Coordinate systems:**
+ * - Shape functions (DrawRect, DrawCircle, DrawCapsule, etc.) use
+ *   **normalised device coordinates** (NDC): X right, Y up, origin at
+ *   screen centre, (-1,-1) bottom-left, (1,1) top-right.
+ * - DrawText uses **pixel coordinates** (Y-up, origin at bottom-left)
+ *   with its own pixel-space orthographic projection.
  *
  * Usage:
  *   UIRenderer renderer;
@@ -21,8 +27,10 @@
  *   renderer.Flush(); <- Draw everything in buffer at end of frame
  */
 
+#include "RanakEngine/Asset/Model.h"
 #include "RanakEngine/IO.h"
 #include "RanakEngine/Math.h"
+#include "RanakEngine/Math/Vector2.h"
 
 #include <string>
 #include <map>
@@ -40,20 +48,21 @@ class UIRenderer
 {
     private:
     /** @brief Draws a quad positioned/scaled by the given parameters. */
-    void DrawQuad(float _x, float _y, float _w, float _h,
-                  float _r, float _g, float _b, float _a,
+    void DrawQuad(Vector2 _pos, Vector2 _size,
+                  Vector4 _color,
                   unsigned int _texId, bool _useTexture);
 
     // TODO: Make a wrapper for these things, maybe utilising Model or Texture?
     // Either way, this is incredibly ugly
-    GLuint m_quadVAO = 0;
-    GLuint m_quadVBO = 0;
+    std::weak_ptr<Asset::Model> m_quadModel;
     GLuint m_circleVAO = 0;
     GLuint m_circleVBO = 0;
     GLuint m_circleVertCount = 0;
     GLuint m_circleLineVAO = 0;
     GLuint m_circleLineVBO = 0;
     GLuint m_circleLineVertCount = 0;
+    GLuint m_rectLineVAO = 0;
+    GLuint m_rectLineVBO = 0;
     GLuint m_semiCircleTopLineVAO = 0;
     GLuint m_semiCircleTopLineVBO = 0;
     GLuint m_semiCircleTopLineVertCount = 0;
@@ -103,8 +112,9 @@ class UIRenderer
                         };
 
         Type         type;
-        float        x = 0, y = 0, w = 0, h = 0;
-        float        r = 1, g = 1, b = 1, a = 1;
+        Vector2      pos = {0, 0};
+        Vector2      size = {0, 0};
+        Vector4      color = {1, 1, 1, 1};
         float        thickness = 1.0f;
         std::string  text;
         float        fontSize = 32.0f;
@@ -114,12 +124,13 @@ class UIRenderer
     std::vector<DrawCommand> m_commandBuffer;
     bool m_buffering = true; ///< When true, draw calls are buffered; set false during Flush.
 
-    glm::mat4 m_projMatrix{};
+    glm::mat4 m_projMatrix{};     ///< Identity — shapes use NDC.
+    glm::mat4 m_textProjMatrix{}; ///< Pixel-space ortho for text rendering.
     float m_screenW = 0.0f;
     float m_screenH = 0.0f;
 
-    float m_mouseX        = 0.0f;
-    float m_mouseY        = 0.0f;
+    float m_mouseX        = 0.0f; ///< Mouse position in NDC.
+    float m_mouseY        = 0.0f; ///< Mouse position in NDC.
     bool  m_mouseDown     = false;
     bool  m_mouseClicked  = false;
     bool  m_mousePrevDown = false;
@@ -147,7 +158,7 @@ class UIRenderer
               float _fontSize = 32.0f);
 
     /** @brief Call at the start of each frame to set up screen-space projection. */
-    void BeginFrame(float _screenW, float _screenH);
+    void BeginFrame(Vector2 _screenSize);
 
     /**
      * @brief Execute all buffered draw commands.
@@ -157,51 +168,30 @@ class UIRenderer
      */
     void Flush();
 
-    void DrawRect(float _x, float _y, float _w, float _h,
-                  float _r, float _g, float _b, float _a);
-
-    void DrawRectOutline(float _x, float _y, float _w, float _h,
-                         float _r, float _g, float _b, float _a,
-                         float _thickness = 1.0f);
-
-    void DrawText(float _x, float _y,
-                  float _r, float _g, float _b, float _a,
+    void DrawText(Vector2 _pos, Vector4 _color,
                   const std::string& _text, float _fontSize,
                   bool _centered);
 
-    void DrawImage(unsigned int _texId, float _x, float _y, float _w, float _h,
-                   float _tR, float _tG, float _tB, float _tA);
+    void DrawImage(unsigned int _texId, Vector2 _pos, Vector2 _size,
+                   Vector4 _color);
 
-    void DrawCircle(float _x, float _y, float _radius,
-                    float _r, float _g, float _b, float _a);
+    void DrawRect(Vector2 _pos, Vector2 _size, Vector4 _color);
+    void DrawRectOutline(Vector2 _pos, Vector2 _size, Vector4 _color, float _thickness = 1.0f);
 
-    void DrawCircleOutline(float _x, float _y, float _radius,
-                           float _r, float _g, float _b, float _a,
-                           float _thickness = 1.0f);
+    void DrawCircle(Vector2 _pos, float _radius, Vector4 _color);
+    void DrawCircleOutline(Vector2 _pos, float _radius, Vector4 _color, float _thickness = 1.0f);
 
-    void DrawCapsule(float _x, float _y, float _w, float _h,
-                     float _r, float _g, float _b, float _a);
+    void DrawCapsule(Vector2 _pos, Vector2 _size, Vector4 _color);
+    void DrawCapsuleOutline(Vector2 _pos, Vector2 _size, Vector4 _color, float _thickness = 1.0f);
 
-    void DrawCapsuleOutline(float _x, float _y, float _w, float _h,
-                            float _r, float _g, float _b, float _a,
-                            float _thickness = 1.0f);
+    void DrawSemiCircleTop(Vector2 _pos, float _radius, Vector4 _color);
+    void DrawSemiCircleTopOutline(Vector2 _pos, float _radius, Vector4 _color, float _thickness = 1.0f);
 
-    void DrawSemiCircleTop(float _x, float _y, float _radius,
-                           float _r, float _g, float _b, float _a);
+    void DrawSemiCircleBot(Vector2 _pos, float _radius, Vector4 _color);
+    void DrawSemiCircleBotOutline(Vector2 _pos, float _radius, Vector4 _color, float _thickness = 1.0f);
 
-    void DrawSemiCircleTopOutline(float _x, float _y, float _radius,
-                                  float _r, float _g, float _b, float _a,
-                                  float _thickness = 1.0f);
-
-    void DrawSemiCircleBot(float _x, float _y, float _radius,
-                           float _r, float _g, float _b, float _a);
-
-    void DrawSemiCircleBotOutline(float _x, float _y, float _radius,
-                                  float _r, float _g, float _b, float _a,
-                                  float _thickness = 1.0f);
-
-    bool IsHovered(float _x, float _y, float _w, float _h) const;
-    bool IsClicked(float _x, float _y, float _w, float _h) const;
+    bool IsHovered(Vector2 _pos, Vector2 _size) const;
+    bool IsClicked(Vector2 _pos, Vector2 _size) const;
 
     float GetScreenWidth()  const { return m_screenW; }
     float GetScreenHeight() const { return m_screenH; }

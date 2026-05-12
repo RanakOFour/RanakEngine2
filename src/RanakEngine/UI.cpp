@@ -41,53 +41,45 @@ namespace RanakEngine::UI
         UITable = l_context->CreateTable();
 
         UITable.set_function("DrawRect",
-            [](float x, float y, float w, float h,
-               float r, float g, float b, float a)
-            { if (s_renderer) s_renderer->DrawRect(x, y, w, h, r, g, b, a); });
+            [](Vector2 _pos, Vector2 _size, Vector4 _color)
+            { if (s_renderer) s_renderer->DrawRect(_pos, _size, _color); });
 
         UITable.set_function("DrawRectOutline",
-            [](float x, float y, float w, float h,
-               float r, float g, float b, float a, float t)
-            { if (s_renderer) s_renderer->DrawRectOutline(x, y, w, h, r, g, b, a, t); });
+            [](Vector2 _pos, Vector2 _size, Vector4 _color, float _thickness)
+            { if (s_renderer) s_renderer->DrawRectOutline(_pos, _size, _color, _thickness); });
 
         UITable.set_function("DrawText",
-            [](float x, float y,
-               float r, float g, float b, float a,
+            [](Vector2 _pos, Vector4 _color,
                const std::string& text, float fontSize, bool centered)
-            { if (s_renderer) s_renderer->DrawText(x, y, r, g, b, a, text, fontSize, centered); });
+            { if (s_renderer) s_renderer->DrawText(_pos, _color, text, fontSize, centered); });
 
         UITable.set_function("DrawImage",
-            [](unsigned int texId, float x, float y, float w, float h,
-               float tR, float tG, float tB, float tA)
-            { if (s_renderer) s_renderer->DrawImage(texId, x, y, w, h, tR, tG, tB, tA); });
+            [](unsigned int texId, Vector2 _pos, Vector2 _size, Vector4 _color)
+            { if (s_renderer) s_renderer->DrawImage(texId, _pos, _size, _color); });
 
         UITable.set_function("DrawCircle",
-            [](float x, float y, float radius,
-               float r, float g, float b, float a)
-            { if (s_renderer) s_renderer->DrawCircle(x, y, radius, r, g, b, a); });
+            [](Vector2 _pos, float radius, Vector4 _color)
+            { if (s_renderer) s_renderer->DrawCircle(_pos, radius, _color); });
 
         UITable.set_function("DrawCircleOutline",
-            [](float x, float y, float radius,
-               float r, float g, float b, float a, float t)
-            { if (s_renderer) s_renderer->DrawCircleOutline(x, y, radius, r, g, b, a, t); });
+            [](Vector2 _pos, float radius, Vector4 _color, float _thickness)
+            { if (s_renderer) s_renderer->DrawCircleOutline(_pos, radius, _color, _thickness); });
 
         UITable.set_function("DrawCapsule",
-            [](float x, float y, float w, float h,
-               float r, float g, float b, float a)
-            { if (s_renderer) s_renderer->DrawCapsule(x, y, w, h, r, g, b, a); });
+            [](Vector2 _pos, Vector2 _size, Vector4 _color)
+            { if (s_renderer) s_renderer->DrawCapsule(_pos, _size, _color); });
 
         UITable.set_function("DrawCapsuleOutline",
-            [](float x, float y, float w, float h,
-               float r, float g, float b, float a, float t)
-            { if (s_renderer) s_renderer->DrawCapsuleOutline(x, y, w, h, r, g, b, a, t); });
+            [](Vector2 _pos, Vector2 _size, Vector4 _color, float _thickness)
+            { if (s_renderer) s_renderer->DrawCapsuleOutline(_pos, _size, _color, _thickness); });
 
         UITable.set_function("IsHovered",
-            [](float x, float y, float w, float h) -> bool
-            { return s_renderer ? s_renderer->IsHovered(x, y, w, h) : false; });
+            [](Vector2 _pos, Vector2 _size) -> bool
+            { return s_renderer ? s_renderer->IsHovered(_pos, _size) : false; });
 
         UITable.set_function("IsClicked",
-            [](float x, float y, float w, float h) -> bool
-            { return s_renderer ? s_renderer->IsClicked(x, y, w, h) : false; });
+            [](Vector2 _pos, Vector2 _size) -> bool
+            { return s_renderer ? s_renderer->IsClicked(_pos, _size) : false; });
 
         UITable.set_function("GetScreenWidth",
             []() -> float { return s_renderer ? s_renderer->GetScreenWidth() : 0.0f; });
