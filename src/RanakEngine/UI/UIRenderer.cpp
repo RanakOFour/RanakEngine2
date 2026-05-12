@@ -556,7 +556,10 @@ void UIRenderer::DrawText(Vector2 _pos, Vector4 _color,
             auto l_it = m_characters.find(c);
             if (l_it == m_characters.end()) l_it = m_characters.find(' ');
             if (l_it != m_characters.end())
+            {
                 l_totalWidth += (l_it->second.advance >> 6) * l_scale;
+        
+            }
         }
     }
 
@@ -566,7 +569,7 @@ void UIRenderer::DrawText(Vector2 _pos, Vector4 _color,
     float l_yPix = (1.0f - _pos.y) * 0.5f * m_screenH;
 
     float l_cursorX = _centered ? l_xPix - l_totalWidth * 0.5f : l_xPix;
-    float l_startY  = _centered ? l_yPix - _fontSize    * 0.5f : l_yPix;
+    float l_startY  = l_yPix - (_fontSize * 0.5f);
 
     // Activate text shader (uses pixel-space projection).
     glUseProgram(m_textShaderProgram);
