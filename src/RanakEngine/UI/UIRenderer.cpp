@@ -531,12 +531,12 @@ void UIRenderer::DrawText(Vector2 _pos, Vector4 _color,
 
     if (_text.empty())
     {
-        Log::Message("UIRenderer::DrawText: ABORT — empty text");
+        Log::Message("UIRenderer::DrawText: ABORT - empty text");
         return;
     }
     if (m_characters.empty())
     {
-        Log::Message("UIRenderer::DrawText: ABORT — no glyphs loaded (FreeType init failed?)");
+        Log::Message("UIRenderer::DrawText: ABORT - no glyphs loaded (FreeType init failed?)");
         return;
     }
 
