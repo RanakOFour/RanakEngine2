@@ -422,8 +422,6 @@ void UIRenderer::DrawQuad(Vector2 _pos, Vector2 _size, Vector4 _color,
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Log::Message("Drawing quad with Pos: " + _pos.ToString() + " and Size: " + _size.ToString());
-
     // Default quad model spans (-1,-1)..(1,1), so translate to the rect's
     // centre and scale by half-size so the geometry lands at _pos..(_pos+_size).
     glm::mat4 l_model(1.0f);
@@ -441,7 +439,6 @@ void UIRenderer::DrawQuad(Vector2 _pos, Vector2 _size, Vector4 _color,
 
     if (_useTexture)
     {
-        Log::Message("Using texture");
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, _texId);
         glUniform1i(m_locTexture, 0);
@@ -449,7 +446,6 @@ void UIRenderer::DrawQuad(Vector2 _pos, Vector2 _size, Vector4 _color,
 
     if(auto l_quadModelPtr = m_quadModel.lock())
     {
-        Log::Message("Using quad model");
         glBindVertexArray(l_quadModelPtr->GetVAO());
         glDrawArrays(GL_TRIANGLES, 0, l_quadModelPtr->GetVertexCount());
         glBindVertexArray(0);
@@ -461,8 +457,6 @@ void UIRenderer::DrawQuad(Vector2 _pos, Vector2 _size, Vector4 _color,
     }
 
     glUseProgram(0);
-
-    Log::Message("Quad drawn");
 }
 
 void UIRenderer::DrawRect(Vector2 _pos, Vector2 _size, Vector4 _colour)
@@ -475,7 +469,7 @@ void UIRenderer::DrawRect(Vector2 _pos, Vector2 _size, Vector4 _colour)
         m_commandBuffer.push_back(std::move(cmd));
         return;
     }
-    Log::Message("Drawing rect with NDC Pos: " + _pos.ToString() + " and Size: " + _size.ToString());
+    
     // _pos is NDC centre (-1..1, Y-up). Convert to pixel-space top-left for DrawQuad.
     float l_cx = (_pos.x + 1.0f) * 0.5f * m_screenW;
     float l_cy = (1.0f - _pos.y) * 0.5f * m_screenH;
@@ -525,15 +519,15 @@ void UIRenderer::DrawText(Vector2 _pos, Vector4 _color,
                           const std::string& _text, float _fontSize,
                           bool _centered)
 {
-    Log::Message("UIRenderer::DrawText: text='" + _text + "'"
-                 + " pos=(" + std::to_string(_pos.x) + "," + std::to_string(_pos.y) + ")"
-                 + " color=(" + std::to_string(_color.x) + "," + std::to_string(_color.y)
-                 + "," + std::to_string(_color.z) + "," + std::to_string(_color.w) + ")"
-                 + " fontSize=" + std::to_string(_fontSize)
-                 + " centered=" + (_centered ? "true" : "false")
-                 + " buffering=" + (m_buffering ? "true" : "false")
-                 + " screenH=" + std::to_string(m_screenH)
-                 + " glyphs=" + std::to_string(m_characters.size()));
+    // Log::Message("UIRenderer::DrawText: text='" + _text + "'"
+    //              + " pos=(" + std::to_string(_pos.x) + "," + std::to_string(_pos.y) + ")"
+    //              + " color=(" + std::to_string(_color.x) + "," + std::to_string(_color.y)
+    //              + "," + std::to_string(_color.z) + "," + std::to_string(_color.w) + ")"
+    //              + " fontSize=" + std::to_string(_fontSize)
+    //              + " centered=" + (_centered ? "true" : "false")
+    //              + " buffering=" + (m_buffering ? "true" : "false")
+    //              + " screenH=" + std::to_string(m_screenH)
+    //              + " glyphs=" + std::to_string(m_characters.size()));
 
     if (_text.empty())
     {
@@ -556,10 +550,8 @@ void UIRenderer::DrawText(Vector2 _pos, Vector4 _color,
         cmd.fontSize = _fontSize;
         cmd.centered = _centered;
         m_commandBuffer.push_back(std::move(cmd));
-        Log::Message("UIRenderer::DrawText: buffered cmd");
         return;
     }
-    Log::Message("UIRenderer::DrawText: rendering immediately (m_buffering=false)");
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -936,8 +928,21 @@ void UIRenderer::Flush()
 
 bool UIRenderer::IsHovered(Vector2 _pos, Vector2 _size) const
 {
-    return m_mouseX >= _pos.x && m_mouseX <= _pos.x + _size.x &&
-           m_mouseY >= _pos.y && m_mouseY <= _pos.y + _size.y;
+    // _pos is NDC centre (-1..1, Y-up), _size is pixel size — same convention
+    // as DrawRect. Build the rect in pixel space and compare against the mouse
+    // in pixel space (m_mouseX/Y are NDC Y-up, set in BeginFrame).
+    float l_cx     = (_pos.x + 1.0f) * 0.5f * m_screenW;
+    float l_cy     = (1.0f - _pos.y) * 0.5f * m_screenH;
+    float l_left   = l_cx - _size.x * 0.5f;
+    float l_right  = l_cx + _size.x * 0.5f;
+    float l_top    = l_cy - _size.y * 0.5f;
+    float l_bottom = l_cy + _size.y * 0.5f;
+
+    float l_mx = (m_mouseX + 1.0f) * 0.5f * m_screenW;
+    float l_my = (1.0f - m_mouseY) * 0.5f * m_screenH;
+
+    return l_mx >= l_left && l_mx <= l_right &&
+           l_my >= l_top  && l_my <= l_bottom;
 }
 
 bool UIRenderer::IsClicked(Vector2 _pos, Vector2 _size) const
