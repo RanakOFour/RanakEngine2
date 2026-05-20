@@ -118,7 +118,7 @@ namespace RanakEngine::Core
             if (!l_result.valid())
             {
                 sol::error l_err = l_result;
-                Log::Error("Error running script \"" + l_path + "\":\n" + std::string(l_err.what()));
+                Log::Warning("Error running script \"" + l_path + "\":\n" + std::string(l_err.what()));
                 if constexpr (std::is_void<T>::value)
                     return;
                 else
