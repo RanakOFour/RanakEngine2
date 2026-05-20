@@ -3,6 +3,8 @@
 #include "RanakEngine/Core/LuaContext.h"
 #include "sol/sol.hpp"
 
+#include <math.h>
+
 namespace RanakEngine::Math
 {
     // Unnamed namespace for 'internal' Lua bindings
@@ -25,6 +27,8 @@ namespace RanakEngine::Math
         MathTable.set_function("Max",  [](float a, float b) { return std::max(a, b); });
         MathTable.set_function("Min",  [](float a, float b) { return std::min(a, b); });
         MathTable.set_function("Abs",  [](float a)          { return std::abs(a); });
+        MathTable.set_function("Cos", [](float r) { return cos(r); });
+        MathTable.set_function("Sin", [](float r) { return sin(r); });
 
         // Add usertypes for Vector2, Vector3, and Vector4
         l_context->AddUserType<Vector2>("Vector2",

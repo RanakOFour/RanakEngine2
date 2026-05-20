@@ -4,6 +4,7 @@
 #include "RanakEngine/Math/Vector3.h"
 
 #include <memory>
+#include "SDL3/SDL.h"
 
 namespace RanakEngine
 {
@@ -84,6 +85,15 @@ namespace RanakEngine::Core
 
         /** @brief Starts the game/editor loop; blocks until Stop() is called. */
         void Start();
+
+        void Update(Uint64& _start, Uint64& _update);
+
+        /** @brief Steps physics and runs scene rules for _deltaTime seconds.
+         *  Does not touch I/O (no input poll, no clear, no buffer swap).
+         *  Use this from an embedding context (e.g. the editor) that manages
+         *  its own rendering pipeline. */
+        void UpdateLogic(float _deltaTime);
+
         /** @brief Signals the loop to exit after the current frame. */
         void Stop();
 

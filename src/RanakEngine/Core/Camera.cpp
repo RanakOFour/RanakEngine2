@@ -54,7 +54,7 @@ namespace RanakEngine::Core
             {
                 auto l_modelWPtr = Asset::Load<Asset::Model>(l_modelPath);
 
-                Log::Message("Entity has model path: " + l_modelPath);
+                //Log::Message("Entity has model path: " + l_modelPath);
                 
                 if(l_modelWPtr.lock() != nullptr)
                 {
@@ -68,11 +68,11 @@ namespace RanakEngine::Core
         if(l_model == nullptr)
         {
             l_model = Asset::GetDefaultModel();
-            Log::Message("Entity is using default model");
+            //Log::Message("Entity is using default model");
         }
         else
         {
-            Log::Message("Using model " + l_model->GetPath());
+            //Log::Message("Using model " + l_model->GetPath());
         }
 
         sol::optional<sol::table> l_textureCatOpt = _entityData.traverse_raw_get<sol::optional<sol::table>>("Texture");
@@ -99,11 +99,11 @@ namespace RanakEngine::Core
 
         if(l_texture == nullptr)
         {
-            Log::Message("Entity does not have texture asset");
+            //Log::Message("Entity does not have texture asset");
         }
         else
         {
-            Log::Message("Using texture " + l_texture->GetPath());
+            //Log::Message("Using texture " + l_texture->GetPath());
         }
 
         sol::optional<sol::table> l_shaderCatOpt = _entityData.traverse_raw_get<sol::optional<sol::table>>("Shader");
@@ -118,7 +118,7 @@ namespace RanakEngine::Core
 
             if(l_vertPath != "" && l_fragPath != "")
             {
-                Log::Message("Entity has shader paths: " + l_vertPath + ", " + l_fragPath);
+                //Log::Message("Entity has shader paths: " + l_vertPath + ", " + l_fragPath);
                 
                 std::string l_shaderPath = l_vertPath + ";" + l_fragPath;
                 
@@ -126,7 +126,7 @@ namespace RanakEngine::Core
 
                 if(l_shaderWPtr.lock() != nullptr)
                 {
-                    Log::Message("Entity has shader asset");
+                    //Log::Message("Entity has shader asset");
 
                     _entityData["Shader"]["asset"] = l_shaderWPtr;
                     l_shaderPtr = _entityData.traverse_raw_get<std::weak_ptr<Asset::Shader>>("Shader", "asset");
@@ -134,7 +134,7 @@ namespace RanakEngine::Core
                 }
                 else
                 {
-                    Log::Message("Entity does not have shader asset");
+                    //Log::Message("Entity does not have shader asset");
                 }
             }
         }
@@ -142,11 +142,11 @@ namespace RanakEngine::Core
         if(l_shader == nullptr)
         {
             l_shader = Asset::GetDefaultShader();
-            Log::Message("Entity is using default shader");
+            //Log::Message("Entity is using default shader");
         }
         else
         {
-            Log::Message("Using shader " + l_shader->GetPath());
+            //Log::Message("Using shader " + l_shader->GetPath());
         }
 
         l_shader->Use();
@@ -196,21 +196,21 @@ namespace RanakEngine::Core
         auto l_shader = _shader.lock();
         if(l_shader == nullptr)
         {
-            Log::Warning("Object cannot be drawn: invalid shader");
+            //Log::Warning("Object cannot be drawn: invalid shader");
             return;
         }
 
         auto l_model = _model.lock();
         if(l_model == nullptr)
         {
-            Log::Warning("Object cannot be drawn: invalid model");
+            //Log::Warning("Object cannot be drawn: invalid model");
             return;
         }
 
         auto l_texture = _texture.lock();
         if(l_texture == nullptr)
         {
-            Log::Warning("Object cannot be drawn: invalid texture");
+            //Log::Warning("Object cannot be drawn: invalid texture");
             return;
         }
 

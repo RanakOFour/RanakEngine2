@@ -50,6 +50,7 @@ namespace RanakEngine::Asset
 
         m_contents.resize(l_fileLength);
         l_stream.read(&m_contents[0], l_fileLength);
+        m_contents.resize(static_cast<size_t>(l_stream.gcount()));
 
         printf("LuaFile %s created!\n", m_name.c_str());
     }
@@ -106,7 +107,6 @@ namespace RanakEngine::Asset
 
     std::string LuaFile::GetCode()
     {
-        std::string l_toReturn = std::string(m_contents.data(), m_contents.size());
-        return l_toReturn;
+        return std::string(m_contents.data(), m_contents.size());
     }
 }

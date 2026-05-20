@@ -68,10 +68,21 @@ namespace RanakEngine::Core
 
         while (m_running)
         {
-            l_startCounters = l_currentCounters;
-            l_currentCounters = SDL_GetPerformanceCounter();
+            Update(l_startCounters, l_currentCounters);
+        }
+    }
 
-            m_deltaTime = ((float)(l_currentCounters - l_startCounters) / (float)SDL_GetPerformanceFrequency());
+    void Core::Manager::Update(Uint64& _start, Uint64& _current)
+    {
+            const float l_oneOverTargetFPS = 1.0f / m_targetFPS;
+            auto l_IOManager = m_ioManager.lock();
+
+            auto l_physicsManager = Physics::Manager::Get().lock();
+
+            _start = _current;
+            _current = SDL_GetPerformanceCounter();
+
+            m_deltaTime = ((float)(_current - _start) / (float)SDL_GetPerformanceFrequency());
             Log::Message("DeltaTime: " + std::to_string(m_deltaTime) + "s");
 
             // Update IO
@@ -93,7 +104,19 @@ namespace RanakEngine::Core
             {
                 SDL_Delay((Uint32)(l_waitTime * 1000.0f));
             }
+    }
+
+    void Core::Manager::UpdateLogic(float _deltaTime)
+    {
+        m_deltaTime = _deltaTime;
+
+        auto l_physicsManager = Physics::Manager::Get().lock();
+        if (l_physicsManager)
+        {
+            l_physicsManager->Step(_deltaTime);
         }
+
+        m_currentScene->Update(_deltaTime);
     }
 
     void Core::Manager::Stop()
