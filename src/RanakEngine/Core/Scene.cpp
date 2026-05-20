@@ -45,6 +45,7 @@ namespace RanakEngine::Core
 
     void Scene::AddToCategory(int _id, std::string _categoryName)
     {
+        Log::Message("Adding entity " + std::to_string(_id) + " to " + _categoryName);
         auto l_category = m_luaContext.lock()->GetCategory(_categoryName).lock();
         if (!l_category)
         {
@@ -75,7 +76,7 @@ namespace RanakEngine::Core
         l_entity["name"] = _newName;
     }
 
-    std::vector<int> Scene::GetEntitiesWith(const std::vector<std::string>& _categoryNames)
+    std::vector<int> Scene::GetEntitiesWith(std::vector<std::string> _categoryNames)
     {
         std::bitset<1024> l_signature;
         for (const auto& l_name : _categoryNames)

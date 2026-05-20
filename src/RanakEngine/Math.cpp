@@ -4,6 +4,7 @@
 #include "sol/sol.hpp"
 
 #include <math.h>
+#include <stdio.h>
 
 namespace RanakEngine::Math
 {
@@ -29,6 +30,8 @@ namespace RanakEngine::Math
         MathTable.set_function("Abs",  [](float a)          { return std::abs(a); });
         MathTable.set_function("Cos", [](float r) { return cos(r); });
         MathTable.set_function("Sin", [](float r) { return sin(r); });
+        MathTable.set_function("Random", []() { return (float)rand() / (float)RAND_MAX; });
+        MathTable.set_function("RandomRange", [](float _min, float _max) { return _min + (((float)rand() / (float)RAND_MAX) * _max); });
 
         // Add usertypes for Vector2, Vector3, and Vector4
         l_context->AddUserType<Vector2>("Vector2",

@@ -170,21 +170,6 @@ namespace RanakEngine::Core
 
         // Update entity signature
         m_entityBitset[_id] ^= _signature;
-
-        // If after removal, no entity uses this category, remove from active set
-        bool l_stillInUse = false;
-        for (const auto& pair : m_entityBitset)
-        {
-            if ((pair.second & _signature).any())
-            {
-                l_stillInUse = true;
-                break;
-            }
-        }
-        if (!l_stillInUse)
-        {
-            m_activeCategories &= ~_signature;
-        }
     }
 
     std::vector<int> EntityRegistry::GetEntitiesWith(std::bitset<1024> _combinedSignature)

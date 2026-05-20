@@ -123,7 +123,7 @@ namespace Core
          * @param _categoryNames List of required Category names.
          * @return Entity IDs that are members of all specified categories.
          */
-        std::vector<int> GetEntitiesWith(const std::vector<std::string>& _categoryNames);
+        std::vector<int> GetEntitiesWith(std::vector<std::string> _categoryNames);
 
         /**
          * @brief Adds a Rule to the scene; calls Rule::Init() immediately.

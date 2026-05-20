@@ -81,6 +81,11 @@ namespace RanakEngine::Core
         // Get entities that match signature
         std::vector<int> l_entities = _registry.GetEntitiesWith(m_signature);
 
+        if(l_entities.size() > 0 && (m_name != "DefaultRenderer" && m_name != "EditorRenderer"))
+        {
+            Log::Message(m_name + " updating " + std::to_string(l_entities.size()) + " entities");
+        }
+
         // Call update function passing in each entity's data
         if(l_entities.size() > 0)
         {
