@@ -1,8 +1,8 @@
 #include "RanakEngine/Assets.h"
+#include "RanakEngine/LuaEngine.h"
 
-#include "RanakEngine/Core.h"
-#include "RanakEngine/Log.h"
 #include "sol/sol.hpp"
+#include <memory>
 
 #if _WIN32
     #include <windows.h>
@@ -11,24 +11,16 @@
 
 namespace RanakEngine::Asset
 {
-    namespace
-    {
-        static std::shared_ptr<Asset::Manager> AssetManager; ///< Module-private singleton handle (set by Init()).
-        static std::shared_ptr<Asset::Shader> DefaultShader; ///< Default shader used for drawing entities without an explicit shader.
-        static std::shared_ptr<Asset::Model> DefaultModel;   ///< Default model used for drawing entities without an explicit model.
-        static sol::table AssetTable;
-    }
-
     std::shared_ptr<Asset::Shader> GetDefaultShader()
     {
-        assert(DefaultShader != nullptr && "DefaultShader was not initialised! Did you forget to call Asset::Init()?");
-        return DefaultShader;
+        assert(g_DefaultShader != nullptr && "DefaultShader was not initialised! Did you forget to call Asset::Init()?");
+        return g_DefaultShader;
     };
 
     std::shared_ptr<Asset::Model> GetDefaultModel()
     {
-        assert(DefaultModel != nullptr && "DefaultModel was not initialised! Did you forget to call Asset::Init()?");
-        return DefaultModel;
+        assert(g_DefaultModel != nullptr && "DefaultModel was not initialised! Did you forget to call Asset::Init()?");
+        return g_DefaultModel;
     };
 
     void CreateIfNotExists(const std::string &_path, const char *_data)
@@ -50,9 +42,8 @@ namespace RanakEngine::Asset
         }
     }
 
-    void DefineLuaLib()
+    void DefineLuaLib(std::shared_ptr<LuaEngine>)
     {
-        auto l_context = Core::LuaContext::Instance().lock();
 
         AssetTable = l_context->CreateTable();
 

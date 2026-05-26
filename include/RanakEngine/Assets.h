@@ -1,15 +1,24 @@
 #ifndef RANAKRESOURCES_H
 #define RANAKRESOURCES_H
 
-#include "RanakEngine/Asset/LuaFile.h"
-#include "RanakEngine/Asset/Audio.h"
+#include "RanakEngine/Asset/LuaScript.h"
+#include "RanakEngine/Asset/AudioSample.h"
 #include "RanakEngine/Asset/Model.h"
 #include "RanakEngine/Asset/Shader.h"
 #include "RanakEngine/Asset/Texture.h"
-#include "RanakEngine/Asset/AssetManager.h"
+#include "RanakEngine/Asset/AssetCache.h"
+#include <memory>
 
 namespace RanakEngine::Asset
 {
+    namespace
+    {
+        std::shared_ptr<AssetCache> g_AssetCache;
+        std::shared_ptr<Asset::Shader> g_DefaultShader; ///< Default shader used for drawing entities without an explicit shader.
+        std::shared_ptr<Asset::Model> g_DefaultModel;   ///< Default model used for drawing entities without an explicit model.
+        sol::table g_AssetTable;
+    }
+
     /**
      * @brief Convenience wrapper that forwards to Asset::Manager::Load<T>().
      *
@@ -25,13 +34,14 @@ namespace RanakEngine::Asset
     template<typename T>
     inline std::weak_ptr<T> Load(std::string _path)
     {
-        auto l_manager = Manager::Instance().lock();
-        assert(l_manager && "Asset::Load() called before AssetManager was initialised! Did you forget to call Asset::Init()?");
-        return l_manager->Load<T>(_path);
+        g_AssetCache = std::make_shared<AssetCache>();
+        
+        assert(g_AssetCache);
+        
+        return g_AssetCache;
     }
 
     std::shared_ptr<Asset::Shader> GetDefaultShader();
-    
     std::shared_ptr<Asset::Model> GetDefaultModel();
 
     void CreateIfNotExists(const std::string& _path, const char* _data);
@@ -40,10 +50,8 @@ namespace RanakEngine::Asset
     std::filesystem::path GetTempDir();
     std::filesystem::path GetDataDir();
 
-    /** @brief Registers asset-related Lua bindings with the active LuaContext. */
-    void DefineLuaLib();
-    /** @brief Creates and returns the Asset::Manager singleton. */
-    std::shared_ptr<Asset::Manager> Init();
+    /** @brief Creates and returns the global asset cache. */
+    std::shared_ptr<AssetCache> Init();
     /** @brief Releases all cached assets and shuts down the asset subsystem. */
     void Stop();
 }

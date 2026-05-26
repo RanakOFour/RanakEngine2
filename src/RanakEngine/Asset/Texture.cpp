@@ -1,7 +1,7 @@
 #include "RanakEngine/Asset/Texture.h"
 
 #include "GL/glew.h"
-#include "GLM/ext.hpp"
+
 #include <string>
 #include <vector>
 
@@ -11,7 +11,7 @@
 namespace RanakEngine::Asset
 {
 	Texture::Texture(std::string _path)
-	: AssetFile(_path, AssetType::TEXTURE)
+	: AssetBase(_path, AssetType::TEXTURE)
 	, m_dirty(true)
 	, m_size(0, 0)
 	, m_id(0)
@@ -28,7 +28,7 @@ namespace RanakEngine::Asset
 
 		char* l_sdata = (char*)l_udata;
 
-		m_contents.assign(l_sdata, l_sdata + m_size.x * m_size.y * 4);
+		m_rawContents.assign(l_sdata, l_sdata + m_size.x * m_size.y * 4);
 	}
 
 	Texture::~Texture()
@@ -52,7 +52,7 @@ namespace RanakEngine::Asset
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 			// Upload the image data to the bound texture unit in the GPU
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_contents.data());
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_rawContents.data());
 
 			// Generate Mipmap so the texture can be mapped correctly
 			glGenerateMipmap(GL_TEXTURE_2D);
@@ -111,7 +111,7 @@ namespace RanakEngine::Asset
 					++data;
 				}
 
-				m_contents.push_back((float)newCol);
+				m_rawContents.push_back((float)newCol);
 			}
 		}
 

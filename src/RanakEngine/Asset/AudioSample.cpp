@@ -1,12 +1,12 @@
-#include "RanakEngine/Asset/Audio.h"
+#include "RanakEngine/Asset/AudioSample.h"
 #include "RanakEngine/Log.h"
 
 #include <stdexcept>
 
 namespace RanakEngine::Asset
 {
-    Audio::Audio(std::string _path)
-    : AssetFile(_path, AssetType::AUDIO)
+    AudioSample::AudioSample(std::string _path)
+    : AssetBase(_path, AssetType::AUDIO)
     , m_buffer(nullptr)
     , m_bufferSize(0)
     {
@@ -26,7 +26,7 @@ namespace RanakEngine::Asset
             " | Format: " + std::to_string(m_spec.format));
     }
     
-    Audio::~Audio()
+    AudioSample::~AudioSample()
     {
         if (m_buffer != nullptr)
         {

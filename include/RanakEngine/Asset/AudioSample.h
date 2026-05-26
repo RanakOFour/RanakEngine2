@@ -1,13 +1,13 @@
-#ifndef AUDIO_RESOURCE_H
-#define AUDIO_RESOURCE_H
+#ifndef AUDIOSAMPLE_H
+#define AUDIOSAMPLE_H
 
-#include "RanakEngine/Asset/AssetFile.h"
+#include "RanakEngine/Asset/AssetBase.h"
 #include "SDL3/SDL_audio.h"
 
 namespace RanakEngine::Asset
 {
     /**
-     * @class Audio
+     * @class AudioSample
      * @brief Asset class for loading and managing audio files.
      * 
      * Loads audio data from disk and provides access to the audio buffer
@@ -16,7 +16,7 @@ namespace RanakEngine::Asset
      * @see Asset
      * @see IOManager
      */
-    class Audio : public AssetFile
+    class AudioSample : public AssetBase
     {
         private:
         SDL_AudioSpec m_spec;   ///< Audio format specification
@@ -29,12 +29,12 @@ namespace RanakEngine::Asset
          * 
          * @param _path Path to the audio file to load.
          */
-        Audio(std::string _path);
+        AudioSample(std::string _path);
 
         /**
          * @brief Destructs the Audio resource and frees the buffer.
          */
-        ~Audio();
+        ~AudioSample();
         
         /**
          * @brief Gets the audio format specification.

@@ -1,13 +1,13 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include "RanakEngine/Asset/AssetFile.h"
+#include "RanakEngine/Asset/AssetBase.h"
 
 #include "GL/glew.h"
-#include "GLM/ext.hpp"
+
+#include "GLM/ext/vector_int2.hpp"
 
 #include <string>
-#include <vector>
 
 namespace RanakEngine::Asset
 {
@@ -20,7 +20,7 @@ namespace RanakEngine::Asset
      * 
      * @see Asset
      */
-    class Texture : public AssetFile
+    class Texture : public AssetBase
     {
     protected:
         bool m_dirty;       ///< Whether the texture needs to be reuploaded

@@ -1,14 +1,15 @@
 #include "RanakEngine/Asset/Shader.h"
 #include "RanakEngine/Log.h"
 
-#include <vector>
+#include "GLM/gtc/type_ptr.hpp"
+
 #include <fstream>
 #include <sstream>
 
 namespace RanakEngine::Asset
 {
     Shader::Shader(std::string _path)
-    : AssetFile(_path, AssetType::SHADER)
+    : AssetBase(_path, AssetType::SHADER)
     , m_ID(0)
     {
         int l_splitPos = _path.find_first_of(';');

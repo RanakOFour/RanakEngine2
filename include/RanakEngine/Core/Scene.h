@@ -8,7 +8,7 @@
 #include "RanakEngine/Core/EntityRegistry.h"
 #include "RanakEngine/Core/CategoryFactory.h"
 #include "RanakEngine/Core/Rule.h"
-#include "RanakEngine/Asset/LuaFile.h"
+#include "RanakEngine/Asset/LuaScript.h"
 #include "RanakEngine/Core/LuaContext.h"
 #include "sol/sol.hpp"
 

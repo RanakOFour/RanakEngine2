@@ -1,10 +1,13 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "RanakEngine/Asset/AssetFile.h"
+#include "RanakEngine/Asset/AssetBase.h"
 
 #include "GL/glew.h"
-#include "GLM/glm.hpp"
+
+#include "GLM/ext/vector_float3.hpp"
+#include "GLM/ext/vector_float2.hpp"
+#include "GLM/geometric.hpp"
 
 #include <string>
 #include <fstream>
@@ -54,7 +57,7 @@ namespace RanakEngine::Asset
     };
   };  
 
-  class Model : public AssetFile
+  class Model : public AssetBase
   {
     std::vector<Face> m_faces;
     GLuint m_vaoId;
@@ -68,7 +71,7 @@ namespace RanakEngine::Asset
       std::vector<std::string>& _output);
 
     public:
-    Model() : AssetFile("", AssetType::MODEL), m_vaoId(-1), m_vboId(-1), m_dirty(false) {};
+    Model() : AssetBase("", AssetType::MODEL), m_vaoId(-1), m_vboId(-1), m_dirty(false) {};
     /**
      * @brief Constructs a Model by loading from an OBJ file.
      * @param _path Path to the OBJ file.
@@ -142,7 +145,7 @@ namespace RanakEngine::Asset
   };
 
   inline Model::Model(std::string _path)
-    : AssetFile(_path, AssetType::MODEL)
+    : AssetBase(_path, AssetType::MODEL)
     , m_vboId(0)
     , m_vaoId(0)
     , m_dirty(false)
@@ -241,7 +244,7 @@ namespace RanakEngine::Asset
   };
 
   inline Model::Model(const Model& _copy)
-    : AssetFile("", AssetType::MODEL)
+    : AssetBase("", AssetType::MODEL)
     , m_vboId(0)
     , m_vaoId(0)
     , m_faces(_copy.m_faces)

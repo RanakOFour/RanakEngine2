@@ -1,4 +1,5 @@
 #pragma once
+#include "RanakEngine/Asset/AssetCache.h"
 #ifndef RANAKENGINE_H
 #define RANAKENGINE_H
 
@@ -28,7 +29,7 @@ namespace RanakEngine
      */
     struct EngineContents
     {
-        std::shared_ptr<Asset::Manager>    resources; ///< Asset management subsystem.
+        std::shared_ptr<Asset::AssetCache> assets;    ///< Asset management subsystem.
         std::shared_ptr<Core::Manager>     core;      ///< Core ECR + scripting subsystem.
         std::shared_ptr<IO::Manager>       io;        ///< Window, input, and audio subsystem.
         std::shared_ptr<Physics::Manager>  physics;   ///< Physics simulation subsystem.

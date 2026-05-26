@@ -1,14 +1,16 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include "RanakEngine/Asset/AssetFile.h"
+#include "RanakEngine/Asset/AssetBase.h"
 
 #include "RanakEngine/Math/Vector2.h"
 #include "RanakEngine/Math/Vector3.h"
 #include "RanakEngine/Math/Vector4.h"
 
 #include "GL/glew.h"
-#include "GLM/ext.hpp"
+
+#include "GLM/ext/matrix_float4x4.hpp"
+#include "GLM/ext/matrix_float3x3.hpp"
 
 #include <string>
 
@@ -33,14 +35,14 @@ namespace RanakEngine::Asset
      * 
      * @see Asset
      */
-    class Shader : public AssetFile
+    class Shader : public AssetBase
     {
         private:
         GLuint m_ID;                ///< OpenGL shader program ID
         ShaderType m_shaderType;    ///< The type of shader program
 
         public:
-        Shader() : AssetFile("", AssetType::SHADER), m_ID(-1), m_shaderType(FragVert) {};
+        Shader() : AssetBase("", AssetType::SHADER), m_ID(-1), m_shaderType(FragVert) {};
 
         /**
          * @brief Constructs a shader from a file.
