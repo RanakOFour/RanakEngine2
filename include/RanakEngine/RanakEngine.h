@@ -1,10 +1,10 @@
 #pragma once
-#include "RanakEngine/Asset/AssetCache.h"
 #ifndef RANAKENGINE_H
 #define RANAKENGINE_H
 
 #include <memory>
 
+#include "RanakEngine/LuaEngine.h"
 #include "RanakEngine/Math.h"
 #include "RanakEngine/Log.h"
 #include "RanakEngine/Assets.h"
@@ -29,8 +29,14 @@ namespace RanakEngine
      */
     struct EngineContents
     {
-        std::shared_ptr<Asset::AssetCache> assets;    ///< Asset management subsystem.
+        std::shared_ptr<LuaEngine>         luaEngine; ///< Shared Lua scripting runtime (destroyed last).
         std::shared_ptr<Core::Manager>     core;      ///< Core ECR + scripting subsystem.
+        // Future split (see refactor plan): currentScene / renderer / window will
+        // be promoted to first-class members as Core is broken up.
+        // std::shared_ptr<Scene> currentScene;
+        // std::shared_ptr<Renderer> renderer;
+        // std::shared_ptr<Window> window;
+        std::shared_ptr<Asset::AssetCache> assets;    ///< Asset management subsystem.
         std::shared_ptr<IO::Manager>       io;        ///< Window, input, and audio subsystem.
         std::shared_ptr<Physics::Manager>  physics;   ///< Physics simulation subsystem.
     };

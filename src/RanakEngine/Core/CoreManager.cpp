@@ -1,5 +1,5 @@
 #include "RanakEngine/Core/CoreManager.h"
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/Core/ScriptRegistry.h"
 #include "RanakEngine/Core/Scene.h"
 #include "RanakEngine/Core/Camera.h"
 #include "RanakEngine/IO/IOManager.h"
@@ -10,7 +10,7 @@
 
 namespace RanakEngine::Core
 {
-    Core::Manager::Manager(bool _debug, std::string _appName)
+    Core::Manager::Manager(bool _debug, std::string _appName, LuaEngine& _engine)
     : m_running(false)
     , m_debug(_debug)
     , m_deltaTime(0.0f)
@@ -18,7 +18,10 @@ namespace RanakEngine::Core
     , m_appName(_appName)
     {
         m_ioManager = IO::Manager::Instance();
-        m_luaContext = LuaContext::Init();
+        // ScriptRegistry::Init registers all Core usertypes and sets its singleton
+        // self-reference before we construct the default Scene, which reaches the
+        // registry via ScriptRegistry::Instance() during its constructor.
+        m_scriptRegistry = ScriptRegistry::Init(_engine);
         m_currentScene = std::make_shared<Scene>();
         m_mainCamera = std::make_shared<Camera>();
     };
@@ -26,15 +29,15 @@ namespace RanakEngine::Core
     Core::Manager::~Manager()
     {
         m_currentScene.reset();
-        m_luaContext.reset();
+        m_scriptRegistry.reset();
     }
 
-    std::shared_ptr<Core::Manager> Core::Manager::Init(bool _debug, std::string _appName)
+    std::shared_ptr<Core::Manager> Core::Manager::Init(bool _debug, std::string _appName, LuaEngine& _engine)
     {
         if (m_self.lock() == nullptr)
         {
             std::shared_ptr<Core::Manager> l_toReturn;
-            Core::Manager *l_manager = new Core::Manager(_debug, _appName);
+            Core::Manager *l_manager = new Core::Manager(_debug, _appName, _engine);
             l_toReturn.reset(l_manager);
 
             l_toReturn->m_ioManager.lock()->SetCore(l_toReturn);
@@ -164,8 +167,8 @@ namespace RanakEngine::Core
         return m_mainCamera;
     }
 
-    std::shared_ptr<LuaContext> Core::Manager::GetLuaContext()
+    std::shared_ptr<ScriptRegistry> Core::Manager::GetScriptRegistry()
     {
-        return m_luaContext;
+        return m_scriptRegistry;
     }
 }

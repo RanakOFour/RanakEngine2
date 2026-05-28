@@ -6,6 +6,11 @@
 #include "RanakEngine/Math/Vector3.h"
 #include "RanakEngine/Math/Vector4.h"
 
+namespace RanakEngine
+{
+    class LuaEngine;
+}
+
 namespace RanakEngine::Math
 {
     static float PI() { return 3.14159265358979f; };
@@ -13,8 +18,8 @@ namespace RanakEngine::Math
     static float DegToRad(float degrees) { return degrees * (PI() / 180.0f); };
     static float RadToDeg(float radians) { return radians * (180.0f / PI()); };
 
-    /** @brief Registers math Lua bindings (Vector2, Vector3, Vector4, Quaternion) with the LuaContext. */
-    void DefineLuaLib();
+    /** @brief Registers math Lua bindings (Vector2, Vector3, Vector4, Quaternion) with the given LuaEngine. */
+    void DefineLuaLib(LuaEngine& _engine);
 
     /** @brief Releases any math-subsystem resources (currently a no-op). */
     void Stop();

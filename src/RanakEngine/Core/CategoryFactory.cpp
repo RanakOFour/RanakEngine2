@@ -1,7 +1,6 @@
 
 #include "RanakEngine/Core/CategoryFactory.h"
 #include "RanakEngine/Core/Category.h"
-#include "RanakEngine/Core/LuaContext.h"
 
 #include "RanakEngine/Log.h"
 

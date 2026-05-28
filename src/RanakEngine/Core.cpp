@@ -1,6 +1,7 @@
 #include "RanakEngine/Core.h"
 
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/Core/ScriptRegistry.h"
+#include "RanakEngine/LuaEngine.h"
 #include "sol/sol.hpp"
 #include <string>
 
@@ -18,14 +19,12 @@ namespace RanakEngine::Core
         return CoreManager->GetAppName();
     }
 
-    void DefineLuaLib()
+    void DefineLuaLib(LuaEngine& _engine)
     {
-        auto l_context = LuaContext::Instance().lock();
-
-        CoreTable = l_context->CreateTable();
+        CoreTable = _engine.AddTable();
 
         CoreTable.set_function("DeltaTime", [](){return CoreManager->DeltaTime();});
-        
+
         std::weak_ptr<Camera> l_camera = CoreManager->GetCamera();
         CoreTable.set("Camera", l_camera.lock());
 
@@ -34,12 +33,12 @@ namespace RanakEngine::Core
 
         CoreTable.set("AppName", CoreManager->GetAppName());
 
-        l_context->SetGlobal("Core", CoreTable);
+        _engine.SetGlobal<sol::table>("Core", CoreTable);
     }
 
-    std::shared_ptr<Core::Manager> Init(bool _isDebug, std::string _appName)
+    std::shared_ptr<Core::Manager> Init(bool _isDebug, std::string _appName, LuaEngine& _engine)
     {
-        CoreManager = Core::Manager::Init(_isDebug, _appName);
+        CoreManager = Core::Manager::Init(_isDebug, _appName, _engine);
         return CoreManager;
     }
 

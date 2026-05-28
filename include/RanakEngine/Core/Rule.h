@@ -6,17 +6,18 @@
 #include <memory>
 
 #include "RanakEngine/Core/EntityRegistry.h"
+#include "RanakEngine/LuaEngine.h"
 
 #include "sol/sol.hpp"
 
 namespace RanakEngine::Asset
 {
-    class LuaFile;
+    class LuaScript;
 }
 
 namespace RanakEngine::Core
 {
-    class LuaContext;
+    class ScriptRegistry;
     class Scene;
 
     /**
@@ -41,10 +42,10 @@ namespace RanakEngine::Core
     class Rule
     {
         friend Scene;
-        friend LuaContext;
+        friend ScriptRegistry;
         private:
-        std::weak_ptr<LuaContext>    m_context;    ///< Scripting context used during Init/Update/Draw dispatch.
-        std::weak_ptr<Asset::LuaFile> m_originFile; ///< The .lua file this rule was loaded from.
+        std::weak_ptr<ScriptRegistry> m_context;    ///< Scripting context used during Init/Update/Draw dispatch.
+        std::weak_ptr<Asset::LuaScript> m_originFile; ///< The .lua file this rule was loaded from.
 
         bool        m_active;     ///< When false the rule is skipped each frame.
         std::string m_name;       ///< Human-readable rule name (set from the Lua filename).
@@ -60,9 +61,9 @@ namespace RanakEngine::Core
          * @brief Registers the Rule usertype with the given Lua state so scripts can construct Rules.
          * @param _state Reference to the sol::state to register with.
          */
-        static void DefineUsertype(sol::state& _state)
+        static void DefineUsertype(LuaEngine& _engine)
         {
-            _state.new_usertype<Rule>("Rule",
+            _engine.AddUserType<Rule>("Rule",
                                               sol::call_constructor,
                                               sol::factories([](sol::table _opts) -> Rule {
                                                   Rule r;
@@ -129,11 +130,11 @@ namespace RanakEngine::Core
 
         /**
          * @brief Associates this rule with the .lua file it was loaded from.
-         * @param _file Weak pointer to the source LuaFile.
+         * @param _file Weak pointer to the source LuaScript.
          */
-        void SetOriginFile(std::weak_ptr<Asset::LuaFile> _file);
+        void SetOriginFile(std::weak_ptr<Asset::LuaScript> _file);
         /** @brief Returns a weak pointer to the source .lua file, if any. */
-        std::weak_ptr<Asset::LuaFile> GetOriginFile();
+        std::weak_ptr<Asset::LuaScript> GetOriginFile();
     };
 }
 

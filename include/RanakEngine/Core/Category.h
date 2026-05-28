@@ -2,6 +2,7 @@
 #define CATEGORY_H
 
 #include "sol/sol.hpp"
+#include "RanakEngine/LuaEngine.h"
 
 #include <string>
 #include <bitset>
@@ -10,12 +11,12 @@
 
 namespace RanakEngine::Asset
 {
-    class LuaFile;
+    class LuaScript;
 }
 
 namespace RanakEngine::Core
 {
-    class LuaContext;
+    class ScriptRegistry;
     class CategoryFactory;
 
     /**
@@ -39,10 +40,10 @@ namespace RanakEngine::Core
      */
     class Category
     {
-        friend LuaContext;
+        friend ScriptRegistry;
         friend CategoryFactory;
         private:
-        std::weak_ptr<Asset::LuaFile> m_originFile; ///< The .lua file this category was loaded from.
+        std::weak_ptr<Asset::LuaScript> m_originFile; ///< The .lua file this category was loaded from.
 
         std::string           m_name;      ///< The category's name (derived from filename).
         std::bitset<1024>     m_signature; ///< Unique per-bit identifier assigned by CategoryFactory.
@@ -53,9 +54,9 @@ namespace RanakEngine::Core
         std::map<int, int>         m_entityToIndex;    ///< Entity ID -> data-table index.
         std::map<int, int>         m_indexToEntity;    ///< Data-table index -> entity ID.
 
-        static void DefineUsertype(sol::state& _state)
+        static void DefineUsertype(LuaEngine& _engine)
         {
-            _state.new_usertype<Category>("Category",
+            _engine.AddUserType<Category>("Category",
                                             sol::call_constructor,
                                             sol::factories([](sol::table _fields) {
                                                 if(!_fields.valid())
@@ -120,11 +121,11 @@ namespace RanakEngine::Core
 
         /**
          * @brief Associates this category with the .lua file it was loaded from.
-         * @param _file Weak pointer to the source LuaFile.
+         * @param _file Weak pointer to the source LuaScript.
          */
-        void SetOriginFile(std::weak_ptr<Asset::LuaFile> _file);
+        void SetOriginFile(std::weak_ptr<Asset::LuaScript> _file);
         /** @brief Returns a weak pointer to the source .lua file, if any. */
-        std::weak_ptr<Asset::LuaFile> GetOriginFile();
+        std::weak_ptr<Asset::LuaScript> GetOriginFile();
     };
 }
 

@@ -1,5 +1,5 @@
-#ifndef RANAKRESOURCES_H
-#define RANAKRESOURCES_H
+#ifndef RANAKASSETS_H
+#define RANAKASSETS_H
 
 #include "RanakEngine/Asset/LuaScript.h"
 #include "RanakEngine/Asset/AudioSample.h"
@@ -9,7 +9,11 @@
 #include "RanakEngine/Asset/AssetCache.h"
 #include <memory>
 
-namespace RanakEngine::Asset
+namespace RanakEngine
+{
+    class LuaEngine;
+
+namespace Asset
 {
     namespace
     {
@@ -34,11 +38,9 @@ namespace RanakEngine::Asset
     template<typename T>
     inline std::weak_ptr<T> Load(std::string _path)
     {
-        g_AssetCache = std::make_shared<AssetCache>();
-        
-        assert(g_AssetCache);
-        
-        return g_AssetCache;
+        assert(g_AssetCache && "Asset::Load() called before Asset::Init().");
+
+        return g_AssetCache->Load<T>(_path);
     }
 
     std::shared_ptr<Asset::Shader> GetDefaultShader();
@@ -51,9 +53,10 @@ namespace RanakEngine::Asset
     std::filesystem::path GetDataDir();
 
     /** @brief Creates and returns the global asset cache. */
-    std::shared_ptr<AssetCache> Init();
+    std::shared_ptr<AssetCache> Init(LuaEngine& _engine);
     /** @brief Releases all cached assets and shuts down the asset subsystem. */
     void Stop();
+}
 }
 
 #endif

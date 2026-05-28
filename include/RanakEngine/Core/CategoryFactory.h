@@ -11,11 +11,11 @@ namespace RanakEngine
 {
 namespace Asset
 {
-    class LuaFile;
+    class LuaScript;
 }
 namespace Core
 {
-    class LuaContext;
+    class ScriptRegistry;
     class Category;
 
     /**
@@ -31,7 +31,7 @@ namespace Core
      */
     class CategoryFactory
     {
-        friend LuaContext;
+        friend ScriptRegistry;
         private:
         int m_size; ///< Number of categories registered so far (used to assign the next free bit).
 

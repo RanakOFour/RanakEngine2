@@ -8,6 +8,8 @@
 
 namespace RanakEngine
 {
+    class LuaEngine;
+
     namespace IO
     {
         class Manager;
@@ -20,13 +22,13 @@ namespace RanakEngine
 
     namespace Asset
     {
-        class LuaFile;
+        class LuaScript;
     }
 }
 
 namespace RanakEngine::Core
 {
-    class LuaContext;
+    class ScriptRegistry;
     class Category;
     class CategoryFactory;
     class Scene;
@@ -57,7 +59,7 @@ namespace RanakEngine::Core
         std::weak_ptr<IO::Manager>      m_ioManager;       ///< IO subsystem (input, window).
         std::weak_ptr<Physics::Manager> m_physicsManager;  ///< Physics subsystem.
 
-        std::shared_ptr<LuaContext> m_luaContext;   ///< Owned Lua scripting runtime.
+        std::shared_ptr<ScriptRegistry> m_scriptRegistry; ///< Owned Core scripting facade (CategoryFactory + Lua bindings).
         std::shared_ptr<Camera>     m_mainCamera;   ///< Primary scene camera.
 
         std::shared_ptr<Scene> m_currentScene; ///< The scene currently being updated/rendered.
@@ -68,7 +70,7 @@ namespace RanakEngine::Core
 
         std::string m_appName = "RanakEngineApp"; ///< Application name used for window title and asset paths.
 
-        Manager(bool _debug, std::string _appName);
+        Manager(bool _debug, std::string _appName, LuaEngine& _engine);
 
     public:
         ~Manager();
@@ -77,9 +79,10 @@ namespace RanakEngine::Core
          * @brief Creates the singleton Core::Manager and all dependent subsystems.
          * @param _debug When true enables verbose engine logging.
          * @param _appName Name of the application.
+         * @param _engine The engine-wide Lua runtime the ScriptRegistry will wrap.
          * @return Shared pointer to the newly created manager.
          */
-        static std::shared_ptr<Core::Manager> Init(bool _debug, std::string _appName);
+        static std::shared_ptr<Core::Manager> Init(bool _debug, std::string _appName, LuaEngine& _engine);
         /** @brief Returns a weak pointer to the singleton instance. */
         static std::weak_ptr<Core::Manager> Instance();
 
@@ -128,8 +131,8 @@ namespace RanakEngine::Core
 
         /** @brief Returns a weak pointer to the main Camera. */
         std::weak_ptr<Camera> GetCamera();
-        /** @brief Returns the shared LuaContext owned by this manager. */
-        std::shared_ptr<LuaContext> GetLuaContext();
+        /** @brief Returns the ScriptRegistry owned by this manager. */
+        std::shared_ptr<ScriptRegistry> GetScriptRegistry();
     };
 }
 

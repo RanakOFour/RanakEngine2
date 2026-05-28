@@ -11,11 +11,11 @@ namespace RanakEngine::Core
     , m_registry()
     , m_rules()
     {
-        m_luaContext = LuaContext::Instance();
-        m_sceneTable = m_luaContext.lock()->CreateTable();
+        m_scriptRegistry = ScriptRegistry::Instance();
+        m_sceneTable = m_scriptRegistry.lock()->CreateTable();
         m_sceneTable.set("Entities", m_registry.GetEntityTable());
         m_sceneTable.set("Categories", m_registry.GetCategoryTable());
-        m_sceneTable.set("Rules", m_luaContext.lock()->CreateTable());
+        m_sceneTable.set("Rules", m_scriptRegistry.lock()->CreateTable());
     }
 
     Scene::Scene(sol::table _tableData)
@@ -25,7 +25,7 @@ namespace RanakEngine::Core
     , m_sceneTable(_tableData)
     {
         m_name = _tableData.raw_get<std::string>("name");
-        auto l_luaContext = LuaContext::Instance().lock();
+        auto l_luaContext = ScriptRegistry::Instance().lock();
         l_luaContext->AddVariable<sol::table>("Scene", m_sceneTable);
     }
 
@@ -46,7 +46,7 @@ namespace RanakEngine::Core
     void Scene::AddToCategory(int _id, std::string _categoryName)
     {
         Log::Message("Adding entity " + std::to_string(_id) + " to " + _categoryName);
-        auto l_category = m_luaContext.lock()->GetCategory(_categoryName).lock();
+        auto l_category = m_scriptRegistry.lock()->GetCategory(_categoryName).lock();
         if (!l_category)
         {
             Log::Error("Category '" + _categoryName + "' not found.");
@@ -58,7 +58,7 @@ namespace RanakEngine::Core
 
     void Scene::RemoveFromCategory(int _id, std::string _categoryName)
     {
-        auto l_category = m_luaContext.lock()->GetCategory(_categoryName).lock();
+        auto l_category = m_scriptRegistry.lock()->GetCategory(_categoryName).lock();
         if (l_category)
         {
             m_registry.RemoveFromCategory(_id, l_category->GetSignature());
@@ -81,7 +81,7 @@ namespace RanakEngine::Core
         std::bitset<1024> l_signature;
         for (const auto& l_name : _categoryNames)
         {
-            auto cat = m_luaContext.lock()->GetCategory(l_name).lock();
+            auto cat = m_scriptRegistry.lock()->GetCategory(l_name).lock();
             if (cat) l_signature |= cat->GetSignature();
         }
         return m_registry.GetEntitiesWith(l_signature);
@@ -125,7 +125,7 @@ namespace RanakEngine::Core
 
     void Scene::Init()
     {
-        auto l_contextPtr = m_luaContext.lock();
+        auto l_contextPtr = m_scriptRegistry.lock();
 
         for (std::shared_ptr<Rule> l_rule : m_rules)
         {
@@ -136,7 +136,7 @@ namespace RanakEngine::Core
 
     void Scene::Update(float _dt)
     {
-        auto l_contextPtr = m_luaContext.lock();
+        auto l_contextPtr = m_scriptRegistry.lock();
 
         for (std::shared_ptr<Rule> l_rule : m_rules)
         {
@@ -146,7 +146,7 @@ namespace RanakEngine::Core
 
     void Scene::Draw()
     {
-        auto l_contextPtr = m_luaContext.lock();
+        auto l_contextPtr = m_scriptRegistry.lock();
 
         for (std::shared_ptr<Rule> l_rule : m_rules)
         {

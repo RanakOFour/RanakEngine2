@@ -1,6 +1,6 @@
 #include "RanakEngine/Core/Category.h"
-#include "RanakEngine/Core/LuaContext.h"
-#include "RanakEngine/Asset/LuaFile.h"
+#include "RanakEngine/Core/ScriptRegistry.h"
+#include "RanakEngine/Asset/LuaScript.h"
 
 namespace RanakEngine::Core
 {
@@ -12,7 +12,7 @@ namespace RanakEngine::Core
     , m_entityToIndex()
     , m_indexToEntity()
     {
-        m_fields = LuaContext::Instance().lock()->CreateTable();
+        m_fields = ScriptRegistry::Instance().lock()->CreateTable();
     }
 
     Category::Category(std::string _name, sol::table _baseFields)
@@ -31,7 +31,7 @@ namespace RanakEngine::Core
 
     }
 
-    void CloneTable(sol::table& _toCopy, sol::table& _target, LuaContext* _context)
+    void CloneTable(sol::table& _toCopy, sol::table& _target, ScriptRegistry* _context)
     {
         auto l_copyPairs = _toCopy.pairs();
         for(auto l_pair : l_copyPairs)
@@ -73,7 +73,7 @@ namespace RanakEngine::Core
 
     sol::table& Category::AddMember(int _id)
     {
-        auto l_luaContext = LuaContext::Instance().lock();
+        auto l_luaContext = ScriptRegistry::Instance().lock();
         
         // Create new table for entity
         sol::table l_newTable = l_luaContext->CreateTable();
@@ -159,12 +159,12 @@ namespace RanakEngine::Core
         return m_signature;
     }
 
-    void Category::SetOriginFile(std::weak_ptr<Asset::LuaFile> _file)
+    void Category::SetOriginFile(std::weak_ptr<Asset::LuaScript> _file)
     {
         m_originFile = _file;
     }
 
-    std::weak_ptr<Asset::LuaFile> Category::GetOriginFile()
+    std::weak_ptr<Asset::LuaScript> Category::GetOriginFile()
     {
         return m_originFile;
     }

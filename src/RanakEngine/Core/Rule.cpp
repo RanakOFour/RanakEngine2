@@ -1,8 +1,8 @@
 #include "RanakEngine/Core/Rule.h"
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/Core/ScriptRegistry.h"
 #include "RanakEngine/Core/EntityRegistry.h"
 #include "RanakEngine/Core/Category.h"
-#include "RanakEngine/Asset/LuaFile.h"
+#include "RanakEngine/Asset/LuaScript.h"
 #include "RanakEngine/Log.h"
 #include "RanakEngine/Math.h"
 
@@ -10,7 +10,7 @@ namespace RanakEngine::Core
 {
     void Rule::CreateSignature()
     {
-        auto l_context = LuaContext::Instance().lock();
+        auto l_context = ScriptRegistry::Instance().lock();
 
         for (std::string l_categoryName : m_categories)
         {
@@ -34,8 +34,8 @@ namespace RanakEngine::Core
     , m_categories()
     , m_active(true)
     {
-        m_table = LuaContext::Instance().lock()->CreateTable();
-        m_context = LuaContext::Instance();
+        m_table = ScriptRegistry::Instance().lock()->CreateTable();
+        m_context = ScriptRegistry::Instance();
     }
 
     Rule::~Rule()
@@ -153,12 +153,12 @@ namespace RanakEngine::Core
         return m_table;
     }
 
-    void Rule::SetOriginFile(std::weak_ptr<Asset::LuaFile> _file)
+    void Rule::SetOriginFile(std::weak_ptr<Asset::LuaScript> _file)
     {
         m_originFile = _file;
     }
 
-    std::weak_ptr<Asset::LuaFile> Rule::GetOriginFile()
+    std::weak_ptr<Asset::LuaScript> Rule::GetOriginFile()
     {
         return m_originFile;
     }

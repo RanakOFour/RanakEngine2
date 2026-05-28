@@ -9,19 +9,19 @@
 #include "RanakEngine/Core/CategoryFactory.h"
 #include "RanakEngine/Core/Rule.h"
 #include "RanakEngine/Asset/LuaScript.h"
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/LuaEngine.h"
 #include "sol/sol.hpp"
 
 namespace RanakEngine
 {
-    class LuaContext;
+    class LuaEngine;
 
 namespace Core
 {
     struct Ray;
     struct RaycastHit;
     class Camera;
-    class LuaContext;
+    class ScriptRegistry;
 
     /**
      * @class Scene
@@ -45,9 +45,9 @@ namespace Core
      */
     class Scene
     {
-        friend LuaContext;
+        friend ScriptRegistry;
         private:
-        std::weak_ptr<LuaContext> m_luaContext; ///< Used to resolve category names during add/remove.
+        std::weak_ptr<ScriptRegistry> m_scriptRegistry; ///< Used to resolve category names during add/remove.
 
         std::string m_name;        ///< Scene name (optional identifier).
         sol::table  m_sceneTable;  ///< Lua-side representation of this scene.
@@ -58,9 +58,9 @@ namespace Core
 
         std::vector<std::shared_ptr<Rule>> m_rules; ///< Rules dispatched each frame.
 
-        static void DefineUsertype(sol::state& _state)
+        static void DefineUsertype(LuaEngine& _engine)
         {
-            _state.new_usertype<Scene>("Scene", sol::constructors<Scene(), Scene(sol::table)>(),
+            _engine.AddUserType<Scene>("Scene", sol::constructors<Scene(), Scene(sol::table)>(),
                                         "name", sol::property(&Scene::GetName),
                                         "addEntity", &Scene::AddEntity,
                                         "removeEntity", &Scene::RemoveEntity,

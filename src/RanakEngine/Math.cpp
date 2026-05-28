@@ -1,6 +1,6 @@
 #include "RanakEngine/Math.h"
 
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/LuaEngine.h"
 #include "sol/sol.hpp"
 
 #include <math.h>
@@ -14,11 +14,9 @@ namespace RanakEngine::Math
         static sol::table MathTable;
     };
 
-    void DefineLuaLib()
+    void DefineLuaLib(LuaEngine& _engine)
     {
-        auto l_context = Core::LuaContext::Instance().lock();
-
-        MathTable = l_context->CreateTable();
+        MathTable = _engine.AddTable();
 
 #pragma region MATHSETUP
 
@@ -34,7 +32,7 @@ namespace RanakEngine::Math
         MathTable.set_function("RandomRange", [](float _min, float _max) { return _min + (((float)rand() / (float)RAND_MAX) * _max); });
 
         // Add usertypes for Vector2, Vector3, and Vector4
-        l_context->AddUserType<Vector2>("Vector2",
+        _engine.AddUserType<Vector2>("Vector2",
                                         sol::call_constructor,
                                         sol::factories([](float _x, float _y) { return Vector2(_x, _y); },
                                                        [](float _value) { return Vector2(_value); },
@@ -59,7 +57,7 @@ namespace RanakEngine::Math
                                         sol::meta_function::equal_to,       [](const Vector2& a, const Vector2& b) { return a == b; }
                                         );
 
-        l_context->AddUserType<Vector3>("Vector3",
+        _engine.AddUserType<Vector3>("Vector3",
                                         sol::call_constructor,
                                         sol::factories([](float _x, float _y, float _z) { return Vector3(_x, _y, _z); },
                                                        [](float _value) { return Vector3(_value); },
@@ -85,7 +83,7 @@ namespace RanakEngine::Math
                                         sol::meta_function::equal_to,       [](const Vector3& a, const Vector3& b) { return a == b; }
                                         );
 
-        l_context->AddUserType<Vector4>("Vector4",
+        _engine.AddUserType<Vector4>("Vector4",
                                         sol::call_constructor,
                                         sol::factories([](float _x, float _y, float _z, float _w) { return Vector4(_x, _y, _z, _w); },
                                                        [](float _value) { return Vector4(_value); },
@@ -125,7 +123,7 @@ namespace RanakEngine::Math
 
 #pragma endregion
 
-        l_context->SetGlobal("Math", MathTable);
+        _engine.SetGlobal<sol::table>("Math", MathTable);
     };
 
     void Stop()

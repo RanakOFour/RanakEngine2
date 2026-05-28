@@ -1,4 +1,6 @@
 #include "RanakEngine/Assets.h"
+#include "RanakEngine/Asset/AssetCache.h"
+#include "RanakEngine/Asset/AudioSample.h"
 #include "RanakEngine/LuaEngine.h"
 
 #include "sol/sol.hpp"
@@ -42,40 +44,39 @@ namespace RanakEngine::Asset
         }
     }
 
-    void DefineLuaLib(std::shared_ptr<LuaEngine>)
+    void DefineLuaLib(LuaEngine& _engine)
     {
+        g_AssetTable = _engine.AddTable();
 
-        AssetTable = l_context->CreateTable();
-
-        AssetTable.new_usertype<Texture>("Texture");
-        AssetTable.set_function("Texture", [](const std::string _path)
+        g_AssetTable.new_usertype<Texture>("Texture");
+        g_AssetTable.set_function("Texture", [](const std::string _path)
                                              { 
-                                                 auto l_tex = AssetManager->Load<Texture>(_path);
+                                                 auto l_tex = g_AssetCache->Load<Texture>(_path);
                                                 return l_tex;
                                              });
 
-        AssetTable.new_usertype<Model>("Model");
-        AssetTable.set_function("Model", [](const std::string _path)
+        g_AssetTable.new_usertype<Model>("Model");
+        g_AssetTable.set_function("Model", [](const std::string _path)
                                            { 
-                                               auto l_model = AssetManager->Load<Model>(_path);
+                                               auto l_model = g_AssetCache->Load<Model>(_path);
                                                return l_model;
                                            });
 
-        AssetTable.new_usertype<Shader>("Shader");
-        AssetTable.set_function("Shader", [](const std::string _path)
+        g_AssetTable.new_usertype<Shader>("Shader");
+        g_AssetTable.set_function("Shader", [](const std::string _path)
                                             { 
-                                                auto l_shader = AssetManager->Load<Shader>(_path);
+                                                auto l_shader = g_AssetCache->Load<Shader>(_path);
                                                 return l_shader;
                                             });
 
-        AssetTable.new_usertype<Audio>("Audio");
-        AssetTable.set_function("Audio", [](const std::string _path)
+        g_AssetTable.new_usertype<AudioSample>("Audio");
+        g_AssetTable.set_function("Audio", [](const std::string _path)
                                            { 
-                                               auto l_audio = AssetManager->Load<Audio>(_path);
+                                               auto l_audio = g_AssetCache->Load<AudioSample>(_path);
                                                return l_audio;
                                            });
 
-        l_context->SetGlobal("Asset", AssetTable);
+        _engine.SetGlobal<sol::table>("Asset", g_AssetTable);
     }
 
     std::filesystem::path GetTempDir()
@@ -108,12 +109,12 @@ namespace RanakEngine::Asset
         else
             l_base = std::filesystem::path(".");
     #endif
-        return (l_base / Core::GetAppName());
+        return (l_base / "RanakEngine");
     }
 
-    std::shared_ptr<Asset::Manager> Init()
+    std::shared_ptr<AssetCache> Init(LuaEngine& _engine)
     {
-        AssetManager = Asset::Manager::Init();
+        g_AssetCache = std::make_shared<AssetCache>();
 
         const std::string c_defaultVertShaderData = "#version 430 core\n"
             "in vec3 a_Position;\n"
@@ -157,8 +158,10 @@ namespace RanakEngine::Asset
                           c_defaultFragShaderData.c_str()
                          );
 
-        DefaultShader = std::make_shared<Asset::Shader>(l_defaultFragShaderPath.string() + ";" + l_defaultVertShaderPath.string());
-
+        g_DefaultShader = g_AssetCache->Load<Shader>(l_defaultFragShaderPath.string() + 
+                                                     ";" + l_defaultVertShaderPath.string())
+                                                     .lock();
+        
         const std::string s_quadData =      "o Plane\n"
                                             "v -1.000000 -1.000000 -0.000000\n"
                                             "v 1.000000 -1.000000 -0.000000\n"
@@ -177,9 +180,11 @@ namespace RanakEngine::Asset
 
         CreateIfNotExists(l_defaultModelPath.string(), s_quadData.c_str());
 
-        DefaultModel = std::make_shared<Asset::Model>(l_defaultModelPath.string());
+        g_DefaultModel = g_AssetCache->Load<Model>(l_defaultModelPath.string()).lock();
 
-        return AssetManager;
+        DefineLuaLib(_engine);
+
+        return g_AssetCache;
     }
 
     void Stop()
@@ -204,7 +209,7 @@ namespace RanakEngine::Asset
             std::filesystem::remove(l_defaultFragShaderPath);
         }
 
-        AssetTable.abandon();
-        AssetManager.reset();
+        g_AssetTable.abandon();
+        g_AssetCache.reset();
     }
 }

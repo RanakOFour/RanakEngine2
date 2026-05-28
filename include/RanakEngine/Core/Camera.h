@@ -6,7 +6,7 @@
 #include "sol/sol.hpp"
 #include "GLM/ext.hpp"
 #include "RanakEngine/Math.h"
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/LuaEngine.h"
 
 namespace RanakEngine::Asset
 {
@@ -17,6 +17,8 @@ namespace RanakEngine::Asset
 
 namespace RanakEngine::Core
 {
+    class ScriptRegistry;
+
     /**
      * @class Camera
      * @brief Scene camera supporting orthographic and perspective projection.
@@ -33,7 +35,7 @@ namespace RanakEngine::Core
      */
     class Camera
     {
-        friend LuaContext;
+        friend ScriptRegistry;
         public:
         /**
          * @enum ProjectionType
@@ -58,11 +60,11 @@ namespace RanakEngine::Core
         glm::mat4 m_projection; ///< Cached projection matrix.
         glm::mat4 m_view;       ///< Cached view matrix.
 
-        static void DefineUsertype(sol::state& _state)
+        static void DefineUsertype(LuaEngine& _engine)
         {
-            _state.new_usertype<Camera>("Camera",
+            _engine.AddUserType<Camera>("Camera",
                                         "Draw", sol::overload(static_cast<void (Camera::*)(sol::table)>(&Camera::Draw),
-                                                              static_cast<void (Camera::*)(sol::table, 
+                                                              static_cast<void (Camera::*)(sol::table,
                                                                                            std::weak_ptr<Asset::Model>,
                                                                                            std::weak_ptr<Asset::Texture>,
                                                                                            std::weak_ptr<Asset::Shader>

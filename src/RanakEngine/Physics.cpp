@@ -1,6 +1,6 @@
 #include "RanakEngine/Physics.h"
 
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/LuaEngine.h"
 #include "RanakEngine/Log.h"
 
 #include "box2d/box2d.h"
@@ -16,11 +16,12 @@ namespace RanakEngine::Physics
         static sol::table PhysicsTable;
     }
 
-    void DefineLuaLib()
+    void DefineLuaLib(LuaEngine& _engine)
     {
-        auto l_context = Core::LuaContext::Instance().lock();
+        PhysicsTable = _engine.AddTable();
 
-        PhysicsTable = l_context->CreateTable();
+        // Register the Body usertype globally (previously done in Core::LuaContext).
+        Physics::Body::DefineUserType(_engine);
 
         // Physics.CreateBody(position: Vector2, bodyType: string) -> Physics.Body
         PhysicsTable.set_function("CreateBody", [](Vector2 _position, std::string _typeStr) -> Physics::Body
@@ -150,7 +151,7 @@ namespace RanakEngine::Physics
             return Vector2(0.0f, 0.0f);
         });
 
-        l_context->SetGlobal("Physics", PhysicsTable);
+        _engine.SetGlobal<sol::table>("Physics", PhysicsTable);
     }
 
     std::shared_ptr<Physics::Manager> Init()

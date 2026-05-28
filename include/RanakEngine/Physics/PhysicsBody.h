@@ -2,6 +2,7 @@
 #define PHYSICS_BODY_H
 
 #include "RanakEngine/Math.h"
+#include "RanakEngine/LuaEngine.h"
 
 #include "box2d/box2d.h"
 
@@ -33,9 +34,9 @@ namespace RanakEngine::Physics
 
         bool    IsValid() const;
 
-        static void DefineUserType(sol::state& _state)
+        static void DefineUserType(LuaEngine& _engine)
         {
-            _state.new_usertype<Body>("Body",
+            _engine.AddUserType<Body>("Body",
                 sol::constructors<Body()>(),
                 "GetPosition",        &Body::GetPosition,
                 "GetAngle",           &Body::GetAngle,

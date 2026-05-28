@@ -11,7 +11,7 @@
 
 namespace RanakEngine::Core
 {
-    class LuaContext;
+    class ScriptRegistry;
     class Category;
 
     /**
@@ -32,7 +32,7 @@ namespace RanakEngine::Core
     class EntityRegistry
     {
         private:
-        std::weak_ptr<LuaContext> m_luaContext; ///< Used to access the CategoryFactory during add/remove operations.
+        std::weak_ptr<ScriptRegistry> m_scriptRegistry; ///< Used to access the CategoryFactory during add/remove operations.
 
         int              m_nextFreeId = 0;  ///< Next ID to allocate if the free-list is empty.
         std::vector<int> m_idsToDelete;     ///< Entity IDs marked for removal at end-of-frame.

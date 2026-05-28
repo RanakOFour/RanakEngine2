@@ -6,10 +6,15 @@
 
 #include <memory>
 
+namespace RanakEngine
+{
+    class LuaEngine;
+}
+
 namespace RanakEngine::Physics
 {
     /** @brief Registers Physics Lua bindings (Body usertype, CreateBody, AddBoxShape, AddCircleShape). */
-    void DefineLuaLib();
+    void DefineLuaLib(LuaEngine& _engine);
 
     /** @brief Creates and returns the Physics::Manager singleton. */
     std::shared_ptr<Physics::Manager> Init();

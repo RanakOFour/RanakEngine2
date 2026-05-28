@@ -1,5 +1,5 @@
 #include "RanakEngine/IO/Audio.h"
-#include "RanakEngine/Asset/Audio.h"
+#include "RanakEngine/Asset/AudioSample.h"
 #include "RanakEngine/Log.h"
 
 #include "SDL3/SDL_audio.h"
@@ -42,7 +42,7 @@ namespace RanakEngine::IO
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
     }
 
-    bool Audio::Play(std::weak_ptr<Asset::Audio> _audio, bool _loop)
+    bool Audio::Play(std::weak_ptr<Asset::AudioSample> _audio, bool _loop)
     {
         if(m_activeStreams.find(_audio) != m_activeStreams.end())
         {
@@ -61,7 +61,7 @@ namespace RanakEngine::IO
             }
         }
 
-        Asset::Audio* l_audio = _audio.lock().get();
+        Asset::AudioSample* l_audio = _audio.lock().get();
         if (!l_audio)
         {
             Log::Warning("PlayAudio: Audio resource is null");
@@ -106,7 +106,7 @@ namespace RanakEngine::IO
         return true;
     }
 
-    void Audio::Stop(std::weak_ptr<Asset::Audio> _audio)
+    void Audio::Stop(std::weak_ptr<Asset::AudioSample> _audio)
     {
         auto stream = m_activeStreams.find(_audio);
         if (stream != m_activeStreams.end())
@@ -117,7 +117,7 @@ namespace RanakEngine::IO
         }
     }
 
-    void Audio::Pause(std::weak_ptr<Asset::Audio> _audio)
+    void Audio::Pause(std::weak_ptr<Asset::AudioSample> _audio)
     {
         auto stream = m_activeStreams.find(_audio);
         if (stream != m_activeStreams.end())
@@ -126,7 +126,7 @@ namespace RanakEngine::IO
         }
     }
 
-    void Audio::Resume(std::weak_ptr<Asset::Audio> _audio)
+    void Audio::Resume(std::weak_ptr<Asset::AudioSample> _audio)
     {
         auto stream = m_activeStreams.find(_audio);
         if (stream != m_activeStreams.end())
@@ -135,7 +135,7 @@ namespace RanakEngine::IO
         }
     }
 
-    void Audio::SetAudioVolume(std::weak_ptr<Asset::Audio> _audio, float _volume)
+    void Audio::SetAudioVolume(std::weak_ptr<Asset::AudioSample> _audio, float _volume)
     {
         auto stream = m_activeStreams.find(_audio);
         if (stream != m_activeStreams.end())

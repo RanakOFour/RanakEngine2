@@ -7,10 +7,15 @@
 #include "RanakEngine/IO/Window.h"
 #include "RanakEngine/IO/IOManager.h"
 
+namespace RanakEngine
+{
+    class LuaEngine;
+}
+
 namespace RanakEngine::IO
 {
-    /** @brief Registers IO Lua bindings (input queries, audio playback, …) with the LuaContext. */
-    void DefineLuaLib();
+    /** @brief Registers IO Lua bindings (input queries, audio playback, …) with the given LuaEngine. */
+    void DefineLuaLib(LuaEngine& _engine);
     /**
      * @brief Creates the IO::Manager singleton, Window, and Audio subsystems.
      * @param _screenSize Initial window dimensions in pixels.

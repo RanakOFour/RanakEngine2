@@ -26,6 +26,21 @@ namespace RanakEngine
             m_state[_name] = _data;
         };
 
+        /**
+         * @brief Registers a C++ usertype with the Lua state under the given name.
+         *
+         * Thin forwarder to sol::state::new_usertype so callers can register
+         * usertypes without the LuaEngine exposing its underlying sol::state.
+         *
+         * @tparam T    Type to register.
+         * @tparam Args Forwarded arguments for sol::state::new_usertype.
+         */
+        template<typename T, typename... Args>
+        void AddUserType(Args&&... _args)
+        {
+            m_state.new_usertype<T>(std::forward<Args>(_args)...);
+        };
+
         sol::object GetGlobal(std::string _name);
 
         void RunScript(std::string _scriptText);
@@ -56,6 +71,8 @@ namespace RanakEngine
             {
                 printf("[LuaEngine::RunScript]: %s", _e.what());
             }
+
+            return sol::nullopt;
         }
 
         template <typename T>

@@ -1,5 +1,5 @@
 #include "RanakEngine/Core/EntityRegistry.h"
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/Core/ScriptRegistry.h"
 #include "RanakEngine/Core/Category.h"
 #include "RanakEngine/Log.h"
 
@@ -11,8 +11,8 @@ namespace RanakEngine::Core
     , m_categories()
     , m_entityBitset()
     {
-        m_luaContext = LuaContext::Instance();
-        m_dataTable = m_luaContext.lock()->CreateTable();
+        m_scriptRegistry = ScriptRegistry::Instance();
+        m_dataTable = m_scriptRegistry.lock()->CreateTable();
         m_dataTable.create_named("Entities");
         m_dataTable.create_named("Categories");
     }
@@ -21,7 +21,7 @@ namespace RanakEngine::Core
     {
         // Remove all entities from their category data tables so that global
         // Category objects don't accumulate orphaned entries across scene changes.
-        auto l_context = m_luaContext.lock();
+        auto l_context = m_scriptRegistry.lock();
         if (!l_context) return;
 
         for (const auto& l_pair : m_entityBitset)
@@ -61,7 +61,7 @@ namespace RanakEngine::Core
         l_newEntityTable.create_named("attributes");
 
         // Add to transform
-        auto l_transformCategory = m_luaContext.lock()->GetCategory("Transform").lock();
+        auto l_transformCategory = m_scriptRegistry.lock()->GetCategory("Transform").lock();
         
         if(l_transformCategory)
         {
@@ -85,7 +85,7 @@ namespace RanakEngine::Core
         for (int l_id : m_idsToDelete)
         {
             auto l_idSignature = m_entityBitset[l_id];
-            auto l_context = m_luaContext.lock();
+            auto l_context = m_scriptRegistry.lock();
             
             for (int i = 0; i < 1024; ++i)
             {
@@ -122,7 +122,7 @@ namespace RanakEngine::Core
 
     void EntityRegistry::AddToCategory(int _id, std::bitset<1024> _signature)
     {
-        auto l_context = m_luaContext.lock();
+        auto l_context = m_scriptRegistry.lock();
         auto l_category = l_context->GetCategory(_signature).lock();
 
         if (!l_category)
@@ -154,7 +154,7 @@ namespace RanakEngine::Core
 
     void EntityRegistry::RemoveFromCategory(int _id, std::bitset<1024> _signature)
     {
-        auto l_context = m_luaContext.lock();
+        auto l_context = m_scriptRegistry.lock();
         auto l_category = l_context->GetCategory(_signature).lock();
 
         if (!l_category)
@@ -225,7 +225,7 @@ namespace RanakEngine::Core
 
     sol::table EntityRegistry::GetCategoryTable()
     {
-        auto l_context = m_luaContext.lock();
+        auto l_context = m_scriptRegistry.lock();
         sol::table l_categoryTable = l_context->CreateTable();
 
         // Iterate over active categories and add them to the table

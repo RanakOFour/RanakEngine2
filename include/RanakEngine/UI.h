@@ -4,6 +4,11 @@
 #include "RanakEngine/UI/UIRenderer.h"
 #include <memory>
 
+namespace RanakEngine
+{
+    class LuaEngine;
+}
+
 namespace RanakEngine::UI
 {
     /**
@@ -22,7 +27,7 @@ namespace RanakEngine::UI
               float _fontSize = 32.0f);
 
     /** @brief Registers the "UI" Lua table with drawing/hit-testing functions. */
-    void DefineLuaLib();
+    void DefineLuaLib(LuaEngine& _engine);
 
     /** @brief Releases the Lua table and destroys the UIRenderer. */
     void Stop();

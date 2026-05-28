@@ -1,5 +1,5 @@
 #include "RanakEngine/Log.h"
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/LuaEngine.h"
 #include "sol/sol.hpp"
 
 namespace RanakEngine::Log
@@ -97,11 +97,9 @@ namespace RanakEngine::Log
         return l_toReturn;
     }
 
-    void DefineLuaLib()
+    void DefineLuaLib(LuaEngine& _engine)
     {
-        auto l_context = Core::LuaContext::Instance().lock();
-
-        LogTable = l_context->CreateTable();
+        LogTable = _engine.AddTable();
 
         LogTable.set_function("Message", [](const std::string _message)
                               {
@@ -117,7 +115,7 @@ namespace RanakEngine::Log
                               { LogManager->LogMessage(Log::MessageContent::NORMAL, Table(_table, 0)); });
 
 
-        l_context->SetGlobal("Log", LogTable);
+        _engine.SetGlobal<sol::table>("Log", LogTable);
     }
 
     void Init()

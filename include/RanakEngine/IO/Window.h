@@ -27,7 +27,7 @@ namespace RanakEngine::IO
         std::shared_ptr<SDL_Window>      m_sdlWindow;    ///< Managed SDL window handle.
         SDL_GLContext                     m_sdlglContext; ///< OpenGL context bound to this window.
         std::shared_ptr<SDL_AudioStream>  m_audioStream;  ///< Primary audio output stream.
-        Vector4 m_clearColour = Vector4(0.4f, 0.4f, 0.8f, 1.0f); ///< RGBA colour used for glClear().
+        Vector4 m_clearColour = Vector4(0.4f, 0.4f, 0.8f, 1.0f);  ///< RGBA colour used for glClear().
         Vector2 m_screenSize  = Vector2(1920.0f, 1080.0f);        ///< Current window dimensions in pixels.
         float   m_aspectRatio = 1920.0f / 1080.0f;                ///< width / height aspect ratio.
 
@@ -62,19 +62,17 @@ namespace RanakEngine::IO
         Vector2 GetScreenPosition();
 
         /** @brief Sets the background clear colour. @param _colour RGBA colour (0.0–1.0). */
-        void SetClearColour(Vector4 _colour);
+        void SetClearColour(Vector4 _colour) { m_clearColour = _colour; }
         /** @brief Returns the current background clear colour. */
-        Vector4 GetClearColour();
+        Vector4 GetClearColour() { return m_clearColour; }
 
         void MaximiseWindow();
         bool IsWindowMaximised();
 
         /** @brief Returns a raw pointer to the underlying SDL_Window. */
-        SDL_Window*      GetSDLWindow()  const { return m_sdlWindow.get(); }
+        SDL_Window*   GetSDLWindow() const { return m_sdlWindow.get(); }
         /** @brief Returns the SDL_GLContext associated with this window. */
-        SDL_GLContext     GetGLContext()  const { return m_sdlglContext; }
-        /** @brief Returns a raw pointer to the primary SDL_AudioStream. */
-        SDL_AudioStream* GetAudioStream() const { return m_audioStream.get(); }
+        SDL_GLContext GetGLContext() const { return m_sdlglContext; }
     };
 }
 

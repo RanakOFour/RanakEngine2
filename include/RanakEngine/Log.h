@@ -4,6 +4,11 @@
 #include "RanakEngine/Log/LogManager.h"
 #include "sol/sol.hpp"
 
+namespace RanakEngine
+{
+    class LuaEngine;
+}
+
 namespace RanakEngine::Log
 {
     namespace
@@ -55,8 +60,8 @@ namespace RanakEngine::Log
      */
     std::string Table(sol::table _tableData, int _index);
 
-    /** @brief Registers Log Lua bindings (log.message, log.warning, …) with the LuaContext. */
-    void DefineLuaLib();
+    /** @brief Registers Log Lua bindings (log.message, log.warning, …) with the given LuaEngine. */
+    void DefineLuaLib(LuaEngine& _engine);
 
     /** @brief Creates the Log::Manager singleton. */
     void Init();

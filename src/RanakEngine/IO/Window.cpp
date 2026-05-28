@@ -40,8 +40,7 @@ bool InitGL()
 namespace RanakEngine::IO
 {
     Window::Window(Vector2 _screenSize, std::string _title)
-    : m_clearColour(0.0f, 0.0f, 0.2f, 1.0f)
-    , m_screenSize(_screenSize)
+    : m_screenSize(_screenSize)
     , m_aspectRatio(_screenSize.x / _screenSize.y)
     {
         if(!SDL_Init(SDL_INIT_VIDEO))
@@ -129,16 +128,6 @@ namespace RanakEngine::IO
         int x, y;
         SDL_GetWindowPosition(m_sdlWindow.get(), &x, &y);
         return Vector2(x, y);
-    }
-
-    void Window::SetClearColour(Vector4 _colour)
-    {
-        m_clearColour = _colour;
-    }
-
-    Vector4 Window::GetClearColour()
-    {
-        return m_clearColour;
     }
 
     void Window::MaximiseWindow()

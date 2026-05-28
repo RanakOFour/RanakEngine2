@@ -1,6 +1,6 @@
 #include "RanakEngine/IO.h"
 
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/LuaEngine.h"
 #include "sol/sol.hpp"
 
 namespace RanakEngine::IO
@@ -11,11 +11,9 @@ namespace RanakEngine::IO
         std::shared_ptr<IO::Manager> IOManager;
     };
 
-    void DefineLuaLib()
+    void DefineLuaLib(LuaEngine& _engine)
     {
-        auto l_context = Core::LuaContext::Instance().lock();
-
-        IOTable = l_context->CreateTable();
+        IOTable = _engine.AddTable();
 
         IOTable.new_usertype<MouseInfo>("MouseInfo",
                                         "position", &MouseInfo::position,
@@ -49,18 +47,18 @@ namespace RanakEngine::IO
         IOTable.set_function("GetCurrentClearColour", []()
                              { return IOManager->GetCurrentClearColour(); });
 
-        IOTable.set_function("PlayAudio", [](std::weak_ptr<Asset::Audio> _audio, bool _repeat)
+        IOTable.set_function("PlayAudio", [](std::weak_ptr<Asset::AudioSample> _audio, bool _repeat)
                              { IOManager->GetAudio().lock()->Play(_audio, _repeat); });
-        IOTable.set_function("StopAudio", [](std::weak_ptr<Asset::Audio> _audio)
+        IOTable.set_function("StopAudio", [](std::weak_ptr<Asset::AudioSample> _audio)
                              { IOManager->GetAudio().lock()->Stop(_audio); });
-        IOTable.set_function("PauseAudio", [](std::weak_ptr<Asset::Audio> _audio)
+        IOTable.set_function("PauseAudio", [](std::weak_ptr<Asset::AudioSample> _audio)
                              { IOManager->GetAudio().lock()->Pause(_audio); });
-        IOTable.set_function("ResumeAudio", [](std::weak_ptr<Asset::Audio> _audio)
+        IOTable.set_function("ResumeAudio", [](std::weak_ptr<Asset::AudioSample> _audio)
                              { IOManager->GetAudio().lock()->Resume(_audio); });
-        IOTable.set_function("SetAudioVolume", [](std::weak_ptr<Asset::Audio> _audio, float _volume)
+        IOTable.set_function("SetAudioVolume", [](std::weak_ptr<Asset::AudioSample> _audio, float _volume)
                              { IOManager->GetAudio().lock()->SetAudioVolume(_audio, _volume); });
 
-        l_context->SetGlobal("IO", IOTable);
+        _engine.SetGlobal<sol::table>("IO", IOTable);
     };
 
     std::shared_ptr<IO::Manager> Init(Vector2 _screenSize)

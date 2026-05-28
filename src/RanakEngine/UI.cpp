@@ -1,7 +1,7 @@
 #include "RanakEngine/UI.h"
 #include "RanakEngine/UI/DefaultFont.h"
 
-#include "RanakEngine/Core/LuaContext.h"
+#include "RanakEngine/LuaEngine.h"
 
 #include <memory>
 #include <sol/sol.hpp>
@@ -34,11 +34,9 @@ namespace RanakEngine::UI
         }
     }
 
-    void DefineLuaLib()
+    void DefineLuaLib(LuaEngine& _engine)
     {
-        auto l_context = Core::LuaContext::Instance().lock();
-
-        UITable = l_context->CreateTable();
+        UITable = _engine.AddTable();
 
         UITable.set_function("DrawRect",
             [](Vector2 _pos, Vector2 _size, Vector4 _color)
@@ -87,7 +85,7 @@ namespace RanakEngine::UI
         UITable.set_function("GetScreenHeight",
             []() -> float { return s_renderer ? s_renderer->GetScreenHeight() : 0.0f; });
 
-        l_context->SetGlobal("UI", UITable);
+        _engine.SetGlobal<sol::table>("UI", UITable);
     }
 
     void Stop()
