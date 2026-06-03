@@ -71,6 +71,12 @@ namespace RanakEngine::Core
                                                   if (cats.has_value()) r.m_categories = *cats;
                                                   sol::optional<sol::table> fields = _opts.get<sol::optional<sol::table>>("fields");
                                                   if (fields.has_value()) r.m_table = *fields;
+                                                  sol::optional<sol::protected_function> initFn = _opts.get<sol::optional<sol::protected_function>>("Init");
+                                                  if (initFn.has_value()) r.m_initFunction = *initFn;
+                                                  sol::optional<sol::protected_function> updateFn = _opts.get<sol::optional<sol::protected_function>>("Update");
+                                                  if (updateFn.has_value()) r.m_updateFunction = *updateFn;
+                                                  sol::optional<sol::protected_function> drawFn = _opts.get<sol::optional<sol::protected_function>>("Draw");
+                                                  if (drawFn.has_value()) r.m_drawFunction = *drawFn;
                                                   return r;
                                               }),
                                               "name", &Rule::m_name,

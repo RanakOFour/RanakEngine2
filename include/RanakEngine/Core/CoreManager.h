@@ -2,9 +2,11 @@
 #define COREMANAGER_H
 
 #include "RanakEngine/Math/Vector3.h"
+#include "SDL3/SDL.h"
+
+
 
 #include <memory>
-#include "SDL3/SDL.h"
 
 namespace RanakEngine
 {
@@ -60,7 +62,7 @@ namespace RanakEngine::Core
         std::weak_ptr<Physics::Manager> m_physicsManager;  ///< Physics subsystem.
 
         std::shared_ptr<ScriptRegistry> m_scriptRegistry; ///< Owned Core scripting facade (CategoryFactory + Lua bindings).
-        std::shared_ptr<Camera>     m_mainCamera;   ///< Primary scene camera.
+        std::shared_ptr<Camera>     m_mainCamera;         ///< Primary scene camera.
 
         std::shared_ptr<Scene> m_currentScene; ///< The scene currently being updated/rendered.
         bool  m_running   = false;  ///< True while the main loop is executing.

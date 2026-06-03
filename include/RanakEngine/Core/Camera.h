@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "RanakEngine/Math/Quaternion.h"
 #include "sol/sol.hpp"
 #include "GLM/ext.hpp"
 #include "RanakEngine/Math.h"
@@ -48,15 +49,15 @@ namespace RanakEngine::Core
         };
 
         private:
-        Vector3 m_position  = Vector3(0.0f, 0.0f, 10.0f); ///< Camera position in world space.
-        float   m_rotation  = 0.0f;                        ///< 2-D rotation around the Z axis (degrees).
+        Vector3      m_position  = Vector3(0.0f, 0.0f, 10.0f); ///< Camera position in world space.
+        Quaternion   m_rotation  = Quaternion();                        ///< 2-D rotation around the Z axis (degrees).
 
         float m_fov         = 45.0f;  ///< Vertical field of view in degrees (perspective only).
         float m_cameraWidth = 30.0f;  ///< Half-width of the orthographic view frustum.
 
         bool m_viewDirty = true; ///< True when the view matrix needs rebuilding.
 
-        ProjectionType m_projectionType = ProjectionType::Orthographic; ///< Active projection mode.
+        ProjectionType m_projectionType = ProjectionType::Perspective; ///< Active projection mode.
         glm::mat4 m_projection; ///< Cached projection matrix.
         glm::mat4 m_view;       ///< Cached view matrix.
 
@@ -74,7 +75,9 @@ namespace RanakEngine::Core
                                         "WorldToScreenPoint", &Camera::WorldToScreenPoint,
                                         "setPosition", &Camera::SetPosition,
                                         "getPosition", &Camera::GetPosition,
-                                        "setRotation", &Camera::SetRotation,
+                                        "setRotation", sol::overload(
+                                            static_cast<void (Camera::*)(Quaternion)>(&Camera::SetRotation),
+                                            static_cast<void (Camera::*)(Vector3)>(&Camera::SetRotation)),
                                         "getRotation", &Camera::GetRotation,
                                         "setFOV", &Camera::SetFOV,
                                         "getFOV", &Camera::GetFOV,
@@ -121,10 +124,12 @@ namespace RanakEngine::Core
         /** @brief Returns the camera's world-space position. */
         Vector3 GetPosition();
 
-        /** @brief Sets the camera's 2-D rotation in degrees. @param _rot Rotation angle. */
-        void SetRotation(float _rot);
+        /** @brief Sets the camera's rotation in degrees. @param _rot Rotation angle. */
+        void SetRotation(Quaternion _rot);
+        void SetRotation(Vector3 _eulers);
+
         /** @brief Returns the camera's current 2-D rotation in degrees. */
-        float GetRotation();
+        Quaternion GetRotation();
 
         /** @brief Sets the vertical field of view (perspective only). @param _fov FOV in degrees. */
         void SetFOV(float _fov);

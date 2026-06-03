@@ -2,33 +2,41 @@
 
 namespace RanakEngine
 {
+    namespace
+    {
+        const char* k_TransformCategory = "return Category{name = \"Transform\", Position = Vector3(0.0), Rotation = Quaternion(), Scale = Vector3(1.0)}";
+        const char* k_ModelCategory = "return Category{name = \"Model\", modelPath = \"\", asset = Field(nil, {hidden = true})}";
+        const char* k_TextureCategory = "return Category{name = \"Texture\", texturePath = \"\", asset = Field(nil, {hidden = true}) }";
+        const char* k_ShaderCategory = "return Category{name = \"Shader\", vertexPath = \"\", fragmentPath = \"\", asset = Field(nil, {hidden = true}) }";
+    }
     EngineContents Initialise(bool _debug, Vector2 _screenSize, std::string _appName)
     {
-        EngineContents l_toReturn{};
+        // This also creates a LuaEngine used to initialise everything else
+        EngineContents l_toReturn;
 
         Log::Init();
 
-        // The Lua runtime is heap-allocated so its address stays stable when this
-        // struct is returned by value; subsystems (e.g. Core::ScriptRegistry) hold
-        // a long-lived reference to it.
-        l_toReturn.luaEngine = std::make_shared<LuaEngine>();
-        LuaEngine& l_engine = *l_toReturn.luaEngine;
-
-        // IO first: it creates the window + GL context that Asset::Init needs to
-        // build the default shader/model, and that the Camera queries on creation.
         l_toReturn.io = IO::Init(_screenSize);
-        l_toReturn.assets = Asset::Init(l_engine);
-        l_toReturn.core = Core::Init(_debug, _appName, l_engine);
+        l_toReturn.assets = Asset::Init(l_toReturn.luaEngine);
+        l_toReturn.core = Core::Init(_debug, _appName, l_toReturn.luaEngine);
         l_toReturn.physics = Physics::Init();
 
         UI::Init(l_toReturn.io);
 
-        Math::DefineLuaLib(l_engine);
-        Core::DefineLuaLib(l_engine);
-        IO::DefineLuaLib(l_engine);
-        Log::DefineLuaLib(l_engine);
-        Physics::DefineLuaLib(l_engine);
-        UI::DefineLuaLib(l_engine);
+        // Define libraries for use in engine
+        Math::DefineLuaLib(l_toReturn.luaEngine);
+        Core::DefineLuaLib(l_toReturn.luaEngine);
+        IO::DefineLuaLib(l_toReturn.luaEngine);
+        Log::DefineLuaLib(l_toReturn.luaEngine);
+        Physics::DefineLuaLib(l_toReturn.luaEngine);
+        UI::DefineLuaLib(l_toReturn.luaEngine);
+
+        auto l_registry = l_toReturn.core->GetScriptRegistry();
+        // Create default Transform category
+        l_registry->CreateCategory(k_TransformCategory);
+        l_registry->CreateCategory(k_ModelCategory);
+        l_registry->CreateCategory(k_TextureCategory);
+        l_registry->CreateCategory(k_ShaderCategory);
 
         return l_toReturn;
     };

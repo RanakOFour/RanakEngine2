@@ -36,7 +36,9 @@ namespace RanakEngine::Core
                     l_catSig.set(i);
                     auto l_cat = l_context->GetCategory(l_catSig).lock();
                     if (l_cat)
+                    {
                         l_cat->RemoveMember(l_id);
+                    }
                 }
             }
         }

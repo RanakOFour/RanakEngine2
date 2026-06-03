@@ -5,6 +5,7 @@
 #include "RanakEngine/IO/IOManager.h"
 #include "RanakEngine/IO/Window.h"
 
+#include "RanakEngine/Math/Quaternion.h"
 #include "sol/sol.hpp"
 #include "GL/glew.h"
 #include "GLM/ext.hpp"
@@ -13,13 +14,13 @@ namespace RanakEngine::Core
 {
     Camera::Camera()
     : m_position(0.0f, 0.0f, 10.0f)
-    , m_rotation(0.0f)
+    , m_rotation(Quaternion())
     , m_fov(45.0f)
-    , m_projectionType(ProjectionType::Orthographic)
+    , m_projectionType(ProjectionType::Perspective)
     , m_cameraWidth(30.0f)
     , m_viewDirty(true)
     {
-        SetOrthographic();
+        SetPerspective();
     }
 
     Camera::~Camera()
@@ -27,10 +28,10 @@ namespace RanakEngine::Core
 
     }
 
-    glm::mat4 CalculateModelMatrix(Vector3 _pos, Vector3 _euler, Vector3 _scale)
+    glm::mat4 CalculateModelMatrix(Vector3 _pos, Quaternion _rot, Vector3 _scale)
     {
-        glm::vec3 l_glPos = glm::vec3(_pos.x, _pos.y, _pos.z);
-        glm::quat l_glQuat = (glm::quat)Quaternion(glm::radians(_euler.x), glm::radians(_euler.y), glm::radians(_euler.z));
+        glm::vec3 l_glPos = (glm::vec3)_pos;
+        glm::quat l_glQuat = _rot.ToGlm();
 
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), l_glPos);
         glm::mat4 rotation = glm::mat4(l_glQuat);
@@ -113,8 +114,8 @@ namespace RanakEngine::Core
         if(l_shaderCatOpt.has_value())
         {
             sol::optional<std::weak_ptr<Asset::Shader>> l_shaderPtr = _entityData.traverse_raw_get<sol::optional<std::weak_ptr<Asset::Shader>>>("Shader", "asset");
-            std::string l_vertPath = _entityData.traverse_raw_get<std::string>("Shader", "vertshaderPath");
-            std::string l_fragPath = _entityData.traverse_raw_get<std::string>("Shader", "fragshaderPath");
+            std::string l_vertPath = _entityData.traverse_raw_get<std::string>("Shader", "vertexPath");
+            std::string l_fragPath = _entityData.traverse_raw_get<std::string>("Shader", "fragmentPath");
 
             if(l_vertPath != "" && l_fragPath != "")
             {
@@ -160,9 +161,9 @@ namespace RanakEngine::Core
 
         sol::table l_transform = _entityData["Transform"];
 
-        Vector3 l_modelPos(l_transform.raw_get<Vector2>("Position"), l_transform.raw_get<float>("Layer"));
-        Vector3 l_modelRotation(0.0f, l_transform.raw_get<float>("Rotation"), 0.0f);
-        Vector3 l_modelScale(l_transform.raw_get<Vector2>("Scale"), 0.5f);
+        Vector3 l_modelPos = l_transform.raw_get<Vector3>("Position");
+        Quaternion l_modelRotation = l_transform.raw_get<Quaternion>("Rotation");
+        Vector3 l_modelScale = l_transform.raw_get<Vector3>("Scale");
 
         glm::mat4 l_modelMat = CalculateModelMatrix(l_modelPos,
                                                     l_modelRotation,
@@ -172,7 +173,7 @@ namespace RanakEngine::Core
         
         if(m_viewDirty)
         {
-            m_view = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
+            m_view = CalculateModelMatrix(m_position, m_rotation, Vector3(1.0f));
             m_view = glm::inverse(m_view);
         }
 
@@ -223,9 +224,9 @@ namespace RanakEngine::Core
             glBindTexture(GL_TEXTURE_2D, l_texture->GetID());
         }
 
-        Vector3 l_modelPos(_transform.raw_get<Vector2>("Position"), _transform.raw_get<float>("Layer"));
-        Vector3 l_modelRotation(0.0f, _transform.raw_get<float>("Rotation"), 0.0f);
-        Vector3 l_modelScale(_transform.raw_get<Vector2>("Scale"), 0.5f);
+        Vector3 l_modelPos = _transform.raw_get<Vector3>("Position");
+        Quaternion l_modelRotation = _transform.raw_get<Quaternion>("Rotation");
+        Vector3 l_modelScale = _transform.raw_get<Vector3>("Scale");
 
         glm::mat4 l_modelMat = CalculateModelMatrix(l_modelPos,
                                                     l_modelRotation,
@@ -235,7 +236,7 @@ namespace RanakEngine::Core
         
         if(m_viewDirty)
         {
-            m_view = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
+            m_view = CalculateModelMatrix(m_position, m_rotation, Vector3(1.0f));
             m_view = glm::inverse(m_view);
         }
 
@@ -260,7 +261,7 @@ namespace RanakEngine::Core
 
         if(m_viewDirty)
         {
-            m_view = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
+            m_view = CalculateModelMatrix(m_position, m_rotation, Vector3(1.0f));
             m_view = glm::inverse(m_view);
             m_viewDirty = false;
         }
@@ -283,7 +284,7 @@ namespace RanakEngine::Core
 
         if(m_viewDirty)
         {
-            m_view = CalculateModelMatrix(m_position, Vector3(0.0f, m_rotation, 0.0f), Vector3(1.0f));
+            m_view = CalculateModelMatrix(m_position, m_rotation, Vector3(1.0f));
             m_view = glm::inverse(m_view);
             m_viewDirty = false;
         }
@@ -313,13 +314,21 @@ namespace RanakEngine::Core
         return m_position;
     }
 
-    void Camera::SetRotation(float _rot)
+    void Camera::SetRotation(Quaternion _rot)
     {
         m_rotation = _rot;
         m_viewDirty = true;
     }
 
-    float Camera::GetRotation()
+    void Camera::SetRotation(Vector3 _eulers)
+    {
+        // Euler angles supplied in degrees (pitch, yaw, roll).
+        SetRotation(Quaternion(Vector3(Math::DegToRad(_eulers.x),
+                                       Math::DegToRad(_eulers.y),
+                                       Math::DegToRad(_eulers.z))));
+    }
+
+    Quaternion Camera::GetRotation()
     {
         return m_rotation;
     }
@@ -391,7 +400,7 @@ namespace RanakEngine::Core
     {
         if(m_viewDirty)
         {
-            m_view = CalculateModelMatrix(m_position, glm::vec3(0.0f, m_rotation, 0.0f), glm::vec3(1.0f));
+            m_view = CalculateModelMatrix(m_position, m_rotation, glm::vec3(1.0f));
             m_view = glm::inverse(m_view);
             m_viewDirty = false;
         }

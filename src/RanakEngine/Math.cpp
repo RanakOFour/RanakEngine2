@@ -1,6 +1,8 @@
 #include "RanakEngine/Math.h"
 
 #include "RanakEngine/LuaEngine.h"
+#include "RanakEngine/Math/Quaternion.h"
+#include "RanakEngine/Math/Vector4.h"
 #include "sol/sol.hpp"
 
 #include <math.h>
@@ -54,7 +56,8 @@ namespace RanakEngine::Math
                                         ),
                                         sol::meta_function::division,       [](const Vector2& v, float s) { return v / s; },
                                         sol::meta_function::unary_minus,    [](const Vector2& v) { return Vector2(-v.x, -v.y); },
-                                        sol::meta_function::equal_to,       [](const Vector2& a, const Vector2& b) { return a == b; }
+                                        sol::meta_function::equal_to,       [](const Vector2& a, const Vector2& b) { return a == b; },
+                                        sol::meta_function::to_string, &Vector2::ToString
                                         );
 
         _engine.AddUserType<Vector3>("Vector3",
@@ -80,7 +83,8 @@ namespace RanakEngine::Math
                                         ),
                                         sol::meta_function::division,       [](const Vector3& v, float s) { return v / s; },
                                         sol::meta_function::unary_minus,    [](const Vector3& v) { return Vector3(-v.x, -v.y, -v.z); },
-                                        sol::meta_function::equal_to,       [](const Vector3& a, const Vector3& b) { return a == b; }
+                                        sol::meta_function::equal_to,       [](const Vector3& a, const Vector3& b) { return a == b; },
+                                        sol::meta_function::to_string, &Vector3::ToString
                                         );
 
         _engine.AddUserType<Vector4>("Vector4",
@@ -107,8 +111,47 @@ namespace RanakEngine::Math
                                         ),
                                         sol::meta_function::division,       [](const Vector4& v, float s) { return v / s; },
                                         sol::meta_function::unary_minus,    [](const Vector4& v) { return Vector4(-v.x, -v.y, -v.z, -v.w); },
-                                        sol::meta_function::equal_to,       [](const Vector4& a, const Vector4& b) { return a == b; }
+                                        sol::meta_function::equal_to,       [](const Vector4& a, const Vector4& b) { return a == b; },
+                                        sol::meta_function::to_string, &Vector4::ToString
                                         );
+
+        _engine.AddUserType<Quaternion>("Quaternion",
+            sol::call_constructor,
+            sol::factories([]() { return Quaternion(); },
+                           [](float _x){ return Quaternion(_x); },
+                           [](float _x, float _y, float _z){ return Quaternion(_x, _y, _z); },
+                           [](float _angle, Vector3 _axis){ return Quaternion(_angle, _axis); },
+                           [](Vector3 _eulers){ return Quaternion(_eulers); },
+                           [](float _x, float _y, float _z, float _w){ return Quaternion(_x, _y, _z, _w); }
+                          ),
+            "x", &Quaternion::x,
+            "y", &Quaternion::y,
+            "z", &Quaternion::z,
+            "w", &Quaternion::w,
+            "Normalise", &Quaternion::Normalise,
+            "Normalised", &Quaternion::Normalised,
+            "Normalize", &Quaternion::Normalise,
+            "Normalized", &Quaternion::Normalised,
+            "ToString", &Quaternion::ToString,
+            "EulerAngles", &Quaternion::EulerAngles,
+            "Dot", &Quaternion::Dot,
+            "ToGlm", &Quaternion::ToGlm,
+            sol::meta_function::multiplication, sol::overload(
+                // quat * quat -> composed rotation
+                [](Quaternion _a, Quaternion _b) { return _a * _b; },
+                // quat * vector -> rotated vector
+                [](Quaternion _q, Vector3 _v)
+                {
+                    glm::vec3 l_r = _q.ToGlm() * glm::vec3(_v.x, _v.y, _v.z);
+                    return Vector3(l_r.x, l_r.y, l_r.z);
+                }
+            ),
+            sol::meta_function::equal_to, [](const Quaternion& _a, const Quaternion& _b)
+            {
+                return _a.x == _b.x && _a.y == _b.y && _a.z == _b.z && _a.w == _b.w;
+            },
+            sol::meta_function::to_string, &Quaternion::ToString
+        );
 
         // Functions for vector operations
         MathTable.set_function("DotProduct", [](Vector2 &_a, Vector2 &_b)

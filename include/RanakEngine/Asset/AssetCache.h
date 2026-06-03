@@ -25,8 +25,8 @@ namespace RanakEngine::Asset
         std::map<std::string, std::shared_ptr<AssetBase>> m_resourceMap; ///< Path -> loaded asset cache.
 
         public:
-        AssetCache();
-        ~AssetCache();
+        AssetCache() = default;
+        ~AssetCache() = default;
         
         /**
          * @brief Loads (or retrieves from cache) an asset of type T.

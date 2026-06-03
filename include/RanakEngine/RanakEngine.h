@@ -13,8 +13,6 @@
 #include "RanakEngine/Physics.h"
 #include "RanakEngine/UI.h"
 
-
-
 namespace RE = RanakEngine;
 
 namespace RanakEngine
@@ -29,7 +27,7 @@ namespace RanakEngine
      */
     struct EngineContents
     {
-        std::shared_ptr<LuaEngine>         luaEngine; ///< Shared Lua scripting runtime (destroyed last).
+        LuaEngine                          luaEngine; ///< Shared Lua scripting runtime (destroyed last).
         std::shared_ptr<Core::Manager>     core;      ///< Core ECR + scripting subsystem.
         // Future split (see refactor plan): currentScene / renderer / window will
         // be promoted to first-class members as Core is broken up.

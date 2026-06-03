@@ -8,11 +8,12 @@
 
 namespace RanakEngine::UI
 {
+    // Module-private state (internal linkage): reachable only from this file.
     namespace
     {
-        static sol::table UITable;
-        static std::shared_ptr<UIRenderer> s_renderer = nullptr;
-    };
+        sol::table g_UITable;
+        std::shared_ptr<UIRenderer> g_Renderer = nullptr;
+    }
 
     const unsigned char* DefaultFontData()
     {
@@ -27,75 +28,75 @@ namespace RanakEngine::UI
     void Init(std::weak_ptr<IO::Manager> _io, const unsigned char* _fontData,
               unsigned int _fontDataSize, float _fontSize)
     {
-        s_renderer = std::make_shared<UIRenderer>();
+        g_Renderer = std::make_shared<UIRenderer>();
         if (auto io = _io.lock())
         {
-            s_renderer->Init(io, _fontData, _fontDataSize, _fontSize);
+            g_Renderer->Init(io, _fontData, _fontDataSize, _fontSize);
         }
     }
 
     void DefineLuaLib(LuaEngine& _engine)
     {
-        UITable = _engine.AddTable();
+        g_UITable = _engine.AddTable();
 
-        UITable.set_function("DrawRect",
+        g_UITable.set_function("DrawRect",
             [](Vector2 _pos, Vector2 _size, Vector4 _color)
-            { if (s_renderer) s_renderer->DrawRect(_pos, _size, _color); });
+            { if (g_Renderer) g_Renderer->DrawRect(_pos, _size, _color); });
 
-        UITable.set_function("DrawRectOutline",
+        g_UITable.set_function("DrawRectOutline",
             [](Vector2 _pos, Vector2 _size, Vector4 _color, float _thickness)
-            { if (s_renderer) s_renderer->DrawRectOutline(_pos, _size, _color, _thickness); });
+            { if (g_Renderer) g_Renderer->DrawRectOutline(_pos, _size, _color, _thickness); });
 
-        UITable.set_function("DrawText",
+        g_UITable.set_function("DrawText",
             [](Vector2 _pos, Vector4 _color,
                const std::string& text, float fontSize, bool centered)
-            { if (s_renderer) s_renderer->DrawText(_pos, _color, text, fontSize, centered); });
+            { if (g_Renderer) g_Renderer->DrawText(_pos, _color, text, fontSize, centered); });
 
-        UITable.set_function("DrawImage",
+        g_UITable.set_function("DrawImage",
             [](unsigned int texId, Vector2 _pos, Vector2 _size, Vector4 _color)
-            { if (s_renderer) s_renderer->DrawImage(texId, _pos, _size, _color); });
+            { if (g_Renderer) g_Renderer->DrawImage(texId, _pos, _size, _color); });
 
-        UITable.set_function("DrawCircle",
+        g_UITable.set_function("DrawCircle",
             [](Vector2 _pos, float radius, Vector4 _color)
-            { if (s_renderer) s_renderer->DrawCircle(_pos, radius, _color); });
+            { if (g_Renderer) g_Renderer->DrawCircle(_pos, radius, _color); });
 
-        UITable.set_function("DrawCircleOutline",
+        g_UITable.set_function("DrawCircleOutline",
             [](Vector2 _pos, float radius, Vector4 _color, float _thickness)
-            { if (s_renderer) s_renderer->DrawCircleOutline(_pos, radius, _color, _thickness); });
+            { if (g_Renderer) g_Renderer->DrawCircleOutline(_pos, radius, _color, _thickness); });
 
-        UITable.set_function("DrawCapsule",
+        g_UITable.set_function("DrawCapsule",
             [](Vector2 _pos, Vector2 _size, Vector4 _color)
-            { if (s_renderer) s_renderer->DrawCapsule(_pos, _size, _color); });
+            { if (g_Renderer) g_Renderer->DrawCapsule(_pos, _size, _color); });
 
-        UITable.set_function("DrawCapsuleOutline",
+        g_UITable.set_function("DrawCapsuleOutline",
             [](Vector2 _pos, Vector2 _size, Vector4 _color, float _thickness)
-            { if (s_renderer) s_renderer->DrawCapsuleOutline(_pos, _size, _color, _thickness); });
+            { if (g_Renderer) g_Renderer->DrawCapsuleOutline(_pos, _size, _color, _thickness); });
 
-        UITable.set_function("IsHovered",
+        g_UITable.set_function("IsHovered",
             [](Vector2 _pos, Vector2 _size) -> bool
-            { return s_renderer ? s_renderer->IsHovered(_pos, _size) : false; });
+            { return g_Renderer ? g_Renderer->IsHovered(_pos, _size) : false; });
 
-        UITable.set_function("IsClicked",
+        g_UITable.set_function("IsClicked",
             [](Vector2 _pos, Vector2 _size) -> bool
-            { return s_renderer ? s_renderer->IsClicked(_pos, _size) : false; });
+            { return g_Renderer ? g_Renderer->IsClicked(_pos, _size) : false; });
 
-        UITable.set_function("GetScreenWidth",
-            []() -> float { return s_renderer ? s_renderer->GetScreenWidth() : 0.0f; });
+        g_UITable.set_function("GetScreenWidth",
+            []() -> float { return g_Renderer ? g_Renderer->GetScreenWidth() : 0.0f; });
 
-        UITable.set_function("GetScreenHeight",
-            []() -> float { return s_renderer ? s_renderer->GetScreenHeight() : 0.0f; });
+        g_UITable.set_function("GetScreenHeight",
+            []() -> float { return g_Renderer ? g_Renderer->GetScreenHeight() : 0.0f; });
 
-        _engine.SetGlobal<sol::table>("UI", UITable);
+        _engine.SetGlobal<sol::table>("UI", g_UITable);
     }
 
     void Stop()
     {
-        UITable.abandon();
-        s_renderer.reset();
+        g_UITable.abandon();
+        g_Renderer.reset();
     }
 
     std::weak_ptr<UIRenderer> GetRenderer()
     {
-        return s_renderer;
+        return g_Renderer;
     }
 }

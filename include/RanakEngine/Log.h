@@ -11,46 +11,17 @@ namespace RanakEngine
 
 namespace RanakEngine::Log
 {
-    namespace
-    {
-        std::shared_ptr<Log::Manager> LogManager; ///< Module-private singleton handle (set by Init()).
-    };
+    /** @brief Logs a normal informational message. */
+    void Message(std::string _message);
 
-    /**
-     * @brief Logs a normal informational message.
-     * @param _message Message text to log.
-     */
-    inline static void Message(std::string _message)
-    {
-        LogManager->LogMessage(Log::MessageContent::NORMAL, _message);
-    }
+    /** @brief Logs a debug-level message (only shown when debug mode is enabled). */
+    void Debug(std::string _message);
 
-    /**
-     * @brief Logs a debug-level message (only shown when debug mode is enabled).
-     * @param _message Message text to log.
-     */
-    inline static void Debug(std::string _message)
-    {
-        LogManager->LogMessage(Log::MessageContent::DEBUG, _message);
-    }
+    /** @brief Logs a warning message. */
+    void Warning(std::string _message);
 
-    /**
-     * @brief Logs a warning message.
-     * @param _message Message text to log.
-     */
-    inline static void Warning(std::string _message)
-    {
-        LogManager->LogMessage(Log::MessageContent::WARNING, _message);
-    }
-
-    /**
-     * @brief Logs an error message.
-     * @param _message Message text to log.
-     */
-    inline static void Error(std::string _message)
-    {
-        LogManager->LogMessage(Log::MessageContent::ERRORLOG, _message);
-    }
+    /** @brief Logs an error message. */
+    void Error(std::string _message);
 
     /**
      * @brief Converts a Lua table to a human-readable string for logging.

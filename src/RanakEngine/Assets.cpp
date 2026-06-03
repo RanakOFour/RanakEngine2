@@ -5,6 +5,7 @@
 
 #include "sol/sol.hpp"
 #include <memory>
+#include <cassert>
 
 #if _WIN32
     #include <windows.h>
@@ -13,6 +14,30 @@
 
 namespace RanakEngine::Asset
 {
+    // Module-private state: internal linkage keeps these reachable only from this
+    // translation unit, so nothing outside RE::Asset can touch them directly.
+    namespace
+    {
+        std::shared_ptr<AssetCache>    g_AssetCache;   ///< The one asset cache.
+        std::shared_ptr<Asset::Shader> g_DefaultShader; ///< Default shader for entities without an explicit shader.
+        std::shared_ptr<Asset::Model>  g_DefaultModel;  ///< Default model for entities without an explicit model.
+        sol::table                     g_AssetTable;    ///< "Asset" Lua table.
+    }
+
+    template<typename T>
+    std::weak_ptr<T> Load(std::string _path)
+    {
+        assert(g_AssetCache && "Asset::Load() called before Asset::Init().");
+        return g_AssetCache->Load<T>(_path);
+    }
+
+    // Explicit instantiations: Load<T> is usable only for the engine's asset types.
+    template std::weak_ptr<Texture>     Load<Texture>(std::string);
+    template std::weak_ptr<Model>       Load<Model>(std::string);
+    template std::weak_ptr<Shader>      Load<Shader>(std::string);
+    template std::weak_ptr<AudioSample> Load<AudioSample>(std::string);
+    template std::weak_ptr<LuaScript>   Load<LuaScript>(std::string);
+
     std::shared_ptr<Asset::Shader> GetDefaultShader()
     {
         assert(g_DefaultShader != nullptr && "DefaultShader was not initialised! Did you forget to call Asset::Init()?");

@@ -4,6 +4,7 @@
 #include "RanakEngine/Asset/LuaScript.h"
 #include "sol/sol.hpp"
 #include <memory>
+#include <stdexcept>
 
 
 namespace RanakEngine
@@ -15,6 +16,7 @@ namespace RanakEngine
 
         public:
         LuaEngine();
+        LuaEngine(LuaEngine& _engine);
         ~LuaEngine();
 
         sol::table AddTable();
@@ -60,11 +62,11 @@ namespace RanakEngine
                         return l_funcResult.get<sol::optional<T>>();
                     }
                     
-                    throw l_funcResult;
+                    throw std::runtime_error(((sol::error)l_funcResult).what());
                 }
                 else
                 {
-                    throw l_loadResult;
+                    throw std::runtime_error(((sol::error)l_loadResult).what());
                 }
             }
             catch (sol::error _e)

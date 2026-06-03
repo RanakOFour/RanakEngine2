@@ -27,6 +27,10 @@ namespace RanakEngine
         });
     }
 
+    LuaEngine::~LuaEngine()
+    {
+    }
+
     sol::table LuaEngine::AddTable()
     {
         return m_state.create_table();

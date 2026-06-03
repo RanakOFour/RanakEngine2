@@ -5,9 +5,82 @@
 
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 namespace RanakEngine::Asset
 {
+    ///////////////////////////////////
+    // ShaderProperty implementation //
+    ///////////////////////////////////
+
+    ShaderProperty::ShaderProperty(std::string _name, PropertyType _type, GLuint _loc)
+    : name(_name)
+    , type(_type)
+    , value{}
+    , location(_loc)
+    {
+    }
+
+    ShaderProperty::ShaderProperty(std::string _name, PropertyType _type, Value _value, GLuint _loc)
+    : name(_name)
+    , type(_type)
+    , value(_value)
+    , location(_loc)
+    {
+    }
+
+    std::string ShaderProperty::Type() const
+    {
+        switch (type)
+        {
+            case INT:   return "INT";
+            case FLOAT: return "FLOAT";
+            case BOOL:  return "BOOL";
+            case VEC2:  return "VEC2";
+            case VEC3:  return "VEC3";
+            case VEC4:  return "VEC4";
+            case SAMPLER2D: return "SAMPLER2D";
+            case TEXTURE2D: return "TEXTURE2D";
+            default:    return "UNKNOWN";
+        }
+    }
+
+    std::string ShaderProperty::AsString() const
+    {
+        std::ostringstream oss;
+        switch (type)
+        {
+            case INT:
+                oss << value.i;
+                break;
+            case FLOAT:
+                oss << value.f;
+                break;
+            case BOOL:
+                oss << (value.b ? "true" : "false");
+                break;
+            case VEC2:
+                oss << "(" << value.vec2[0] << ", " << value.vec2[1] << ")";
+                break;
+            case VEC3:
+                oss << "(" << value.vec3[0] << ", " << value.vec3[1] << ", " << value.vec3[2] << ")";
+                break;
+            case VEC4:
+                oss << "(" << value.vec4[0] << ", " << value.vec4[1] << ", " << value.vec4[2] << ", " << value.vec4[3] << ")";
+                break;
+            case TEXTURE2D:
+            case SAMPLER2D:
+                oss << value.textureID;
+                break;
+
+        }
+        return oss.str();
+    }
+    
+    ///////////////////////////
+    // Shader Implementation //
+    ///////////////////////////
+
     Shader::Shader(std::string _path)
     : AssetBase(_path, AssetType::SHADER)
     , m_ID(0)
@@ -32,6 +105,9 @@ namespace RanakEngine::Asset
                 l_vertPath = l_fragPath;
                 l_fragPath = l_temp;
             }
+
+            m_name = l_vertPath.substr(l_vertPath.find_last_of('/') + 1, l_vertPath.size() - l_vertPath.find_last_of('/'));
+            m_name = m_name.substr(0, m_name.find_last_of('.'));
 
             Log::Message("Attempting to create fragvert shader with paths:\n" + l_vertPath + "\n" + l_fragPath + "\npaths.");
 
@@ -147,6 +223,10 @@ namespace RanakEngine::Asset
         {
             // Only 1 shader path == compute
             m_shaderType = ShaderType::Compute;
+
+            m_name = _path.substr(_path.find_last_of('/') + 1, _path.size() - _path.find_last_of('/'));
+            m_name = m_name.substr(0, m_name.find_last_of('.'));
+
             std::ifstream shaderFile;
             shaderFile.open(_path);
 
@@ -183,6 +263,71 @@ namespace RanakEngine::Asset
             }
 
             glDeleteShader(compute);
+        }
+
+        printf("Initialising ShaderProperties for %s\n", m_name.c_str());
+        GLint l_count = 0;
+        glGetProgramiv(m_ID, GL_ACTIVE_UNIFORMS, &l_count);
+
+        char l_nameBuf[256];
+        
+        for (GLint i = 0; i < l_count; ++i) 
+        {
+            GLsizei len = 0;
+            GLint size = 0;
+            GLenum type = 0;
+            glGetActiveUniform(m_ID, (GLuint)i, sizeof(l_nameBuf), &len, &size, &type, l_nameBuf);
+            GLint loc = glGetUniformLocation(m_ID, l_nameBuf);
+
+            ShaderProperty::PropertyType propType;
+            switch(type)
+            {
+                case GL_INT:        propType = ShaderProperty::INT;   break;
+                case GL_FLOAT:      propType = ShaderProperty::FLOAT; break;
+                case GL_BOOL:       propType = ShaderProperty::BOOL;  break;
+                case GL_FLOAT_VEC2: propType = ShaderProperty::VEC2;  break;
+                case GL_FLOAT_VEC3: propType = ShaderProperty::VEC3;  break;
+                case GL_FLOAT_VEC4: propType = ShaderProperty::VEC4;  break;
+                case GL_SAMPLER_2D: propType = ShaderProperty::SAMPLER2D; break;
+                case GL_TEXTURE_2D: propType = ShaderProperty::TEXTURE2D; break;
+                default: continue;
+            }
+
+            ShaderProperty l_property(l_nameBuf, propType, loc);
+
+            switch(propType)
+            {
+                case ShaderProperty::INT:
+                    glGetUniformiv(m_ID, loc, &l_property.value.i);
+                    break;
+                case ShaderProperty::FLOAT:
+                    glGetUniformfv(m_ID, loc, &l_property.value.f);
+                    break;
+                case ShaderProperty::BOOL:
+                    glGetUniformiv(m_ID, loc, &l_property.value.i);
+                    break;
+                case ShaderProperty::VEC2:
+                    glGetnUniformfv(m_ID, loc, 2 * sizeof(float), &l_property.value.vec2[0]);
+                    break;
+                case ShaderProperty::VEC3:
+                    glGetnUniformfv(m_ID, loc, 3 * sizeof(float), &l_property.value.vec3[0]);
+                    break;
+                case ShaderProperty::VEC4:
+                    glGetnUniformfv(m_ID, loc, 4 * sizeof(float), &l_property.value.vec4[0]);
+                    break;
+                case ShaderProperty::SAMPLER2D:
+                case ShaderProperty::TEXTURE2D:
+                    glGetUniformiv(m_ID, loc, &l_property.value.textureID);
+            }
+
+            m_properties.push_back(l_property);
+
+            printf("Logged uniform: %s (Type: %s, Location: %d, Value: %s)\n", 
+                l_property.name.c_str(), 
+                l_property.Type().c_str(), 
+                l_property.location,
+                l_property.AsString().c_str()
+            );
         }
     }
 
@@ -306,34 +451,39 @@ namespace RanakEngine::Asset
         glUseProgram(m_ID);
     }
 
-    void Shader::SetUniform(const std::string& _uniformName, glm::mat4 _value)
+    void Shader::SetUniform(const std::string _uniformName, glm::mat4 _value)
     {
         glUniformMatrix4fv(glGetUniformLocation(m_ID, _uniformName.c_str()), 1, GL_FALSE, glm::value_ptr(_value));
     }
 
-    void Shader::SetUniform(const std::string& _uniformName, glm::mat3 _value)
+    void Shader::SetUniform(const std::string _uniformName, glm::mat3 _value)
     {
         glUniformMatrix3fv(glGetUniformLocation(m_ID, _uniformName.c_str()), 1, GL_FALSE, glm::value_ptr(_value));
     }
 
-    void Shader::SetUniform(const std::string& _uniformName, Vector4 _value)
+    void Shader::SetUniform(const std::string _uniformName, Vector4 _value)
     {
         glUniform4f(glGetUniformLocation(m_ID, _uniformName.c_str()), _value.x, _value.y, _value.z, _value.w);
     }
 
-    void Shader::SetUniform(const std::string& _uniformName, Vector3 _value)
+    void Shader::SetUniform(const std::string _uniformName, Vector3 _value)
     {
         glUniform3f(glGetUniformLocation(m_ID, _uniformName.c_str()), _value.x, _value.y, _value.z);
     }
 
-    void Shader::SetUniform(const std::string& _uniformName, Vector2 _value)
+    void Shader::SetUniform(const std::string _uniformName, Vector2 _value)
     {
         glUniform2f(glGetUniformLocation(m_ID, _uniformName.c_str()), _value.x, _value.y);
     }
 
-    void Shader::SetUniform(const std::string& _uniformName, float _value)
+    void Shader::SetUniform(const std::string _uniformName, float _value)
     {
         glUniform1f(glGetUniformLocation(m_ID, _uniformName.c_str()), _value);
+    }
+
+    void Shader::SetUniform(const std::string _uniformName, int _value)
+    {
+        glUniform1i(glGetUniformLocation(m_ID, _uniformName.c_str()), _value);
     }
 
     GLuint& Shader::GetID()

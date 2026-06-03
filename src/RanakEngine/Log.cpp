@@ -4,10 +4,32 @@
 
 namespace RanakEngine::Log
 {
+    // Module-private state (internal linkage): reachable only from this file.
     namespace
     {
         static sol::table LogTable;
+        std::shared_ptr<Log::Manager> LogManager;
     };
+
+    void Message(std::string _message)
+    {
+        LogManager->LogMessage(Log::MessageContent::NORMAL, _message);
+    }
+
+    void Debug(std::string _message)
+    {
+        LogManager->LogMessage(Log::MessageContent::DEBUG, _message);
+    }
+
+    void Warning(std::string _message)
+    {
+        LogManager->LogMessage(Log::MessageContent::WARNING, _message);
+    }
+
+    void Error(std::string _message)
+    {
+        LogManager->LogMessage(Log::MessageContent::ERRORLOG, _message);
+    }
 
     std::string Table(sol::table _table, int _tabIndex = 0)
     {

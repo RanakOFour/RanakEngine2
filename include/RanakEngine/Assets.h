@@ -15,33 +15,22 @@ namespace RanakEngine
 
 namespace Asset
 {
-    namespace
-    {
-        std::shared_ptr<AssetCache> g_AssetCache;
-        std::shared_ptr<Asset::Shader> g_DefaultShader; ///< Default shader used for drawing entities without an explicit shader.
-        std::shared_ptr<Asset::Model> g_DefaultModel;   ///< Default model used for drawing entities without an explicit model.
-        sol::table g_AssetTable;
-    }
-
     /**
-     * @brief Convenience wrapper that forwards to Asset::Manager::Load<T>().
+     * @brief Convenience wrapper that forwards to the module's cached AssetCache.
      *
-     * Allows callers to load assets without holding a reference to the AssetManager:
      * @code{.cpp}
      *   auto tex = RanakEngine::Asset::Load<Texture>("resources/icon.png");
      * @endcode
      *
-     * @tparam T   Asset type (Texture, Audio, Shader, Model, LuaFile, …).
+     * Defined in Assets.cpp and explicitly instantiated for each asset type, so the
+     * module's globals (the cache, defaults, Lua table) stay private to that file.
+     *
+     * @tparam T   Asset type (Texture, Model, Shader, AudioSample, LuaScript).
      * @param _path Filesystem path to the asset file.
      * @return Weak pointer to the loaded (or cached) asset.
      */
     template<typename T>
-    inline std::weak_ptr<T> Load(std::string _path)
-    {
-        assert(g_AssetCache && "Asset::Load() called before Asset::Init().");
-
-        return g_AssetCache->Load<T>(_path);
-    }
+    std::weak_ptr<T> Load(std::string _path);
 
     std::shared_ptr<Asset::Shader> GetDefaultShader();
     std::shared_ptr<Asset::Model> GetDefaultModel();

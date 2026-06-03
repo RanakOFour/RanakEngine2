@@ -40,7 +40,7 @@ namespace RanakEngine::Core
 
     Rule::~Rule()
     {
-
+        m_table.reset();
     }
 
     void Rule::Init(EntityRegistry& _registry)

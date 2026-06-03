@@ -8,14 +8,15 @@
 #include "RanakEngine/Asset/LuaScript.h"
 #include "RanakEngine/LuaEngine.h"
 #include "RanakEngine/Log.h"
+#include <memory>
 
 namespace RanakEngine::Core
 {
     ScriptRegistry::ScriptRegistry(LuaEngine& _engine)
-    : m_engine(&_engine)
+    : m_engine()
+    , m_categoryFactory()
     {
-        m_categoryFactory = std::make_shared<CategoryFactory>();
-
+        m_engine.reset(&_engine);
         // Register all Core usertypes with the shared Lua runtime.
         Category::DefineUsertype(_engine);
         Rule::DefineUsertype(_engine);
@@ -25,7 +26,6 @@ namespace RanakEngine::Core
 
     ScriptRegistry::~ScriptRegistry()
     {
-        m_categoryFactory.reset();
     }
 
     std::shared_ptr<ScriptRegistry> ScriptRegistry::Init(LuaEngine& _engine)
@@ -72,7 +72,7 @@ namespace RanakEngine::Core
             return std::weak_ptr<Category>();
         }
 
-        return m_categoryFactory->RegisterCategory(l_opt.value());
+        return m_categoryFactory.RegisterCategory(l_opt.value());
     }
 
     std::weak_ptr<Category> ScriptRegistry::CreateCategory(std::weak_ptr<Asset::LuaScript> _file)
@@ -102,17 +102,17 @@ namespace RanakEngine::Core
         l_categoryTable.m_name = l_file->GetScriptName();
         l_categoryTable.SetOriginFile(_file);
 
-        return m_categoryFactory->RegisterCategory(l_categoryTable);
+        return m_categoryFactory.RegisterCategory(l_categoryTable);
     }
 
     std::weak_ptr<Category> ScriptRegistry::GetCategory(std::bitset<1024> _signature)
     {
-        return m_categoryFactory->GetBySignature(_signature);
+        return m_categoryFactory.GetBySignature(_signature);
     }
 
     std::weak_ptr<Category> ScriptRegistry::GetCategory(std::string _name)
     {
-        return m_categoryFactory->GetByName(_name);
+        return m_categoryFactory.GetByName(_name);
     }
 
     Rule ScriptRegistry::CreateRule(std::weak_ptr<Asset::LuaScript> _file)
@@ -148,7 +148,7 @@ namespace RanakEngine::Core
         l_newCategory.m_name = l_file->GetScriptName();
 
         // Attempt to reload through the factory (will abort if category has entities)
-        auto l_newCategoryPtr = m_categoryFactory->ReloadCategory(l_oldCategory, l_newCategory).lock();
+        auto l_newCategoryPtr = m_categoryFactory.ReloadCategory(l_oldCategory, l_newCategory).lock();
         if (l_newCategoryPtr)
         {
             l_newCategoryPtr->SetOriginFile(l_file);
@@ -161,6 +161,6 @@ namespace RanakEngine::Core
 
     std::string ScriptRegistry::GetCategoryNames()
     {
-        return m_categoryFactory->GetCategoryNames();
+        return m_categoryFactory.GetCategoryNames();
     }
 }

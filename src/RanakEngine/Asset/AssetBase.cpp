@@ -21,7 +21,9 @@ namespace RanakEngine::Asset
 
     std::string AssetBase::GetContents()
     {
-        return std::string(m_rawContents.data());
+        // m_rawContents is not NUL-terminated; build with explicit length so we
+        // don't read past the buffer into heap garbage.
+        return std::string(m_rawContents.data(), m_rawContents.size());
     }
 
     AssetType AssetBase::GetAssetType()

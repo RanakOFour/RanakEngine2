@@ -18,10 +18,10 @@ namespace RanakEngine::Core
     , m_appName(_appName)
     {
         m_ioManager = IO::Manager::Instance();
-        // ScriptRegistry::Init registers all Core usertypes and sets its singleton
-        // self-reference before we construct the default Scene, which reaches the
-        // registry via ScriptRegistry::Instance() during its constructor.
+
+        // Registers all Core usertypes and categories sets
         m_scriptRegistry = ScriptRegistry::Init(_engine);
+
         m_currentScene = std::make_shared<Scene>();
         m_mainCamera = std::make_shared<Camera>();
     };
@@ -90,6 +90,13 @@ namespace RanakEngine::Core
 
             // Update IO
             l_IOManager->UpdateInputs();
+
+            // Stop the loop when the window/app requests to quit.
+            if (l_IOManager->GetQuitSignal())
+            {
+                m_running = false;
+                return;
+            }
 
             // Step physics world before game logic
             if (l_physicsManager)

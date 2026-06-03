@@ -46,8 +46,8 @@ namespace RanakEngine::Core
     {
     private:
         inline static std::weak_ptr<ScriptRegistry> m_self; ///< Weak self-reference for the singleton pattern.
-        LuaEngine* m_engine = nullptr;                       ///< Shared, app-owned Lua runtime (not owned here).
-        std::shared_ptr<Core::CategoryFactory> m_categoryFactory; ///< Owned category registry.
+        std::shared_ptr<LuaEngine> m_engine;         ///< Engine reference (we do NOT fuck with raw pointers).
+        CategoryFactory m_categoryFactory;            ///< Owned category registry.
 
         explicit ScriptRegistry(LuaEngine& _engine);
 
