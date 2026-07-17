@@ -111,9 +111,9 @@ int main()
     WriteFile(l_cameraPath, k_cameraRule);
     WriteFile(l_renderPath, k_renderingRule);
 
-    RE::EngineContents l_engine = RE::Initialise(true, Vector2(1280.0f, 720.0f), "RanakEngine Demo");
+    RE::EngineContents* l_engine = RE::Initialise(true, Vector2(1280.0f, 720.0f), "RanakEngine Demo");
 
-    std::shared_ptr<RE::Core::Manager> l_core = l_engine.core;
+    std::shared_ptr<RE::Core::Manager> l_core = l_engine->core;
     std::shared_ptr<RE::Core::Scene> l_scene = l_core->GetScene().lock();
     std::shared_ptr<RE::Core::ScriptRegistry> l_registry = l_core->GetScriptRegistry();
 
