@@ -16,7 +16,6 @@ namespace RanakEngine
 
         public:
         LuaEngine();
-        LuaEngine(LuaEngine& _engine);
         ~LuaEngine();
 
         sol::table AddTable();

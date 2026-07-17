@@ -49,7 +49,7 @@ namespace RanakEngine
      * @param _screenSize Initial window size in pixels.
      * @return EngineContents struct populated with all live manager shared pointers.
      */
-    EngineContents Initialise(bool _debug, Vector2 _screenSize, std::string _appName);
+    EngineContents* Initialise(bool _debug, Vector2 _screenSize, std::string _appName);
 
     /**
      * @brief Shuts down all engine subsystems in reverse dependency order.
@@ -59,7 +59,7 @@ namespace RanakEngine
      *
      * @param _contents Reference to the EngineContents returned by Initialise().
      */
-    void Shutdown(EngineContents &_contents);
+    void Shutdown(EngineContents* _contents);
 }
 
 #endif

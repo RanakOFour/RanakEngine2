@@ -1,9 +1,11 @@
 include(ProcessorCount)
 cmake_minimum_required(VERSION 3.20)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_GENERATOR Ninja)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
 
 project(RanakEngine VERSION 0.5 LANGUAGES CXX)
 
