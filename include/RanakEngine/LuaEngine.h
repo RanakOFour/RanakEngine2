@@ -44,8 +44,19 @@ namespace RanakEngine
 
         sol::object GetGlobal(std::string _name);
 
+        /**
+        * @brief Takes in raw lua script and runs it in the engine.
+        * @param _scriptText The string containing lua code that is to be executed.
+        */
         void RunScript(std::string _scriptText);
         void RunScriptFile(std::weak_ptr<Asset::LuaScript> _file);
+        
+        
+        /**
+        * @brief Takes in raw lua script with an expected return type, executes the program, and returns the expected value.
+        * @tparam T Expected return type
+        * @param _scriptText String containing lua code that is to be executed
+        */
 
         template<typename T>
         inline sol::optional<T> RunScript(std::string _scriptText)
